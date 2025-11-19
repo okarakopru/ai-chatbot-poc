@@ -1,0 +1,12 @@
+{
+  "P123": {
+    "name": "Wireless Earbuds",
+    "price": "$59",
+    "stock": "In stock"
+  },
+  "P124": {
+    "name": "Smartwatch X",
+    "price": "$129",
+    "stock": "Pre-order"
+  }
+}
