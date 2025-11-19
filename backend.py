@@ -9,7 +9,7 @@ from openai import OpenAI
 from langdetect import detect as lang_detect
 
 # ============================================================
-# OPENAI CLIENT (SAFE)
+# OPENAI CLIENT (SAFE — env var)
 # ============================================================
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -26,24 +26,24 @@ app.add_middleware(
 )
 
 # ============================================================
-# LOAD DATA
+# LOAD DATASETS
 # ============================================================
 products = json.load(open("products.json"))
 orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
 # ============================================================
-# LEVEL 8.2 MEMORY (Dual-channel)
+# MEMORY (Dual-Channel + Product History Array)
 # ============================================================
 memory = {
-    "conversation_product": None,
+    "conversation_products": [],   # history list (NEW)
     "order_product": None,
     "last_intent": None,
     "last_order_id": None
 }
 
 # ============================================================
-# LANGUAGE DETECTION (drift-proof)
+# LANGUAGE DETECTION (Drift-Proof, Hybrid)
 # ============================================================
 def detect_language(msg):
     try:
@@ -54,10 +54,10 @@ def detect_language(msg):
         if lang.startswith("es"): return "Spanish"
         return "English"
     except:
-        # Fallback: LLM-based detection
+        # fallback LLM detection
         prompt = f"""
         Detect the language of this message.
-        Respond with ONLY: English, Turkish, Arabic, Spanish, Other.
+        Respond ONLY with: English, Turkish, Arabic, Spanish, Other.
 
         Message: "{msg}"
         """
@@ -70,17 +70,18 @@ def detect_language(msg):
             return "English"
         return ans
 
-
 # ============================================================
-# AI DETECTORS
+# TOPIC RECALL DETECTOR (AI-only)
 # ============================================================
 def ai_topic_recall(msg):
     prompt = f"""
-    Is the user asking to recall the earlier topic of conversation?
+    Is the user asking to recall the earlier conversation topic?
 
     Examples of YES:
     - what were we talking about
-    - what was the topic earlier
+    - what did we discuss earlier
+    - what was the topic at the beginning
+    - ne konuşuyorduk
     - konuşmanın başında ne konuşuyorduk
     - عن ماذا كنا نتحدث سابقاً
 
@@ -94,12 +95,19 @@ def ai_topic_recall(msg):
     )
     return r.choices[0].message.content.strip().lower() == "yes"
 
-
+# ============================================================
+# ORDER ID MISSING DETECTOR (AI-based)
+# ============================================================
 def ai_order_id_missing(msg):
     prompt = f"""
-    Determine if the user is saying they DO NOT KNOW their order ID.
-
+    Does the user indicate they DO NOT KNOW their order ID?
     Respond ONLY YES or NO.
+
+    Examples:
+    - I don't know my order ID
+    - I forgot my order number
+    - sipariş numaramı hatırlamıyorum
+    - لا أعرف رقم الطلب
 
     User: "{msg}"
     """
@@ -109,20 +117,19 @@ def ai_order_id_missing(msg):
     )
     return r.choices[0].message.content.strip().lower() == "yes"
 
-
 # ============================================================
 # ORDER ID EXTRACTION (regex + AI fallback)
 # ============================================================
 def extract_order_id(msg):
-    # Regex first
+    # Try regex
     ids = re.findall(r"\b(\d{5})\b", msg)
     if ids:
         return ids[0]
 
     # AI fallback
     prompt = f"""
-    Extract the 5-digit order ID from the message below.
-    Respond ONLY with the 5-digit number. If none found, respond NONE.
+    Extract the 5-digit order ID from the message.
+    Respond ONLY with the number or NONE.
 
     Message: "{msg}"
     """
@@ -133,11 +140,71 @@ def extract_order_id(msg):
     ans = r.choices[0].message.content.strip()
     return ans if ans.isdigit() and len(ans)==5 else None
 
-
 # ============================================================
-# LEVEL 7 — FULL AI PRODUCT EXPLORER
+# PRODUCT NAME EXTRACTION FOR ORDER CONTEXT (Hybrid)
+# ============================================================
+def extract_product_from_order_context(msg):
+    text = msg.lower()
+
+    # 1) Direct string match across product names
+    for p in products.values():
+        pname = p["name"].lower()
+        if pname in text:
+            return p["name"]
+
+    # 2) Match across category-like keywords
+    keyword_map = {
+        "earbud": "Wireless Earbuds",
+        "earbuds": "Wireless Earbuds",
+        "kulak": "Wireless Earbuds",
+        "headphone": "Noise Cancelling Headphones",
+        "speaker": "Bluetooth Speaker Mini",
+        "hoparlör": "Bluetooth Speaker Mini",
+        "kamera": "4K Action Camera",
+        "camera": "4K Action Camera",
+        "كاميرا": "4K Action Camera",
+        "سماعة": "Wireless Earbuds",
+        "fitness": "Fitness Tracker Band",
+        "spor": "Fitness Tracker Band"
+    }
+
+    for k,v in keyword_map.items():
+        if k in text:
+            return v
+
+    # 3) AI Fallback – direct extraction from choices
+    names = [p["name"] for p in products.values()]
+
+    prompt = f"""
+    The user is describing a product they bought, but did not provide an order ID.
+    Extract which product they bought.
+
+    USER MESSAGE:
+    "{msg}"
+
+    Choose ONLY from:
+    {names}
+
+    Respond ONLY with the product name, or NONE.
+    """
+
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"user","content":prompt}]
+    )
+
+    ans = r.choices[0].message.content.strip()
+
+    if ans in names:
+        return ans
+
+    return None
+# ============================================================
+# LEVEL 7+ — FULL AI PRODUCT EXPLORER (STRICT & FACTUAL)
 # ============================================================
 def tool_ai_product_explorer(query):
+    """Fully AI-driven product filtering and category naming."""
+
     product_list = list(products.values())
 
     prompt = f"""
@@ -150,23 +217,30 @@ def tool_ai_product_explorer(query):
     {json.dumps(product_list, indent=2)}
 
     TASK:
-    - Identify relevant products (semantic reasoning).
-    - If user asks "what products do you have?" return ALL.
-    - If implicit category (camera, audio, fitness, charging, etc.) → return those.
-    - Create a short category name (1–3 words).
+    - Identify products semantically relevant to the query.
+    - If user asks "what products do you have", "show all products", "ürünleriniz neler",
+      "ما هي المنتجات المتوفرة", etc → return ALL products.
+    - If the query implies something like sound/audio/ear/camera/fitness/charger,
+      filter intelligently.
+    - Create a CATEGORY NAME (1–3 words).
     - Return STRICT JSON ONLY:
 
     {{
        "category": "Category Name",
        "products": [
-          {{"name":"...", "price":"...", "stock":"..."}}
+          {{
+             "name": "...",
+             "price": "...",
+             "stock": "..."
+          }}
        ]
     }}
 
     RULES:
-    - DO NOT invent new products.
+    - Absolutely DO NOT invent new products.
     - DO NOT modify price or stock.
-    - ONLY use products from catalog.
+    - DO NOT add imaginary availability ("low stock", "out of stock", etc).
+    - Use ONLY products listed in the catalog.
     """
 
     r = client.chat.completions.create(
@@ -180,45 +254,61 @@ def tool_ai_product_explorer(query):
         data = json.loads(raw)
         memory["last_intent"] = "product"
 
-        if len(data.get("products",[]))==1:
-            memory["conversation_product"] = data["products"][0]["name"]
+        # Update conversation history list
+        for p in data.get("products", []):
+            pname = p["name"]
+            if pname not in memory["conversation_products"]:
+                memory["conversation_products"].append(pname)
 
         return {
             "type":"product_list",
-            "category":data.get("category","Products"),
-            "products":data.get("products",[])
+            "category": data.get("category","Products"),
+            "products": data.get("products",[])
         }
+
     except:
+        # fallback → return everything
+        for p in product_list:
+            pname = p["name"]
+            if pname not in memory["conversation_products"]:
+                memory["conversation_products"].append(pname)
+
         return {
             "type":"product_list",
             "category":"All Products",
             "products":product_list
         }
 
-
+# ============================================================
+# HYBRID PRODUCT LOOKUP (AI + fallback)
+# ============================================================
 def tool_product_lookup(query):
-    # Use AI explorer itself
+    """Return ONE best-fit product using both AI reasoning and fallback."""
     result = tool_ai_product_explorer(query)
 
+    # If only 1 → direct return
     if len(result["products"]) == 1:
         p = result["products"][0]
-        memory["conversation_product"] = p["name"]
+
+        if p["name"] not in memory["conversation_products"]:
+            memory["conversation_products"].append(p["name"])
+
         return {
             "type":"product_info",
-            "name":p["name"],
-            "price":p["price"],
-            "stock":p["stock"]
+            "name": p["name"],
+            "price": p["price"],
+            "stock": p["stock"]
         }
 
-    # Multiple products → ask AI
+    # Multiple products → ask AI to pick the single closest match
     names = [p["name"] for p in result["products"]]
 
     prompt = f"""
-    User asked: "{query}"
-    Options: {names}
+    The user asked about: "{query}"
+    Candidate products: {names}
 
-    Which single product is the closest match?
-    Respond ONLY with the product name.
+    Choose ONLY ONE product name from the list above.
+    Respond ONLY with that name.
     """
 
     r = client.chat.completions.create(
@@ -226,50 +316,67 @@ def tool_product_lookup(query):
         messages=[{"role":"user","content":prompt}]
     )
 
-    best = r.choices[0].message.content.strip()
+    chosen = r.choices[0].message.content.strip()
 
+    # Validate chosen
     for p in result["products"]:
-        if p["name"].lower()==best.lower():
-            memory["conversation_product"] = p["name"]
+        if p["name"].lower() == chosen.lower():
+
+            if p["name"] not in memory["conversation_products"]:
+                memory["conversation_products"].append(p["name"])
+
             return {
                 "type":"product_info",
-                "name":p["name"],
-                "price":p["price"],
-                "stock":p["stock"]
+                "name": p["name"],
+                "price": p["price"],
+                "stock": p["stock"]
             }
 
-    # fallback
+    # fallback → first
     p = result["products"][0]
+
+    if p["name"] not in memory["conversation_products"]:
+        memory["conversation_products"].append(p["name"])
+
     return {
         "type":"product_info",
-        "name":p["name"],
-        "price":p["price"],
-        "stock":p["stock"]
+        "name": p["name"],
+        "price": p["price"],
+        "stock": p["stock"]
     }
 
-
+# ============================================================
+# ORDER LOOKUP
+# ============================================================
 def tool_order_lookup(order_id):
-    memory["last_intent"]="order"
-    memory["last_order_id"]=order_id
+    memory["last_intent"] = "order"
+    memory["last_order_id"] = order_id
 
     if order_id in orders:
         info = orders[order_id]
         return {
-            "type":"order_info",
-            "order_id":order_id,
-            "status":info["status"],
-            "delivery":info["delivery_date"]
+            "type": "order_info",
+            "order_id": order_id,
+            "status": info["status"],
+            "delivery": info["delivery_date"]
         }
+
     return {"type":"order_info","error":"Order not found"}
 
-
+# ============================================================
+# REFUND POLICY (STRICT — NO UPSELL)
+# ============================================================
 def tool_refund_policy():
-    memory["last_intent"]="refund"
-    return {"type":"refund_policy","policy":return_policy["policy"]}
+    """Strict factual refund explanation. No upsell allowed."""
+    memory["last_intent"] = "refund"
 
+    return {
+        "type": "refund_policy",
+        "policy": return_policy["policy"]
+    }
 
 # ============================================================
-# NATURAL FORMATTER (drift-proof)
+# NATURAL FORMATTER (DRIFT-PROOF + FACTUAL-STRICT)
 # ============================================================
 def natural_format(user_msg, tool_data):
     user_lang = detect_language(user_msg)
@@ -277,32 +384,31 @@ def natural_format(user_msg, tool_data):
     prompt = f"""
     You are a multilingual customer support assistant.
 
-    USER LANGUAGE = {user_lang}
+    IMPORTANT LANGUAGE RULES:
+    - Respond ONLY in {user_lang}.
+    - IGNORE: tool data language, previous assistant replies, internal reasoning.
+    - NEVER drift to a different language.
 
-    Respond STRICTLY in {user_lang}.
-    IGNORE:
-    - the language of TOOL_DATA
-    - the language of previous assistant messages
-    - internal reasoning
-
-    DO NOT:
-    - invent facts
-    - modify price
-    - modify stock
-    - add misinformation
-
-    TOOL_DATA:
-    {json.dumps(tool_data, indent=2)}
+    FACTUAL RULES:
+    - NEVER change product stock value.
+    - NEVER modify price.
+    - NEVER add 'low stock', 'out of stock', 'popular', etc unless TOOL_DATA says so.
+    - NEVER invent product details.
 
     USER SAID:
     "{user_msg}"
 
-    RULES:
-    - If product_list: list items clearly.
-    - If product_info: provide availability + suggestion.
-    - If order_info: describe delivery + next steps.
-    - If refund_policy: describe return window simply.
-    - Add ONE friendly suggestion.
+    TOOL_DATA:
+    {json.dumps(tool_data, indent=2)}
+
+    INSTRUCTIONS:
+    - If product_list: list items cleanly in {user_lang}.
+    - If product_info: give factual details + ONE suggestion.
+    - If order_info: explain delivery status + next step.
+    - If refund_policy: explain return window (NO upsell).
+    - If summary needed: summarize memory["conversation_products"].
+
+    Respond now in {user_lang}:
     """
 
     r = client.chat.completions.create(
@@ -310,16 +416,13 @@ def natural_format(user_msg, tool_data):
         messages=[{"role":"assistant","content":prompt}]
     )
     return r.choices[0].message.content.strip()
-
-
 # ============================================================
 # FRONTEND SERVE
 # ============================================================
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
-    with open("index.html","r",encoding="utf-8") as f:
+    with open("index.html", "r", encoding="utf-8") as f:
         return f.read()
-
 
 # ============================================================
 # REQUEST MODEL
@@ -327,71 +430,130 @@ def serve_frontend():
 class ChatInput(BaseModel):
     message: str
 
-
 # ============================================================
-# MAIN AGENT — LEVEL 8.2 FINAL
+# MAIN AGENT — LEVEL 8.3 FINAL
 # ============================================================
 @app.post("/chat")
-def chat(req:ChatInput):
+def chat(req: ChatInput):
     user = req.message
     lower = user.lower()
 
-    # -----------------------------------------
-    # 0) AI TOPIC RECALL (fully AI-based)
-    # -----------------------------------------
-    if ai_topic_recall(user):
-        if memory["conversation_product"]:
-            info = tool_product_lookup(memory["conversation_product"])
-            return {"reply": natural_format(user, info)}
-        return {"reply":"We were having a general conversation earlier. How can I assist you now?"}
+    # =======================================================
+    # (A) SUMMARY INTENT — “şu ana kadar konuştuğumuz ürünleri özetle”
+    # =======================================================
+    summary_keywords = [
+        "özetle", "konuştuklarımız", "talked so far", 
+        "summarize", "summary", "konuştugumuz", "products so far",
+        "bana özetle"
+    ]
 
-    # -----------------------------------------
-    # 1) REFERENTIAL ("it", "this", "that")
-    # -----------------------------------------
-    if any(w in lower for w in ["it","this","that"]):
-        if memory["last_intent"]=="order" and memory["order_product"]:
+    if any(k in lower for k in summary_keywords):
+        items = memory["conversation_products"]
+        if not items:
+            return {"reply": natural_format(user, {
+                "type":"summary",
+                "products":[]
+            })}
+
+        # Build summary tool_data structure
+        summary_data = {
+            "type":"summary",
+            "products":[
+                {"name": p["name"], "price": p["price"], "stock": p["stock"]}
+                for p in products.values()
+                if p["name"] in items
+            ]
+        }
+
+        return {"reply": natural_format(user, summary_data)}
+
+    # =======================================================
+    # (B) TOPIC RECALL — AI + keyword hybrid
+    # =======================================================
+    product_keywords = ["camera","earbud","speaker","charger","kulak","spor","fitness","hoparlör","şarj","cams","video"]
+    order_keywords = ["order","track","sipariş","تتبع","طلب"]
+
+    is_recall_question = ai_topic_recall(user)
+
+    if is_recall_question and not any(k in lower for k in product_keywords + order_keywords):
+        # valid topic recall
+        if memory["conversation_products"]:
+            last_product = memory["conversation_products"][-1]
+            info = tool_product_lookup(last_product)
+            return {"reply": natural_format(user, info)}
+
+        return {"reply": natural_format(user, {
+            "type":"summary",
+            "products":[]
+        })}
+
+    # =======================================================
+    # (C) REFERENTIAL MEMORY
+    # =======================================================
+    referential_words = ["it", "this", "that", "bu", "şu"]
+
+    if any(w in lower.split() for w in referential_words):
+        # NEVER route referential queries to the router
+        if memory["order_product"]:
             info = tool_product_lookup(memory["order_product"])
             return {"reply": natural_format(user, info)}
 
-        if memory["conversation_product"]:
-            info = tool_product_lookup(memory["conversation_product"])
+        if memory["conversation_products"]:
+            last_product = memory["conversation_products"][-1]
+            info = tool_product_lookup(last_product)
             return {"reply": natural_format(user, info)}
 
-    # -----------------------------------------
-    # 2) ORDER ID MISSING
-    # -----------------------------------------
-    if memory["last_intent"]=="order" and ai_order_id_missing(user):
-        explorer = tool_ai_product_explorer(user)
-        if explorer["products"]:
-            p = explorer["products"][0]
-            memory["order_product"]=p["name"]
-            return {"reply":
-                f"It looks like you don’t know your order ID.\n\n"
-                f"You mentioned **{p['name']}**.\n"
-                f"It costs {p['price']} and is {p['stock']}.\n\n"
-                "Please check your email for your confirmation number so I can track it."
-            }
+    # =======================================================
+    # (D) ORDER-ID EXTRACTION ALWAYS BEFORE ROUTER
+    # =======================================================
+    extracted_id = extract_order_id(user)
+    if extracted_id:
+        data = tool_order_lookup(extracted_id)
+        return {"reply": natural_format(user, data)}
 
-    # -----------------------------------------
-    # 3) ORDER ASKED WITHOUT ID
-    # -----------------------------------------
-    if "where is my order" in lower or "track my order" in lower:
-        # Try regex + AI extraction automatically
-        extracted_id = extract_order_id(user)
-        if extracted_id:
-            data = tool_order_lookup(extracted_id)
-            return {"reply": natural_format(user, data)}
+    # =======================================================
+    # (E) ORDER-ID-MISSING (AI Detector)
+    # =======================================================
+    if memory["last_intent"] == "order" and ai_order_id_missing(user):
+        product_name = extract_product_from_order_context(user)
 
-        memory["last_intent"]="order"
-        return {"reply": "Sure — could you share your order ID?"}
+        if product_name:
+            memory["order_product"] = product_name
+            p = next(item for item in products.values() if item["name"] == product_name)
 
-    # -----------------------------------------
-    # 4) ROUTER (AI chooses tool)
-    # -----------------------------------------
+            return {"reply": natural_format(user, {
+                "type":"product_info",
+                "name": p["name"],
+                "price": p["price"],
+                "stock": p["stock"]
+            })}
+
+        return {"reply":
+            natural_format(user, {
+                "type":"info",
+                "message":"Please check your email for your order confirmation ID."
+            })
+        }
+
+    # =======================================================
+    # (F) REFUND INTENT (NO ORDER-ID-MISSING OVERRIDE)
+    # =======================================================
+    refund_words = ["refund","return","iade","استرجاع","geri","تبديل"]
+
+    if any(w in lower for w in refund_words):
+        data = tool_refund_policy()
+        return {"reply": natural_format(user, data)}
+
+    # =======================================================
+    # (G) ROUTER — AI SELECTS TOOL
+    # =======================================================
     router = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role":"system","content":"You are an AI support agent. Select the correct tool."},
+            {
+                "role":"system",
+                "content":"You are an AI support agent. Choose the correct function tool."
+            },
             {"role":"user","content":user}
         ],
         tools=[
@@ -399,7 +561,7 @@ def chat(req:ChatInput):
                 "type":"function",
                 "function":{
                     "name":"tool_ai_product_explorer",
-                    "description":"Fully AI-driven product explorer",
+                    "description":"AI-driven product explorer",
                     "parameters":{
                         "type":"object",
                         "properties":{"query":{"type":"string"}},
@@ -411,7 +573,7 @@ def chat(req:ChatInput):
                 "type":"function",
                 "function":{
                     "name":"tool_product_lookup",
-                    "description":"Single product detail",
+                    "description":"Detailed single product lookup",
                     "parameters":{
                         "type":"object",
                         "properties":{"query":{"type":"string"}},
@@ -423,7 +585,7 @@ def chat(req:ChatInput):
                 "type":"function",
                 "function":{
                     "name":"tool_order_lookup",
-                    "description":"Order tracking by ID",
+                    "description":"Track order by ID",
                     "parameters":{
                         "type":"object",
                         "properties":{"order_id":{"type":"string"}},
@@ -435,7 +597,7 @@ def chat(req:ChatInput):
                 "type":"function",
                 "function":{
                     "name":"tool_refund_policy",
-                    "description":"Return refund policy",
+                    "description":"Return refund policy steps",
                     "parameters":{"type":"object","properties":{}}
                 }
             }
@@ -445,27 +607,31 @@ def chat(req:ChatInput):
 
     choice = router.choices[0]
 
-    # -----------------------------------------
-    # 5) TOOL EXECUTION
-    # -----------------------------------------
-    if choice.finish_reason=="tool_calls":
+    # =======================================================
+    # (H) TOOL EXECUTION
+    # =======================================================
+    if choice.finish_reason == "tool_calls":
         call = choice.message.tool_calls[0]
-        fn = call.function.name
+        fname = call.function.name
         args = json.loads(call.function.arguments)
 
-        if fn=="tool_ai_product_explorer":
-            return {"reply": natural_format(user, tool_ai_product_explorer(args["query"]))}
+        if fname == "tool_ai_product_explorer":
+            data = tool_ai_product_explorer(args["query"])
+            return {"reply": natural_format(user, data)}
 
-        if fn=="tool_product_lookup":
-            return {"reply": natural_format(user, tool_product_lookup(args["query"]))}
+        if fname == "tool_product_lookup":
+            data = tool_product_lookup(args["query"])
+            return {"reply": natural_format(user, data)}
 
-        if fn=="tool_order_lookup":
-            return {"reply": natural_format(user, tool_order_lookup(args["order_id"]))}
+        if fname == "tool_order_lookup":
+            data = tool_order_lookup(args["order_id"])
+            return {"reply": natural_format(user, data)}
 
-        if fn=="tool_refund_policy":
-            return {"reply": natural_format(user, tool_refund_policy())}
+        if fname == "tool_refund_policy":
+            data = tool_refund_policy()
+            return {"reply": natural_format(user, data)}
 
-    # -----------------------------------------
-    # 6) FALLBACK
-    # -----------------------------------------
+    # =======================================================
+    # (I) FALLBACK
+    # =======================================================
     return {"reply": choice.message.content}
