@@ -3,15 +3,20 @@ import os
 import numpy as np
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from openai import OpenAI
 
-# OpenAI key from environment variable
+# ================================================
+# OPENAI CLIENT (SAFE — uses environment variable)
+# ================================================
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# ================================================
+# FASTAPI APP + CORS
+# ================================================
 app = FastAPI()
 
-# allow frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,28 +24,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------------------------------------------------------
-# LOAD DATA
-# ------------------------------------------------------------
+# ================================================
+# LOAD DATA (products, orders, refund policy)
+# ================================================
 products = json.load(open("products.json"))
 orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
+# ================================================
+# MEMORY (Level 4 / Level 5 behaviors)
+# ================================================
 memory = {
     "last_product": None,
     "last_order_id": None,
     "last_intent": None
 }
 
-# ------------------------------------------------------------
-# SEMANTIC SEARCH
-# ------------------------------------------------------------
+# ================================================
+# SEMANTIC SEARCH (Level 3)
+# ================================================
 def embed(text):
-    res = client.embeddings.create(
+    """Create embedding vector for semantic similarity."""
+    r = client.embeddings.create(
         model="text-embedding-3-small",
         input=text
     )
-    return res.data[0].embedding
+    return r.data[0].embedding
 
 def cosine_similarity(a, b):
     a, b = np.array(a), np.array(b)
@@ -50,31 +59,31 @@ product_names = [info["name"] for info in products.values()]
 product_vectors = [embed(name) for name in product_names]
 
 def vector_search_product(query):
+    """Semantic search to find the closest matching product."""
     q_vec = embed(query)
     scores = [cosine_similarity(q_vec, p_vec) for p_vec in product_vectors]
-    return product_names[int(np.argmax(scores))]
+    best_index = int(np.argmax(scores))
+    return product_names[best_index]
 
-# ------------------------------------------------------------
-# AI DETECT: ORDER ID MISSING
-# ------------------------------------------------------------
-def ai_order_id_missing(user_message):
+# ================================================
+# AI DETECTOR — “User doesn’t know order ID”
+# ================================================
+def ai_order_id_missing(user_msg):
     prompt = f"""
-    Does the user indicate they do NOT know their order ID?
-    Respond ONLY YES or NO.
+    Determine if the user is saying they DO NOT KNOW their order ID.
+    Respond ONLY with YES or NO.
 
-    User message: "{user_message}"
+    User: "{user_msg}"
     """
-
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}]
     )
-
     return r.choices[0].message.content.strip().lower() == "yes"
 
-# ------------------------------------------------------------
-# DATA TOOLS (raw functions)
-# ------------------------------------------------------------
+# ================================================
+# TOOL IMPLEMENTATIONS (Raw Data Functions)
+# ================================================
 def tool_order_lookup(order_id):
     memory["last_intent"] = "order"
     memory["last_order_id"] = order_id
@@ -85,7 +94,7 @@ def tool_order_lookup(order_id):
             "type": "order_info",
             "order_id": order_id,
             "status": info["status"],
-            "delivery": info["delivery_date"]
+            "delivery": info["delivery_date"],
         }
 
     return {"type": "order_info", "error": "Order not found"}
@@ -110,21 +119,27 @@ def tool_refund_policy():
     memory["last_intent"] = "refund"
     return {"type": "refund_policy", "policy": return_policy["policy"]}
 
-# ------------------------------------------------------------
-# NATURAL RESPONSE FORMATTER
-# ------------------------------------------------------------
+# ================================================
+# NATURAL RESPONSE FORMATTER (LLM)
+# ================================================
 def natural_format(user_message, data):
+    """LLM styles the tool result into a friendly agent response."""
     prompt = f"""
-    Turn this tool result into a friendly, human-like customer support answer.
-    Do NOT invent facts.
+    You are a friendly customer support agent.
+
+    Convert the following tool output into a helpful, human-like answer.
+    DO NOT invent facts.
 
     User: "{user_message}"
 
-    Data:
+    Tool result:
     {json.dumps(data)}
 
-    Make the tone friendly, concise, and helpful.
-    Offer one optional suggestion.
+    Requirements:
+    - Be natural
+    - Be concise
+    - Add ONE friendly suggestion
+    - Keep factual data unchanged
     """
 
     r = client.chat.completions.create(
@@ -134,45 +149,66 @@ def natural_format(user_message, data):
 
     return r.choices[0].message.content.strip()
 
-# ------------------------------------------------------------
-# MAIN AGENT LOGIC
-# ------------------------------------------------------------
+# ================================================
+# FRONTEND ROUTE — SERVE index.html FROM ROOT
+# ================================================
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    """Serves the frontend chatbot UI."""
+    with open("index.html", "r", encoding="utf-8") as f:
+        html = f.read()
+    return HTMLResponse(content=html)
+
+# ================================================
+# API SCHEMA
+# ================================================
 class ChatInput(BaseModel):
     message: str
 
+# ================================================
+# MAIN AI AGENT ENDPOINT (Level 5)
+# ================================================
 @app.post("/chat")
 def chat(req: ChatInput):
     user_msg = req.message
     lower = user_msg.lower()
 
-    # Memory-based referential understanding
+    # -------------------------
+    # 1. REFERENTIAL: “is it / this / that”
+    # -------------------------
     if any(w in lower for w in ["it", "this", "that"]) and memory["last_product"]:
         data = tool_product_lookup(memory["last_product"])
         return {"reply": natural_format(user_msg, data)}
 
-    # Order ID missing detection
+    # -------------------------
+    # 2. ORDER ID Missing (AI detected)
+    # -------------------------
     if memory["last_intent"] == "order" and ai_order_id_missing(user_msg):
-        product = vector_search_product(user_msg)
-        data = tool_product_lookup(product)
+        product_name = vector_search_product(user_msg)
+        data = tool_product_lookup(product_name)
+
         return {
-            "reply": (
-                f"It seems you don’t know your order ID.\n\n"
-                f"But I found you’re referring to **{data['name']}**.\n"
-                f"It costs {data['price']} and is {data['stock']}.\n\n"
-                f"To track the order, please check your email for your confirmation number."
-            )
+            "reply":
+            f"It seems you don’t know your order ID.\n\n"
+            f"You mentioned **{data['name']}**.\n"
+            f"It costs {data['price']} and is {data['stock']}.\n\n"
+            f"To continue tracking, please check your email for your order confirmation number."
         }
 
-    # If user asks for order without ID
+    # -------------------------
+    # 3. Natural Order Request without ID
+    # -------------------------
     if "where is my order" in lower or "track my order" in lower:
         memory["last_intent"] = "order"
-        return {"reply": "I can help with that! Could you please tell me your order ID?"}
+        return {"reply": "Sure! Can you please share your order ID so I can check the status?"}
 
-    # Let the agent reason & choose tool plan
-    plan = client.chat.completions.create(
+    # -------------------------
+    # 4. AI TOOL ROUTER (Function Calling)
+    # -------------------------
+    router = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are an AI support agent. Think step by step and pick the correct tool."},
+            {"role": "system", "content": "You are an AI customer support agent. Think step-by-step and choose the right tool."},
             {"role": "user", "content": user_msg}
         ],
         tools=[
@@ -180,7 +216,7 @@ def chat(req: ChatInput):
                 "type": "function",
                 "function": {
                     "name": "tool_product_lookup",
-                    "description": "Return product info (semantic vector search).",
+                    "description": "Return product info from semantic vector search.",
                     "parameters": {
                         "type": "object",
                         "properties": {"query": {"type": "string"}},
@@ -192,7 +228,7 @@ def chat(req: ChatInput):
                 "type": "function",
                 "function": {
                     "name": "tool_order_lookup",
-                    "description": "Return order tracking info.",
+                    "description": "Return order info by ID.",
                     "parameters": {
                         "type": "object",
                         "properties": {"order_id": {"type": "string"}},
@@ -212,9 +248,9 @@ def chat(req: ChatInput):
         tool_choice="auto"
     )
 
-    choice = plan.choices[0]
+    choice = router.choices[0]
 
-    # If AI triggers a tool
+    # If a tool is selected
     if choice.finish_reason == "tool_calls":
         call = choice.message.tool_calls[0]
         fn = call.function.name
@@ -232,5 +268,5 @@ def chat(req: ChatInput):
             data = tool_refund_policy()
             return {"reply": natural_format(user_msg, data)}
 
-    # fallback
+    # fallback: natural LLM response
     return {"reply": choice.message.content}
