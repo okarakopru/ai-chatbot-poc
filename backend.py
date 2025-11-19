@@ -7,14 +7,14 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from openai import OpenAI
 
-# ================================================
+# ============================================================
 # OPENAI CLIENT (SAFE)
-# ================================================
+# ============================================================
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ================================================
+# ============================================================
 # FASTAPI APP + CORS
-# ================================================
+# ============================================================
 app = FastAPI()
 
 app.add_middleware(
@@ -24,26 +24,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ================================================
+# ============================================================
 # LOAD DATA
-# ================================================
+# ============================================================
 products = json.load(open("products.json"))
 orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
-# ================================================
-# LEVEL 5.5 MEMORY MODEL
-# ================================================
+# ============================================================
+# MEMORY (Dual-layer)
+# ============================================================
 memory = {
-    "order_product": None,
-    "conversation_product": None,
+    "order_product": None,          # product mentioned when trying to track an order
+    "conversation_product": None,   # last product discussed in the conversation
     "last_intent": None,
     "last_order_id": None
 }
 
-# ================================================
-# EMBEDDING + SEMANTIC SEARCH
-# ================================================
+# ============================================================
+# SEMANTIC SEARCH (Embedding)
+# ============================================================
 def embed(text):
     r = client.embeddings.create(
         model="text-embedding-3-small",
@@ -54,7 +54,7 @@ def embed(text):
 def cosine(a, b):
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
-# embed all products
+# Precompute product vectors
 product_names = [info["name"] for info in products.values()]
 product_vectors = [embed(name) for name in product_names]
 
@@ -63,67 +63,67 @@ def semantic_product(query):
     scores = [cosine(q_vec, p_vec) for p_vec in product_vectors]
     return product_names[int(np.argmax(scores))]
 
-# ================================================
-# LEVEL 6 – MULTILINGUAL SMART CATEGORY SYSTEM
-# ================================================
-CATEGORIES = {
-    "camera": [
-        "camera", "action camera", "sport camera", "video",
-        "4k", "cam", "record", "kamera", "كاميرا"
-    ],
-    "audio": [
-        "audio", "sound", "music", "ear", "headphone", "earbuds",
-        "kulaklık", "ses", "سماعة"
-    ],
-    "fitness": [
-        "fitness", "health", "exercise", "tracker", "sport",
-        "spor", "fit", "band", "رياضي"
-    ],
-    "charging": [
-        "charger", "usb", "power", "şarj", "battery", "charge",
-        "powerbank", "باور"
-    ],
-    "lighting": [
-        "led", "light", "strip", "rgb", "ışık", "照明"
-    ]
-}
-
-# precompute category vectors
-CAT_VECTORS = {}
-for cat, words in CATEGORIES.items():
-    vecs = [embed(w) for w in words]
-    CAT_VECTORS[cat] = np.mean(vecs, axis=0)
-
-def semantic_category(query):
+# ============================================================
+# LEVEL 6.2 — FULLY AI-GENERATED CATEGORIES
+# ============================================================
+def semantic_filter_products(query):
+    """
+    Find all products semantically related to the user query.
+    A product is included if similarity score exceeds threshold.
+    """
     q_vec = embed(query)
-    scores = {
-        cat: cosine(q_vec, vec)
-        for cat, vec in CAT_VECTORS.items()
-    }
-    best_cat, best_score = max(scores.items(), key=lambda x: x[1])
-    return best_cat if best_score > 0.55 else None  # threshold
+    filtered = []
+    for info, p_vec in zip(products.values(), product_vectors):
+        score = cosine(q_vec, p_vec)
+        if score > 0.40:   # good threshold for fuzzy grouping
+            filtered.append(info)
 
-def filter_products_by_category(category):
-    """Return product list by category using semantic similarity."""
-    if category is None:
-        return list(products.values())
+    return filtered if filtered else list(products.values())
 
-    result = []
-    for info in products.values():
-        p_vec = embed(info["name"])
-        score = cosine(p_vec, CAT_VECTORS[category])
-        if score > 0.50:
-            result.append(info)
 
-    return result if result else list(products.values())  # fallback all
+def generate_category_name(product_list, user_query):
+    """
+    Ask AI to create a meaningful category name
+    based on the given product list + user’s query.
+    """
+    product_names_joined = ", ".join([p["name"] for p in product_list])
 
-# ================================================
-# AI DETECTOR: "order id missing"
-# ================================================
+    prompt = f"""
+    You are an intelligent product classification system.
+
+    The user asked: "{user_query}"
+
+    Here is the list of products that semantically match their query:
+    {product_names_joined}
+
+    Your task:
+    - Invent a human-friendly CATEGORY NAME that represents these products.
+    - Keep it short (1–3 words).
+    - Do NOT use made-up products.
+    - Respond ONLY with the category name.
+
+    Example outputs:
+    - "Audio Devices"
+    - "Camera Gear"
+    - "Charging Accessories"
+    - "Wearables"
+    """
+
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    return r.choices[0].message.content.strip()
+
+
+# ============================================================
+# ORDER ID MISSING DETECTOR
+# ============================================================
 def ai_order_id_missing(msg):
     prompt = f"""
-    Does the user indicate they DO NOT KNOW their order ID?
-    Respond only with YES or NO.
+    Does the user indicate they do NOT know their order ID?
+    Respond ONLY YES or NO.
 
     User: "{msg}"
     """
@@ -133,9 +133,43 @@ def ai_order_id_missing(msg):
     )
     return r.choices[0].message.content.strip().lower() == "yes"
 
-# ================================================
-# RAW TOOLS
-# ================================================
+
+
+# ============================================================
+# TOOL FUNCTIONS
+# ============================================================
+def tool_product_lookup(query):
+    best = semantic_product(query)
+    memory["conversation_product"] = best
+    memory["last_intent"] = "product"
+
+    info = next(i for i in products.values() if i["name"].lower() == best.lower())
+    return {
+        "type": "product_info",
+        "name": best,
+        "price": info["price"],
+        "stock": info["stock"]
+    }
+
+
+def tool_list_products(query):
+    """
+    Advanced semantic product explorer:
+    - Find semantically related products
+    - Ask AI to produce a category name dynamically
+    """
+    related = semantic_filter_products(query)
+    category_name = generate_category_name(related, query)
+
+    memory["last_intent"] = "product"
+
+    return {
+        "type": "product_list",
+        "category": category_name,
+        "products": related
+    }
+
+
 def tool_order_lookup(order_id):
     memory["last_intent"] = "order"
     memory["last_order_id"] = order_id
@@ -151,103 +185,100 @@ def tool_order_lookup(order_id):
 
     return {"type": "order_info", "error": "Order not found"}
 
-def tool_product_lookup(query):
-    best = semantic_product(query)
-    memory["conversation_product"] = best
-    memory["last_intent"] = "product"
-
-    info = next(i for i in products.values() if i["name"].lower() == best.lower())
-    return {
-        "type": "product_info",
-        "name": best,
-        "price": info["price"],
-        "stock": info["stock"]
-    }
 
 def tool_refund_policy():
     memory["last_intent"] = "refund"
     return {"type": "refund_policy", "policy": return_policy["policy"]}
 
-def tool_list_products(query):
-    """Smart explorer: category-based or full list."""
-    category = semantic_category(query)
-    filtered = filter_products_by_category(category)
 
-    memory["last_intent"] = "product"
 
-    return {
-        "type": "product_list",
-        "category": category,
-        "products": filtered
-    }
-
-# ================================================
-# NATURAL FORMATTER (LLM)
-# ================================================
+# ============================================================
+# NATURAL RESPONSE FORMATTER
+# ============================================================
 def natural_format(user_msg, data):
     prompt = f"""
-    You are a friendly multilingual e-commerce support agent.
+    You are a friendly multilingual e-commerce assistant.
 
-    Convert the following tool output into a clear human-friendly answer.
+    Convert the following tool output into a clear, human-like answer.
     DO NOT invent facts.
 
-    User message: "{user_msg}"
+    User said: "{user_msg}"
 
-    Tool output:
+    Tool data:
     {json.dumps(data, indent=2)}
 
-    Guidelines:
-    - If product_list: list each item with price & stock.
-    - If single product: explain price, stock, suggestion.
-    - If order tracking: explain status and next step.
-    - If refund: mention the 14-day rule.
-    - Add ONE friendly suggestion at the end.
-    - Respond in the same language as the user when possible.
+    Rules:
+    - If product_list: list each product with price & stock.
+    - If product_info: explain price, stock, suggestion.
+    - If order_info: clearly describe delivery status & next step.
+    - If refund_policy: explain the refund conditions.
+    - Use same language as user.
+    - Add ONE friendly suggestion.
     """
-
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "assistant", "content": prompt}]
     )
     return r.choices[0].message.content.strip()
 
-# ================================================
-# FRONTEND (index.html)
-# ================================================
+
+# ============================================================
+# SERVE FRONTEND
+# ============================================================
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
     with open("index.html", "r", encoding="utf-8") as f:
         return f.read()
 
-# ================================================
+
+# ============================================================
 # CHAT INPUT MODEL
-# ================================================
+# ============================================================
 class ChatInput(BaseModel):
     message: str
 
-# ================================================
-# MAIN AGENT (Level 6)
-# ================================================
+
+# ============================================================
+# MAIN AI AGENT (LEVEL 6.2)
+# ============================================================
 @app.post("/chat")
 def chat(req: ChatInput):
     user = req.message
     lower = user.lower()
 
-    # ----------------------------------------
-    # 1) REFERENTIAL: "it / this / that"
-    # ----------------------------------------
-    if any(w in lower for w in ["it", "this", "that"]):
-        if memory["last_intent"] == "order" and memory["order_product"]:
-            info = tool_product_lookup(memory["order_product"])
-            return {"reply": natural_format(user, info)}
+    # -------------------------------------------------------
+    # 0) TOPIC RECALL PATCH
+    # -------------------------------------------------------
+    topic_phrases = [
+        "what were we talking",
+        "what we were talking",
+        "what was the topic",
+        "what did we talk about",
+        "konuşmanın başında",
+        "نحن كنا نتحدث"
+    ]
 
+    if any(p in lower for p in topic_phrases):
         if memory["conversation_product"]:
             info = tool_product_lookup(memory["conversation_product"])
             return {"reply": natural_format(user, info)}
+        return {"reply": "We were having a general conversation earlier. How may I assist you now?"}
 
-    # ----------------------------------------
-    # 2) ORDER ID MISSING
-    # ----------------------------------------
+    # -------------------------------------------------------
+    # 1) REFERENTIAL ("it / this / that")
+    # -------------------------------------------------------
+    if any(w in lower for w in ["it", "this", "that"]):
+        if memory["last_intent"] == "order" and memory["order_product"]:
+            data = tool_product_lookup(memory["order_product"])
+            return {"reply": natural_format(user, data)}
+
+        if memory["conversation_product"]:
+            data = tool_product_lookup(memory["conversation_product"])
+            return {"reply": natural_format(user, data)}
+
+    # -------------------------------------------------------
+    # 2) ORDER ID MISSING LOGIC
+    # -------------------------------------------------------
     if memory["last_intent"] == "order" and ai_order_id_missing(user):
         product = semantic_product(user)
         memory["order_product"] = product
@@ -256,34 +287,33 @@ def chat(req: ChatInput):
         return {
             "reply":
             f"It seems you don’t know your order ID.\n\n"
-            f"The product you mentioned is **{details['name']}**.\n"
+            f"You mentioned **{details['name']}**.\n"
             f"It costs {details['price']} and is {details['stock']}.\n\n"
             f"Please check your email for the confirmation number so I can track it."
         }
 
-    # ----------------------------------------
-    # 3) ORDER REQUEST WITHOUT ID
-    # ----------------------------------------
+    # -------------------------------------------------------
+    # 3) ORDER ASKED WITHOUT ID
+    # -------------------------------------------------------
     if "where is my order" in lower or "track my order" in lower:
         memory["last_intent"] = "order"
         return {"reply": "Sure — can you share your order ID?"}
 
-    # ----------------------------------------
-    # 4) CALL LLM ROUTER WITH ALL TOOLS
-    # ----------------------------------------
+    # -------------------------------------------------------
+    # 4) AI TOOL ROUTER (FUNCTION CALLING)
+    # -------------------------------------------------------
     router = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are an AI agent. Pick the correct tool."},
-            {"role": "user",
-             "content": user}
+            {"role": "system", "content": "You are an AI support agent. Choose the correct tool."},
+            {"role": "user", "content": user}
         ],
         tools=[
             {
                 "type": "function",
                 "function": {
                     "name": "tool_product_lookup",
-                    "description": "Return product info",
+                    "description": "Return product info.",
                     "parameters": {
                         "type": "object",
                         "properties": {"query": {"type": "string"}},
@@ -295,7 +325,7 @@ def chat(req: ChatInput):
                 "type": "function",
                 "function": {
                     "name": "tool_list_products",
-                    "description": "Return a category-based product list or full list",
+                    "description": "Dynamic semantic product explorer.",
                     "parameters": {
                         "type": "object",
                         "properties": {"query": {"type": "string"}},
@@ -307,7 +337,7 @@ def chat(req: ChatInput):
                 "type": "function",
                 "function": {
                     "name": "tool_order_lookup",
-                    "description": "Track an order by ID",
+                    "description": "Return order tracking info.",
                     "parameters": {
                         "type": "object",
                         "properties": {"order_id": {"type": "string"}},
@@ -319,7 +349,7 @@ def chat(req: ChatInput):
                 "type": "function",
                 "function": {
                     "name": "tool_refund_policy",
-                    "description": "Return refund policy",
+                    "description": "Return refund policy.",
                     "parameters": {"type": "object", "properties": {}}
                 }
             }
@@ -329,31 +359,27 @@ def chat(req: ChatInput):
 
     choice = router.choices[0]
 
-    # ----------------------------------------
-    # 5) EXECUTE TOOL
-    # ----------------------------------------
+    # -------------------------------------------------------
+    # 5) TOOL EXECUTION
+    # -------------------------------------------------------
     if choice.finish_reason == "tool_calls":
         call = choice.message.tool_calls[0]
         fn = call.function.name
         args = json.loads(call.function.arguments)
 
         if fn == "tool_product_lookup":
-            data = tool_product_lookup(args["query"])
-            return {"reply": natural_format(user, data)}
+            return {"reply": natural_format(user, tool_product_lookup(args["query"]))}
 
         if fn == "tool_list_products":
-            data = tool_list_products(args["query"])
-            return {"reply": natural_format(user, data)}
+            return {"reply": natural_format(user, tool_list_products(args["query"]))}
 
         if fn == "tool_order_lookup":
-            data = tool_order_lookup(args["order_id"])
-            return {"reply": natural_format(user, data)}
+            return {"reply": natural_format(user, tool_order_lookup(args["order_id"]))}
 
         if fn == "tool_refund_policy":
-            data = tool_refund_policy()
-            return {"reply": natural_format(user, data)}
+            return {"reply": natural_format(user, tool_refund_policy())}
 
-    # ----------------------------------------
-    # 6) FALLBACK (normal chat)
-    # ----------------------------------------
+    # -------------------------------------------------------
+    # 6) FALLBACK (natural chat)
+    # -------------------------------------------------------
     return {"reply": choice.message.content}
