@@ -97,7 +97,7 @@ def clean_user_message(msg):
     return cleaned.strip()
 
 # ============================================================
-# ARABIC DIGIT NORMALIZATION  <-- FIX
+# ARABIC DIGIT NORMALIZATION
 # ============================================================
 ARABIC_DIGITS = {
     "٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
@@ -135,22 +135,14 @@ TASK:
 
 
 def ai_resolve_order_intent(msg):
-    prompt = f"""
-Does the user want ORDER TRACKING?
-Respond ONLY YES or NO.
-USER: "{msg}"
-"""
+    prompt = f"Does the user want ORDER TRACKING? YES or NO.\nUSER: {msg}"
     r = client.chat.completions.create(model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}])
     return r.choices[0].message.content.strip().lower() == "yes"
 
 
 def ai_resolve_refund_intent(msg):
-    prompt = f"""
-Is the user requesting a RETURN or REFUND?
-Respond ONLY with: REFUND or NO.
-USER: "{msg}"
-"""
+    prompt = f"Is the user requesting a RETURN or REFUND? REFUND or NO.\nUSER: {msg}"
     r = client.chat.completions.create(model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}])
     return r.choices[0].message.content.strip().upper() == "REFUND"
@@ -159,7 +151,7 @@ USER: "{msg}"
 # ORDER ID EXTRACTION (FIXED)
 # ============================================================
 def extract_order_id(msg):
-    msg = normalize_digits(msg)   # <-- CRITICAL FIX
+    msg = normalize_digits(msg)
 
     matches = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
     if matches:
@@ -167,74 +159,65 @@ def extract_order_id(msg):
         if clean.isdigit() and len(clean)==5:
             return clean
     return None
+# ============================================================
+# ORDER-ID-MISSING DETECTOR (ADDED — WAS MISSING)
+# ============================================================
+def ai_order_id_missing(msg):
+    prompt = f"""
+Does the user indicate they DO NOT know their order ID?
+Examples: "I forgot my order ID", "I don’t know the number",
+Arabic examples: "لا أعرف رقم الطلب", "نسيت رقم طلبي"
+Respond ONLY YES or NO.
+
+USER: "{msg}"
+"""
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return r.choices[0].message.content.strip().lower() == "yes"
+
 
 # ============================================================
-# TOOL FUNCTIONS
+# NATURAL FORMATTER
 # ============================================================
-def tool_ai_product_explorer(query):
-    memory["last_intent"] = "product"
-    product_list = list(products.values())
+def natural_format(user_msg, tool_data):
+    lang = detect_language(user_msg)
 
     prompt = f"""
-You are a strict product-discovery engine.
-USER QUERY: "{query}"
-Return STRICT JSON with category + products.
-CATALOG: {json.dumps(product_list)}
+You are a multilingual agent. Respond ONLY in {lang}.
+
+Convert TOOL_DATA into a clean natural-language answer.
+
+STRICT RULES:
+- For order_info → ONLY order_id, status, delivery
+- For product_info → ONLY name, price, stock
+- For product_list → clean bullet list
+- For refund_policy → ONLY policy
+- NEVER mix types
+- NEVER add facts
+- NEVER hallucinate
+- NEVER upsell
+
+TOOL_DATA:
+{json.dumps(tool_data, indent=2)}
 """
-    r = client.chat.completions.create(model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}])
-
-    raw = r.choices[0].message.content.strip()
-
-    try:
-        data = json.loads(raw)
-        for p in data.get("products", []):
-            if p["name"] not in memory["conversation_products"]:
-                memory["conversation_products"].append(p["name"])
-        return {"type":"product_list", "category":data["category"], "products":data["products"]}
-
-    except:
-        for p in product_list:
-            if p["name"] not in memory["conversation_products"]:
-                memory["conversation_products"].append(p["name"])
-        return {"type":"product_list","category":"All Products","products":product_list}
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"user", "content":prompt}]
+    )
+    return r.choices[0].message.content.strip()
 
 
-def tool_product_lookup(name):
-    memory["last_intent"] = "product"
-    memory["order_product"] = None
-
-    for p in products.values():
-        if p["name"].lower() == name.lower():
-            if p["name"] not in memory["conversation_products"]:
-                memory["conversation_products"].append(p["name"])
-            return {"type":"product_info","name":p["name"],"price":p["price"],"stock":p["stock"]}
-
-    return {"type":"info","message":"Product not found."}
-
-
-def tool_order_lookup(order_id):
-    memory["last_intent"] = "order"
-    memory["last_order_id"] = order_id
-
-    if order_id in orders:
-        info = orders[order_id]
-        return {
-            "type":"order_info",
-            "order_id":order_id,
-            "status":info["status"],
-            "delivery":info["delivery_date"]
-        }
-
-    return {"type":"order_info","error":"Order not found"}
-
-
-def tool_refund_policy():
-    memory["last_intent"] = "refund"
-    memory["order_product"] = None
-    return {"type":"refund_policy","policy":return_policy["policy"]}
 # ============================================================
-# MAIN CHAT ENDPOINT (AI-FIRST + HYBRID INTENT)
+# REQUEST MODEL
+# ============================================================
+class ChatInput(BaseModel):
+    message: str
+
+
+# ============================================================
+# MAIN CHAT ENDPOINT
 # ============================================================
 @app.post("/chat")
 def chat(req: ChatInput):
@@ -242,69 +225,52 @@ def chat(req: ChatInput):
     lower = user.lower()
 
     # --------------------------------------------------------
-    # PRODUCT-LIST TRIGGERS (EN + AR)
+    # PRODUCT LIST (EN + AR)
     # --------------------------------------------------------
     product_list_triggers = [
-        "what are your products",
-        "products?", "show products",
-        "list products", "products",
-        "all products",
-
-        # Arabic
-        "المنتجات",
-        "ما هي منتجاتك",
-        "اخبرني عن منتجاتك",
-        "أخبرني عن منتجاتك",
-        "عرض المنتجات",
-        "قائمة المنتجات"
+        "what are your products","products?","show products",
+        "list products","products","all products",
+        "المنتجات","ما هي منتجاتك","اخبرني عن منتجاتك",
+        "أخبرني عن منتجاتك","عرض المنتجات","قائمة المنتجات"
     ]
 
     if any(t in lower for t in product_list_triggers):
-        return {
-            "reply": natural_format(user, tool_ai_product_explorer("all products"))
-        }
+        return {"reply": natural_format(user,
+                 tool_ai_product_explorer("all products"))}
 
     # --------------------------------------------------------
-    # SEMANTIC REFUND INTENT
+    # REFUND INTENT (semantic)
     # --------------------------------------------------------
     if ai_resolve_refund_intent(user):
-        return {
-            "reply": natural_format(user, tool_refund_policy())
-        }
+        return {"reply": natural_format(user, tool_refund_policy())}
 
     # --------------------------------------------------------
-    # SEMANTIC ORDER INTENT
+    # ORDER INTENT (semantic)
     # --------------------------------------------------------
     if ai_resolve_order_intent(user):
         order_id = extract_order_id(user)
         if order_id:
-            return {
-                "reply": natural_format(user, tool_order_lookup(order_id))
-            }
-        return {
-            "reply": natural_format(user, {
-                "type":"info",
-                "message":"Please provide your order ID."
-            })
-        }
+            return {"reply": natural_format(user,
+                     tool_order_lookup(order_id))}
+        return {"reply": natural_format(user, {
+            "type": "info",
+            "message": "Please provide your order ID."
+        })}
 
     # --------------------------------------------------------
-    # SEMANTIC PRODUCT RESOLVE
+    # PRODUCT INTENT (semantic)
     # --------------------------------------------------------
     resolved = ai_resolve_product_name(user)
     if resolved:
-        return {
-            "reply": natural_format(user, tool_product_lookup(resolved))
-        }
+        return {"reply": natural_format(user,
+                 tool_product_lookup(resolved))}
 
     # --------------------------------------------------------
-    # SUMMARY INTENT
+    # SUMMARY
     # --------------------------------------------------------
     summary_keywords = [
-        "summarize","summary",
-        "ملخص","لخص","تلخيص",
-        "ما تحدثنا عنه","ما ناقشنا",
-        "الأشياء التي تحدثنا عنها",
+        "summarize","summary","ملخص","لخص","تلخيص",
+        "ما تحدثنا عنه","ما ناقشنا","الأشياء التي تحدثنا عنها",
         "اعطني ملخص","نظرة عامة"
     ]
 
@@ -321,9 +287,8 @@ def chat(req: ChatInput):
                         "stock": p["stock"]
                     })
 
-        return {
-            "reply": natural_format(user, {"type":"summary", "products": summary})
-        }
+        return {"reply": natural_format(user,
+                 {"type":"summary","products":summary})}
 
     # --------------------------------------------------------
     # TOPIC RECALL
@@ -331,74 +296,62 @@ def chat(req: ChatInput):
     if ai_topic_recall(user):
         if memory["conversation_products"]:
             last = memory["conversation_products"][-1]
-            return {
-                "reply": natural_format(user, tool_product_lookup(last))
-            }
-        return {
-            "reply": natural_format(user, {"type":"summary","products":[]})
-        }
+            return {"reply": natural_format(user,
+                     tool_product_lookup(last))}
+        return {"reply": natural_format(user,
+                 {"type":"summary","products":[]})}
 
     # --------------------------------------------------------
-    # REFERENTIAL MEMORY ("this", "that", "هو", ...)
+    # REFERENTIAL MEMORY
     # --------------------------------------------------------
     refer_words = ["it","this","that","هو","هي","هذا","هذه","ذلك","تلك"]
 
     if any(w in lower.split() for w in refer_words):
         if memory["conversation_products"]:
             last = memory["conversation_products"][-1]
-            return {
-                "reply": natural_format(user, tool_product_lookup(last))
-            }
+            return {"reply": natural_format(user,
+                     tool_product_lookup(last))}
 
     # --------------------------------------------------------
-    # REFUND INTENT (KEYWORD FALLBACK)
+    # REFUND FALLBACK TRIGGERS
     # --------------------------------------------------------
     refund_keywords = [
-        "refund","return",
-        "استرجاع","ارجاع","إرجاع",
-        "مرتجعات","رجوع","اعادة"
+        "refund","return","استرجاع",
+        "ارجاع","إرجاع","مرتجعات","رجوع","اعادة"
     ]
 
     if any(k in lower for k in refund_keywords):
-        return {
-            "reply": natural_format(user, tool_refund_policy())
-        }
+        return {"reply": natural_format(user,
+                 tool_refund_policy())}
 
     # --------------------------------------------------------
-    # ORDER ID EXTRACTION → ORDER LOOKUP
+    # ORDER ID → ORDER LOOKUP
     # --------------------------------------------------------
     extracted = extract_order_id(user)
     if extracted:
-        return {
-            "reply": natural_format(user, tool_order_lookup(extracted))
-        }
+        return {"reply": natural_format(user,
+                 tool_order_lookup(extracted))}
 
     # --------------------------------------------------------
-    # ORDER-ID-MISSING FALLBACK
+    # ORDER-ID-MISSING FLOW
     # --------------------------------------------------------
-    # (If user asked for order but didn't give ID)
     if memory["last_intent"] == "order" and ai_order_id_missing(user):
 
         product_name = ai_resolve_product_name(user)
 
         if product_name:
-            return {
-                "reply": natural_format(user, tool_product_lookup(product_name))
-            }
+            return {"reply": natural_format(user,
+                     tool_product_lookup(product_name))}
 
-        return {
-            "reply": natural_format(user, {
-                "type":"info",
-                "message":"Please check your email for your order confirmation ID."
-            })
-        }
+        return {"reply": natural_format(user, {
+            "type":"info",
+            "message":"Please check your email for your order confirmation ID."
+        })}
 
     # --------------------------------------------------------
-    # SAFE FINAL FALLBACK (NO DRIFT)
+    # SAFE FINAL FALLBACK
     # --------------------------------------------------------
-    return {
-        "reply": natural_format(user, {
-            "type": "info",
-            "message": "I'm here to help with products, orders, or refunds. How can I assist you?"
-        })
-    }
+    return {"reply": natural_format(user, {
+        "type": "info",
+        "message": "I'm here to help with products, orders, or refunds. How can I assist you?"
+    })}
