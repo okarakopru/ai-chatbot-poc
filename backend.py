@@ -33,7 +33,7 @@ orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
 # ============================================================
-# MEMORY (Dual-channel + Product History Array)
+# MEMORY
 # ============================================================
 memory = {
     "conversation_products": [],
@@ -43,28 +43,24 @@ memory = {
 }
 
 # ============================================================
-# EXPLICIT LANGUAGE OVERRIDE (EN + AR ONLY)
+# EXPLICIT LANGUAGE OVERRIDE
 # ============================================================
 def detect_explicit_language_request(msg):
     lowered = msg.lower()
-
     if "respond me in arabic" in lowered or "reply in arabic" in lowered:
         return "Arabic"
-
     if "respond me in english" in lowered or "reply in english" in lowered:
         return "English"
-
     return None
 
 # ============================================================
-# HYBRID LANGUAGE DETECTION (ONLY EN + AR)
+# LANGUAGE DETECTION (EN + AR ONLY)
 # ============================================================
 def detect_language(msg):
     forced = detect_explicit_language_request(msg)
     if forced:
         return forced
 
-    # ISO detection
     try:
         lang = lang_detect(msg)
         if lang.startswith("en"):
@@ -73,30 +69,25 @@ def detect_language(msg):
             return "Arabic"
         return "English"
     except:
-        # LLM fallback
         prompt = f"""
         Detect the language of this message.
         Respond ONLY with: English or Arabic.
-
         Message: "{msg}"
         """
-
         r = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role":"user","content":prompt}]
         )
-
         detected = r.choices[0].message.content.strip()
         return "Arabic" if detected == "Arabic" else "English"
 
 # ============================================================
-# AI TOPIC RECALL (EN + AR)
+# AI TOPIC RECALL
 # ============================================================
 def ai_topic_recall(msg):
     prompt = f"""
     Determine if the user is asking to recall the earlier topic of conversation.
     Respond ONLY YES or NO.
-
     Message: "{msg}"
     """
     r = client.chat.completions.create(
@@ -106,23 +97,22 @@ def ai_topic_recall(msg):
     return r.choices[0].message.content.strip().lower() == "yes"
 
 # ============================================================
-# ORDER ID MISSING (EN + AR)
+# ORDER ID MISSING
 # ============================================================
 def ai_order_id_missing(msg):
     prompt = f"""
     Does the user indicate they DO NOT know their order ID?
     Respond ONLY YES or NO.
-
     Message: "{msg}"
     """
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip().lower() == "yes"
 
 # ============================================================
-# ORDER ID EXTRACTION (regex + LLM fallback)
+# ORDER ID EXTRACTION
 # ============================================================
 def extract_order_id(msg):
     ids = re.findall(r"\b(\d{5})\b", msg)
@@ -132,7 +122,6 @@ def extract_order_id(msg):
     prompt = f"""
     Extract the 5-digit order ID from the following message.
     Respond ONLY with the number or NONE.
-
     Message: "{msg}"
     """
     r = client.chat.completions.create(
@@ -141,7 +130,6 @@ def extract_order_id(msg):
     )
 
     ans = r.choices[0].message.content.strip()
-
     if ans.isdigit() and len(ans) == 5:
         return ans
 
@@ -158,7 +146,6 @@ def extract_product_from_order_context(msg):
         if p["name"].lower() in lowered:
             return p["name"]
 
-    # keyword map (English + Arabic only)
     keyword_map = {
         "earbud": "Wireless Earbuds",
         "earbuds": "Wireless Earbuds",
@@ -175,29 +162,23 @@ def extract_product_from_order_context(msg):
         if keyword in lowered:
             return product_name
 
-    # LLM fallback
     options = [p["name"] for p in products.values()]
 
     prompt = f"""
     The user is referring to a product.
-
     USER MESSAGE: "{msg}"
-
     Products: {options}
-
     Respond with one exact product name or NONE.
     """
-
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-
     ans = r.choices[0].message.content.strip()
 
     return ans if ans in options else None
 # ============================================================
-# FULL AI PRODUCT EXPLORER (STRICT)
+# FULL AI PRODUCT EXPLORER (STRICT & FACTUAL)
 # ============================================================
 def tool_ai_product_explorer(query):
     product_list = list(products.values())
@@ -220,7 +201,7 @@ def tool_ai_product_explorer(query):
     }}
 
     RULES:
-    - NEVER invent products.
+    - NEVER invent new products.
     - NEVER modify price or stock.
     """
 
@@ -289,12 +270,7 @@ def tool_product_lookup(query):
         if p["name"].lower() == choice.lower():
             if p["name"] not in memory["conversation_products"]:
                 memory["conversation_products"].append(p["name"])
-            return {
-                "type":"product_info",
-                "name": p["name"],
-                "price": p["price"],
-                "stock": p["stock"]
-            }
+            return {"type":"product_info","name":p["name"],"price":p["price"],"stock":p["stock"]}
 
     p = result["products"][0]
     if p["name"] not in memory["conversation_products"]:
@@ -323,7 +299,7 @@ def tool_order_lookup(order_id):
 
 
 # ============================================================
-# REFUND POLICY (STRICT)
+# REFUND POLICY
 # ============================================================
 def tool_refund_policy():
     memory["last_intent"] = "refund"
@@ -331,7 +307,7 @@ def tool_refund_policy():
 
 
 # ============================================================
-# NATURAL FORMATTER (EN + AR STRICT)
+# NATURAL FORMATTER (FIXED ROLE)
 # ============================================================
 def natural_format(user_msg, tool_data):
     user_lang = detect_language(user_msg)
@@ -355,7 +331,7 @@ def natural_format(user_msg, tool_data):
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "assistant", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}]   # FIXED ✔
     )
 
     return r.choices[0].message.content.strip()
@@ -386,7 +362,7 @@ def chat(req: ChatInput):
     lower = user.lower()
 
     # --------------------------------------------------------
-    # SUMMARY INTENT (English + Arabic)
+    # SUMMARY INTENT
     # --------------------------------------------------------
     summary_keywords = [
         "summarize", "summary",
@@ -412,16 +388,14 @@ def chat(req: ChatInput):
         return {"reply": natural_format(user, summary_data)}
 
     # --------------------------------------------------------
-    # TOPIC RECALL (EN + AR)
+    # TOPIC RECALL
     # --------------------------------------------------------
     product_keywords = [
-        "camera", "earbud", "earbuds", "speaker", "charger",
-        "headphone", "fitness", "video", "sound", "audio",
-        "سماعة", "سماعات", "كاميرا", "الصوت", "صوت",
-        "شاحن", "بطارية", "طاقة", "رياضة", "لياقة"
+        "camera","earbud","earbuds","speaker","charger","headphone","fitness","video","sound","audio",
+        "سماعة","سماعات","كاميرا","الصوت","صوت","شاحن","بطارية","طاقة","رياضة","لياقة"
     ]
 
-    order_keywords = ["order", "track", "tracking", "تتبع", "طلب"]
+    order_keywords = ["order","track","tracking","تتبع","طلب"]
 
     want_recall = ai_topic_recall(user)
 
@@ -434,13 +408,9 @@ def chat(req: ChatInput):
         return {"reply": natural_format(user, {"type":"summary","products":[]})}
 
     # --------------------------------------------------------
-    # REFERENTIAL MEMORY (EN + AR ONLY)
+    # REFERENTIAL MEMORY
     # --------------------------------------------------------
-    refer_words = [
-        "it", "this", "that",
-        "هو", "هي", "هذا", "هذه", "ذلك", "تلك"
-    ]
-
+    refer_words = ["it","this","that","هو","هي","هذا","هذه","ذلك","تلك"]
     tokens = lower.split()
 
     if any(w in tokens for w in refer_words):
@@ -455,7 +425,18 @@ def chat(req: ChatInput):
             return {"reply": natural_format(user, data)}
 
     # --------------------------------------------------------
-    # ORDER ID EXTRACTION
+    # REFUND KEYWORDS (MOVED ABOVE ORDER EXTRACTION) ✔✔✔
+    # --------------------------------------------------------
+    refund_keywords = [
+        "refund","return",
+        "استرجاع","تبديل","ارجاع","مرتجعات","رجوع","اعادة"
+    ]
+
+    if any(k in lower for k in refund_keywords):
+        return {"reply": natural_format(user, tool_refund_policy())}
+
+    # --------------------------------------------------------
+    # ORDER ID EXTRACTION (AFTER REFUND CHECK) ✔
     # --------------------------------------------------------
     extracted = extract_order_id(user)
     if extracted:
@@ -485,17 +466,6 @@ def chat(req: ChatInput):
         })}
 
     # --------------------------------------------------------
-    # REFUND KEYWORDS (EN + AR ONLY)
-    # --------------------------------------------------------
-    refund_keywords = [
-        "refund", "return",
-        "استرجاع", "تبديل", "ارجاع", "مرتجعات", "رجوع", "اعادة"
-    ]
-
-    if any(k in lower for k in refund_keywords):
-        return {"reply": natural_format(user, tool_refund_policy())}
-
-    # --------------------------------------------------------
     # TOOL ROUTER
     # --------------------------------------------------------
     router = client.chat.completions.create(
@@ -523,8 +493,8 @@ def chat(req: ChatInput):
             {"type":"function","function":{
                 "name":"tool_refund_policy",
                 "description":"Refund policy",
-                "parameters":{"type":"object","properties":{}}
-            }}
+                "parameters":{"type":"object","properties":{}}}
+            }
         ],
         tool_choice="auto"
     )
