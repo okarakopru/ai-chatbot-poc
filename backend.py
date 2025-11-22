@@ -36,76 +36,65 @@ return_policy = json.load(open("return_policy.json"))
 # MEMORY (Dual-channel + Product History Array)
 # ============================================================
 memory = {
-    "conversation_products": [],  # list of product names discussed in history
+    "conversation_products": [],
     "order_product": None,
     "last_intent": None,
     "last_order_id": None
 }
 
 # ============================================================
-# EXPLICIT LANGUAGE OVERRIDE DETECTOR
+# EXPLICIT LANGUAGE OVERRIDE (EN + AR ONLY)
 # ============================================================
 def detect_explicit_language_request(msg):
     lowered = msg.lower()
+
     if "respond me in arabic" in lowered or "reply in arabic" in lowered:
         return "Arabic"
-    if "respond me in turkish" in lowered or "reply in turkish" in lowered:
-        return "Turkish"
+
     if "respond me in english" in lowered or "reply in english" in lowered:
         return "English"
-    if "respond me in spanish" in lowered or "reply in spanish" in lowered:
-        return "Spanish"
+
     return None
 
 # ============================================================
-# HYBRID LANGUAGE DETECTION (ISO + LLM fallback)
+# HYBRID LANGUAGE DETECTION (ONLY EN + AR)
 # ============================================================
 def detect_language(msg):
-    # 1. explicit override
     forced = detect_explicit_language_request(msg)
     if forced:
         return forced
 
-    # 2. ISO detection
+    # ISO detection
     try:
         lang = lang_detect(msg)
-        if lang.startswith("en"): return "English"
-        if lang.startswith("tr"): return "Turkish"
-        if lang.startswith("ar"): return "Arabic"
-        if lang.startswith("es"): return "Spanish"
+        if lang.startswith("en"):
+            return "English"
+        if lang.startswith("ar"):
+            return "Arabic"
         return "English"
     except:
-        # 3. LLM fallback
+        # LLM fallback
         prompt = f"""
         Detect the language of this message.
-        Respond ONLY with: English, Turkish, Arabic, Spanish, Other.
+        Respond ONLY with: English or Arabic.
 
         Message: "{msg}"
         """
+
         r = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role":"user","content":prompt}]
         )
-        detected = r.choices[0].message.content.strip()
 
-        if detected not in ["English","Turkish","Arabic","Spanish"]:
-            return "English"
-        return detected
+        detected = r.choices[0].message.content.strip()
+        return "Arabic" if detected == "Arabic" else "English"
 
 # ============================================================
-# AI TOPIC RECALL DETECTOR (safe)
+# AI TOPIC RECALL (EN + AR)
 # ============================================================
 def ai_topic_recall(msg):
     prompt = f"""
     Determine if the user is asking to recall the earlier topic of conversation.
-
-    Examples of YES:
-    - what were we talking about?
-    - what did we discuss earlier?
-    - ne konuşuyorduk az önce?
-    - konuşmanın başında ne konuşuyorduk?
-    - عن ماذا كنا نتحدث سابقاً؟
-
     Respond ONLY YES or NO.
 
     Message: "{msg}"
@@ -117,25 +106,18 @@ def ai_topic_recall(msg):
     return r.choices[0].message.content.strip().lower() == "yes"
 
 # ============================================================
-# ORDER ID MISSING (AI-based)
+# ORDER ID MISSING (EN + AR)
 # ============================================================
 def ai_order_id_missing(msg):
     prompt = f"""
     Does the user indicate they DO NOT know their order ID?
-
-    Examples:
-    - I don't know my order ID
-    - I forgot my order number
-    - sipariş numaramı hatırlamıyorum
-    - لا أعرف رقم الطلب
-
     Respond ONLY YES or NO.
 
     Message: "{msg}"
     """
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
     return r.choices[0].message.content.strip().lower() == "yes"
 
@@ -143,12 +125,10 @@ def ai_order_id_missing(msg):
 # ORDER ID EXTRACTION (regex + LLM fallback)
 # ============================================================
 def extract_order_id(msg):
-    # 1. Regex extraction (handles 24 839, 24839??, etc)
     ids = re.findall(r"\b(\d{5})\b", msg)
     if ids:
         return ids[0]
 
-    # 2. AI fallback
     prompt = f"""
     Extract the 5-digit order ID from the following message.
     Respond ONLY with the number or NONE.
@@ -162,56 +142,52 @@ def extract_order_id(msg):
 
     ans = r.choices[0].message.content.strip()
 
-    if ans.isdigit() and len(ans)==5:
+    if ans.isdigit() and len(ans) == 5:
         return ans
 
     return None
 
 # ============================================================
-# PRODUCT EXTRACTION FOR ORDER-CONTEXT (hybrid)
+# PRODUCT EXTRACTION (EN + AR)
 # ============================================================
 def extract_product_from_order_context(msg):
     lowered = msg.lower()
 
-    # 1. Direct name match
+    # direct name match
     for p in products.values():
         if p["name"].lower() in lowered:
             return p["name"]
 
-    # 2. Keyword → product map
+    # keyword map (English + Arabic only)
     keyword_map = {
         "earbud": "Wireless Earbuds",
         "earbuds": "Wireless Earbuds",
-        "kulak": "Wireless Earbuds",
         "headphone": "Noise Cancelling Headphones",
         "speaker": "Bluetooth Speaker Mini",
-        "hoparlör": "Bluetooth Speaker Mini",
-        "kamera": "4K Action Camera",
         "camera": "4K Action Camera",
         "كاميرا": "4K Action Camera",
         "سماعة": "Wireless Earbuds",
-        "fitness": "Fitness Tracker Band",
-        "spor": "Fitness Tracker Band"
+        "رياضة": "Fitness Tracker Band",
+        "لياقة": "Fitness Tracker Band"
     }
 
     for keyword, product_name in keyword_map.items():
         if keyword in lowered:
             return product_name
 
-    # 3. AI fallback
+    # LLM fallback
     options = [p["name"] for p in products.values()]
 
     prompt = f"""
-    The user is referring to a product they bought in an order context.
+    The user is referring to a product.
 
-    USER MESSAGE:
-    "{msg}"
+    USER MESSAGE: "{msg}"
 
-    Products you must choose from:
-    {options}
+    Products: {options}
 
-    Respond ONLY with exactly one product name or NONE.
+    Respond with one exact product name or NONE.
     """
+
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
@@ -221,11 +197,9 @@ def extract_product_from_order_context(msg):
 
     return ans if ans in options else None
 # ============================================================
-# LEVEL 7/8 — FULL AI PRODUCT EXPLORER (STRICT & FACTUAL)
+# FULL AI PRODUCT EXPLORER (STRICT)
 # ============================================================
 def tool_ai_product_explorer(query):
-    """Fully AI-driven product filtering and category naming."""
-
     product_list = list(products.values())
 
     prompt = f"""
@@ -237,34 +211,17 @@ def tool_ai_product_explorer(query):
     PRODUCT CATALOG:
     {json.dumps(product_list, indent=2)}
 
-    TASK:
-    - Identify products semantically relevant to the query.
-    - If user asks a general question like:
-      "what products do you have", 
-      "ürünleriniz neler",
-      "ما هي المنتجات المتوفرة",
-      → return ALL products.
-    - If the query implies audio/sound/ear/fones, sport, camera, charging,
-      → filter intelligently.
-    - Create a short category name (1–3 words).
-    - Respond with STRICT JSON ONLY:
-
+    Return STRICT JSON ONLY:
     {{
-       "category": "Category Name",
+       "category": "Category",
        "products": [
-          {{
-             "name":"...",
-             "price":"...",
-             "stock":"..."
-          }}
+          {{"name":"", "price":"", "stock":""}}
        ]
     }}
 
     RULES:
-    - DO NOT invent new products.
+    - NEVER invent products.
     - NEVER modify price or stock.
-    - NEVER add fake availability (no "low stock", "popular", etc).
-    - Only use products in the catalog.
     """
 
     r = client.chat.completions.create(
@@ -278,7 +235,6 @@ def tool_ai_product_explorer(query):
         data = json.loads(raw)
         memory["last_intent"] = "product"
 
-        # Update conversation history
         for p in data.get("products", []):
             name = p["name"]
             if name not in memory["conversation_products"]:
@@ -286,16 +242,14 @@ def tool_ai_product_explorer(query):
 
         return {
             "type":"product_list",
-            "category": data.get("category","Products"),
-            "products": data.get("products",[])
+            "category": data.get("category", "Products"),
+            "products": data.get("products", [])
         }
 
     except:
-        # fallback: return everything
         for p in product_list:
-            name = p["name"]
-            if name not in memory["conversation_products"]:
-                memory["conversation_products"].append(name)
+            if p["name"] not in memory["conversation_products"]:
+                memory["conversation_products"].append(p["name"])
 
         return {
             "type":"product_list",
@@ -303,38 +257,25 @@ def tool_ai_product_explorer(query):
             "products":product_list
         }
 
+
 # ============================================================
-# HYBRID PRODUCT LOOKUP (AI + fallback)
+# PRODUCT LOOKUP
 # ============================================================
 def tool_product_lookup(query):
-    """Choose ONE best product via AI reasoning (strict factual)."""
-
     result = tool_ai_product_explorer(query)
 
-    # If single item
     if len(result["products"]) == 1:
         p = result["products"][0]
-
-        # Update memory
         if p["name"] not in memory["conversation_products"]:
             memory["conversation_products"].append(p["name"])
+        return {"type":"product_info","name":p["name"],"price":p["price"],"stock":p["stock"]}
 
-        return {
-            "type":"product_info",
-            "name": p["name"],
-            "price": p["price"],
-            "stock": p["stock"]
-        }
-
-    # If multiple results: let AI choose one
     names = [p["name"] for p in result["products"]]
 
     prompt = f"""
     The user asked: "{query}"
     Candidate products: {names}
-
-    Choose ONE product name from the list.
-    Respond ONLY with that name.
+    Choose ONE product name.
     """
 
     r = client.chat.completions.create(
@@ -344,7 +285,6 @@ def tool_product_lookup(query):
 
     choice = r.choices[0].message.content.strip()
 
-    # Validate
     for p in result["products"]:
         if p["name"].lower() == choice.lower():
             if p["name"] not in memory["conversation_products"]:
@@ -356,18 +296,12 @@ def tool_product_lookup(query):
                 "stock": p["stock"]
             }
 
-    # fallback: first item
     p = result["products"][0]
-
     if p["name"] not in memory["conversation_products"]:
         memory["conversation_products"].append(p["name"])
 
-    return {
-        "type":"product_info",
-        "name": p["name"],
-        "price": p["price"],
-        "stock": p["stock"]
-    }
+    return {"type":"product_info","name":p["name"],"price":p["price"],"stock":p["stock"]}
+
 
 # ============================================================
 # ORDER LOOKUP
@@ -387,52 +321,36 @@ def tool_order_lookup(order_id):
 
     return {"type":"order_info","error":"Order not found"}
 
+
 # ============================================================
-# REFUND POLICY (STRICT — NO UPSELL)
+# REFUND POLICY (STRICT)
 # ============================================================
 def tool_refund_policy():
     memory["last_intent"] = "refund"
+    return {"type":"refund_policy","policy": return_policy["policy"]}
 
-    return {
-        "type":"refund_policy",
-        "policy": return_policy["policy"]
-    }
 
 # ============================================================
-# NATURAL FORMATTER (DRIFT-PROOF + FACTUAL STRICT + SUMMARY SAFE)
+# NATURAL FORMATTER (EN + AR STRICT)
 # ============================================================
 def natural_format(user_msg, tool_data):
     user_lang = detect_language(user_msg)
 
     prompt = f"""
-    You are a multilingual e-commerce customer assistant.
+    You are a multilingual e-commerce assistant.
 
-    LANGUAGE RULES:
-    - Respond ONLY in {user_lang}.
-    - IGNORE: language of tool data, previous assistant messages.
-    - NO DRIFT allowed.
+    Respond ONLY in {user_lang}.
 
-    FACTUAL RULES:
-    - NEVER modify price.
-    - NEVER modify stock.
-    - NEVER add stock comments ("low stock", "popular", etc).
-    - NEVER invent product details.
-    - NEVER upsell in refund policy responses.
-
-    CONTEXT:
     USER SAID: "{user_msg}"
 
     TOOL_DATA:
     {json.dumps(tool_data, indent=2)}
 
-    FORMATTING RULES:
-    - product_list → list items cleanly.
-    - product_info → describe factual details + one friendly suggestion.
-    - order_info → state delivery + next steps.
-    - refund_policy → explain return window (NO upsell).
-    - summary → summarize memory["conversation_products"] items only.
-
-    Now respond in {user_lang}.
+    RULES:
+    - NEVER modify price or stock.
+    - NEVER invent product features.
+    - NEVER upsell during refund policy.
+    - Format answers cleanly.
     """
 
     r = client.chat.completions.create(
@@ -441,6 +359,8 @@ def natural_format(user_msg, tool_data):
     )
 
     return r.choices[0].message.content.strip()
+
+
 # ============================================================
 # FRONTEND SERVE
 # ============================================================
@@ -449,40 +369,30 @@ def serve_frontend():
     with open("index.html", "r", encoding="utf-8") as f:
         return f.read()
 
+
 # ============================================================
 # REQUEST MODEL
 # ============================================================
 class ChatInput(BaseModel):
     message: str
 
+
 # ============================================================
-# MAIN AGENT — LEVEL 8.4 FINAL
+# MAIN CHAT ENDPOINT (EN + AR ONLY)
 # ============================================================
 @app.post("/chat")
 def chat(req: ChatInput):
     user = req.message
     lower = user.lower()
 
-    # =======================================================
-    # (A) SUMMARY INTENT (EN + TR + AR SUPPORT)
-    # =======================================================
+    # --------------------------------------------------------
+    # SUMMARY INTENT (English + Arabic)
+    # --------------------------------------------------------
     summary_keywords = [
-        # Turkish
-        "özetle", "konuştuklarımız", "konuştugumuz", "bana özetle",
-
-        # English
-        "summarize", "summary", "products we talked", "summary of", "made a summary",
-
-        # Arabic
-        "ملخص",           # summary
-        "لخص",            # summarize
-        "تلخيص",          # summarization
-        "ما تحدثنا عنه",  # what we talked about
-        "ما ناقشنا",       # what we discussed
-        "الأشياء التي تحدثنا عنها", 
-        "المنتجات التي تحدثنا عنها",
-        "اعطني ملخص",     # give me a summary
-        "نظرة عامة"       # overview
+        "summarize", "summary",
+        "ملخص", "لخص", "تلخيص",
+        "ما تحدثنا عنه", "ما ناقشنا", "الأشياء التي تحدثنا عنها",
+        "اعطني ملخص", "نظرة عامة"
     ]
 
     if any(k in lower for k in summary_keywords):
@@ -498,109 +408,62 @@ def chat(req: ChatInput):
                         "stock": p["stock"]
                     })
 
-        summary_data = {
-            "type": "summary",
-            "products": product_summary
-        }
-
+        summary_data = {"type": "summary", "products": product_summary}
         return {"reply": natural_format(user, summary_data)}
 
-    # =======================================================
-    # (B) TOPIC RECALL
-    # =======================================================
+    # --------------------------------------------------------
+    # TOPIC RECALL (EN + AR)
+    # --------------------------------------------------------
     product_keywords = [
-        # English product indicators
-        "camera","earbud","earbuds","speaker","charger","headphone",
-        "fitness","video","sound","audio",
-
-        # Turkish product indicators
-        "kulak","kulaklık","hoparlör","spor","şarj","kamera","video",
-
-        # Arabic product indicators
-        "سماعة",     # headphone / speaker / earphone
-        "سماعات",    # plural
-        "كاميرا",     # camera
-        "الصوت",      # the sound
-        "صوت",        # sound / audio
-        "شاحن",       # charger
-        "بطارية",     # battery
-        "طاقة",       # power
-        "رياضة",      # sport
-        "لياقة"       # fitness
+        "camera", "earbud", "earbuds", "speaker", "charger",
+        "headphone", "fitness", "video", "sound", "audio",
+        "سماعة", "سماعات", "كاميرا", "الصوت", "صوت",
+        "شاحن", "بطارية", "طاقة", "رياضة", "لياقة"
     ]
 
-    order_keywords = [
-        # English
-        "order","track","tracking",
-
-        # Turkish
-        "sipariş","takip",
-
-        # Arabic
-        "تتبع",   # tracking
-        "طلب"     # order
-    ]
+    order_keywords = ["order", "track", "tracking", "تتبع", "طلب"]
 
     want_recall = ai_topic_recall(user)
 
-    # Trigger topic recall only if:
-    # - user asked a recall question
-    # - AND it’s NOT a product or order intent
     if want_recall and not any(w in lower for w in product_keywords + order_keywords):
         if memory["conversation_products"]:
             last_product = memory["conversation_products"][-1]
             info = tool_product_lookup(last_product)
             return {"reply": natural_format(user, info)}
 
-        return {"reply": natural_format(user, {"type":"summary", "products":[]})}
+        return {"reply": natural_format(user, {"type":"summary","products":[]})}
 
-    # =======================================================
-    # (C) REFERENTIAL MEMORY 
-    # ("it", "this", "that", "bu", "şu" + Arabic demonstratives)
-    # =======================================================
+    # --------------------------------------------------------
+    # REFERENTIAL MEMORY (EN + AR ONLY)
+    # --------------------------------------------------------
     refer_words = [
-        # English demonstratives
         "it", "this", "that",
-
-        # Turkish demonstratives
-        "bu", "şu",
-
-        # Arabic demonstratives (masculine/feminine, near/far)
-        "هو",    # he / it (masc.)
-        "هي",    # she / it (fem.)
-        "هذا",   # this (masc.)
-        "هذه",   # this (fem.)
-        "ذلك",   # that (masc.)
-        "تلك"    # that (fem.)
+        "هو", "هي", "هذا", "هذه", "ذلك", "تلك"
     ]
 
-    # Tokenize strictly — safer for multi-language scripts
     tokens = lower.split()
 
     if any(w in tokens for w in refer_words):
 
-        # 1) ORDER-CONTEXT REFERENTIAL
         if memory["order_product"]:
             data = tool_product_lookup(memory["order_product"])
             return {"reply": natural_format(user, data)}
 
-        # 2) CONVERSATION-CONTEXT REFERENTIAL
         if memory["conversation_products"]:
             last_product = memory["conversation_products"][-1]
             data = tool_product_lookup(last_product)
             return {"reply": natural_format(user, data)}
 
-    # =======================================================
-    # (D) ORDER ID EXTRACTION (ALWAYS BEFORE ROUTER)
-    # =======================================================
-    extracted_id = extract_order_id(user)
-    if extracted_id:
-        data = tool_order_lookup(extracted_id)
-        return {"reply": natural_format(user, data)}
+    # --------------------------------------------------------
+    # ORDER ID EXTRACTION
+    # --------------------------------------------------------
+    extracted = extract_order_id(user)
+    if extracted:
+        return {"reply": natural_format(user, tool_order_lookup(extracted))}
 
-    # =======================================================
-    # (E) ORDER-ID-MISSING FLOW (ONLY IF TRUE ORDER CONTEXT)
-    # =======================================================
+    # --------------------------------------------------------
+    # ORDER-ID-MISSING FLOW
+    # --------------------------------------------------------
     if memory["last_intent"] == "order" and ai_order_id_missing(user):
 
         product_name = extract_product_from_order_context(user)
@@ -616,102 +479,58 @@ def chat(req: ChatInput):
                 "stock": p["stock"]
             })}
 
-        # fallback if product cannot be extracted
         return {"reply": natural_format(user, {
-            "type":"info",
-            "message":"Please check your email for your order confirmation ID."
+            "type": "info",
+            "message": "Please check your email for your order confirmation ID."
         })}
 
-    # =======================================================
-    # (F) REFUND POLICY (TAKES PRIORITY)
-    # =======================================================
+    # --------------------------------------------------------
+    # REFUND KEYWORDS (EN + AR ONLY)
+    # --------------------------------------------------------
     refund_keywords = [
-        # English
-        "refund","return",
-
-        # Turkish
-        "iade","geri",
-
-        # Arabic (existing)
-        "استرجاع","تبديل",
-
-        # Arabic (new additions)
-        "ارجاع",      # returning
-        "مرتجعات",    # returns
-        "رجوع",       # going back / returning
-        "اعادة"       # repeating / returning in context
+        "refund", "return",
+        "استرجاع", "تبديل", "ارجاع", "مرتجعات", "رجوع", "اعادة"
     ]
 
-    if any(w in lower for w in refund_keywords):
-        data = tool_refund_policy()
-        return {"reply": natural_format(user, data)}
+    if any(k in lower for k in refund_keywords):
+        return {"reply": natural_format(user, tool_refund_policy())}
 
-    # =======================================================
-    # (G) AI ROUTER — TOOL SELECTION
-    # =======================================================
+    # --------------------------------------------------------
+    # TOOL ROUTER
+    # --------------------------------------------------------
     router = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {
-                "role":"system",
-                "content":"You are an AI support agent. Choose the correct tool."
-            },
+            {"role":"system","content":"You are an AI support agent. Choose the correct tool."},
             {"role":"user","content":user}
         ],
         tools=[
-            {
-                "type":"function",
-                "function":{
-                    "name":"tool_ai_product_explorer",
-                    "description":"AI-driven product explorer",
-                    "parameters":{
-                        "type":"object",
-                        "properties":{"query":{"type":"string"}},
-                        "required":["query"]
-                    }
-                }
-            },
-            {
-                "type":"function",
-                "function":{
-                    "name":"tool_product_lookup",
-                    "description":"Find one best matching product",
-                    "parameters":{
-                        "type":"object",
-                        "properties":{"query":{"type":"string"}},
-                        "required":["query"]
-                    }
-                }
-            },
-            {
-                "type":"function",
-                "function":{
-                    "name":"tool_order_lookup",
-                    "description":"Track order by ID",
-                    "parameters":{
-                        "type":"object",
-                        "properties":{"order_id":{"type":"string"}},
-                        "required":["order_id"]
-                    }
-                }
-            },
-            {
-                "type":"function",
-                "function":{
-                    "name":"tool_refund_policy",
-                    "description":"Return refund policy steps",
-                    "parameters":{"type":"object","properties":{}}
-                }
-            }
+            {"type":"function","function":{
+                "name":"tool_ai_product_explorer",
+                "description":"AI product explorer",
+                "parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}
+            }},
+            {"type":"function","function":{
+                "name":"tool_product_lookup",
+                "description":"Product lookup",
+                "parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}
+            }},
+            {"type":"function","function":{
+                "name":"tool_order_lookup",
+                "description":"Order tracking",
+                "parameters":{"type":"object","properties":{"order_id":{"type":"string"}},"required":["order_id"]}
+            }},
+            {"type":"function","function":{
+                "name":"tool_refund_policy",
+                "description":"Refund policy",
+                "parameters":{"type":"object","properties":{}}
+            }}
         ],
         tool_choice="auto"
     )
 
     choice = router.choices[0]
 
-    # =======================================================
-    # (H) TOOL EXECUTION
-    # =======================================================
     if choice.finish_reason == "tool_calls":
         call = choice.message.tool_calls[0]
         fname = call.function.name
@@ -729,7 +548,7 @@ def chat(req: ChatInput):
         if fname == "tool_refund_policy":
             return {"reply": natural_format(user, tool_refund_policy())}
 
-    # =======================================================
-    # (I) FALLBACK RESPONSE
-    # =======================================================
+    # --------------------------------------------------------
+    # FALLBACK
+    # --------------------------------------------------------
     return {"reply": choice.message.content}
