@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Lean Scale Case Study – AI Chatbot by Orhan Karakopru</title>
 
-    <!-- Linked CSS -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -19,19 +18,24 @@
     <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
+    <!-- SPEAKING INDICATOR -->
+    <div id="speaking-indicator" class="speaking hidden">🔊 Speaking...</div>
+
     <!-- INPUT SECTION -->
     <div class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
+        <button id="mic-btn" class="mic-btn">🎤</button>
         <button onclick="sendMessage()">Send</button>
     </div>
 
 </div>
 
+<!-- STOP SPEAKING BUTTON -->
+<button id="stop-speaking-btn" class="stop-speaking hidden">Stop</button>
+
 <!-- SCROLL TO BOTTOM BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
-<!-- JS -->
 <script src="/static/script.js"></script>
-
 </body>
 </html>
