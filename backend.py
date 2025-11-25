@@ -1,5 +1,5 @@
 # ============================================================
-#  backend.py  (CLI logic version – fully synced with cli_chatbot.py)
+#  backend.py  (Static files + Chatbot logic fully working on Render)
 # ============================================================
 
 import json
@@ -32,8 +32,8 @@ app.add_middleware(
 # ============================================================
 # STATIC FILE SERVE (FRONTEND)
 # ============================================================
-# This serves index.html + css + js + assets automatically
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+# Serve /static/... (CSS, JS, PNG)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================
 # LOAD DATA
@@ -159,7 +159,7 @@ def ai_wants_refund(msg):
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-    return r.choices[0].message.content.strip().upper()=="REFUND"
+    return r.choices[0].message.content.strip().upper() == "REFUND"
 
 # ============================================================
 # ARABIC DIGITS
@@ -181,7 +181,7 @@ def extract_order_id(msg):
     found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
-        if clean.isdigit() and len(clean)==5:
+        if clean.isdigit() and len(clean) == 5:
             return clean
     return None
 
@@ -212,25 +212,23 @@ TOOL_DATA:
 # TOOLS — EXACTLY LIKE CLI
 # ============================================================
 def tool_product_list():
-    return {"type":"product_list","products":list(products.values())}
+    return {"type": "product_list", "products": list(products.values())}
 
 def tool_product_info(name):
     for p in products.values():
         if p["name"].lower() == name.lower():
             if p["name"] not in memory["conversation_products"]:
                 memory["conversation_products"].append(p["name"])
-            return {"type":"product_info", **p}
-
-    return {"type":"info","message":"Product not found."}
+            return {"type": "product_info", **p}
+    return {"type": "info", "message": "Product not found."}
 
 def tool_order_lookup(id):
     if id in orders:
-        return {"type":"order_info", **orders[id]}
-
-    return {"type":"order_info","error":"Order not found"}
+        return {"type": "order_info", **orders[id]}
+    return {"type": "order_info", "error": "Order not found"}
 
 def tool_refund():
-    return {"type":"refund_policy","policy":return_policy["policy"]}
+    return {"type": "refund_policy", "policy": return_policy["policy"]}
 
 # ============================================================
 # REQUEST MODEL
@@ -239,7 +237,7 @@ class ChatInput(BaseModel):
     message: str
 
 # ============================================================
-# MAIN CHAT ENDPOINT — 100% CLI LOGIC
+# MAIN CHAT ENDPOINT
 # ============================================================
 @app.post("/chat")
 def chat(req: ChatInput):
@@ -261,7 +259,7 @@ def chat(req: ChatInput):
         oid = extract_order_id(user)
         if oid:
             return {"reply": natural_format(user, tool_order_lookup(oid))}
-        return {"reply": natural_format(user, {"type":"info","message":"Please provide your order ID."})}
+        return {"reply": natural_format(user, {"type": "info", "message": "Please provide your order ID."})}
 
     product = ai_resolve_product(user)
     if product:
@@ -273,9 +271,17 @@ def chat(req: ChatInput):
             for p in products.values():
                 if p["name"] == name:
                     plist.append(p)
-        return {"reply": natural_format(user, {"type":"summary","products":plist})}
+        return {"reply": natural_format(user, {"type": "summary", "products": plist})}
 
     return {"reply": natural_format(user, {
-        "type":"info",
-        "message":"I'm here to help with products, orders, or refunds. How can I assist?"
+        "type": "info",
+        "message": "I'm here to help with products, orders, or refunds. How can I assist?"
     })}
+
+# ============================================================
+# ROOT ENDPOINT (SERVE index.html)
+# ============================================================
+@app.get("/", response_class=HTMLResponse)
+def index():
+    with open("index.html", "r", encoding="utf-8") as f:
+        return f.read()

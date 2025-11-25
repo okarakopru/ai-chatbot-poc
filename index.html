@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Neon AI Chat</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- CSS artık /static altında -->
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -11,7 +13,8 @@
 
     <!-- Robot Section -->
     <div class="robot-container">
-        <img src="assets/robot.png" class="robot-img" alt="AI Robot">
+        <!-- Robot PNG artık /static/assets içinde -->
+        <img src="/static/assets/robot.png" class="robot-img" alt="AI Robot">
 
         <!-- Thinking Bubble -->
         <div id="thinking-bubble" class="hidden">
@@ -32,6 +35,8 @@
 
 </div>
 
-<script src="script.js"></script>
+<!-- JS dosyası da artık /static altında -->
+<script src="/static/script.js"></script>
+
 </body>
 </html>
