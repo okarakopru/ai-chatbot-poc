@@ -8,6 +8,7 @@ import re
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
 from langdetect import detect as lang_detect
@@ -27,6 +28,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ============================================================
+# STATIC FILE SERVE (FRONTEND)
+# ============================================================
+# This serves index.html + css + js + assets automatically
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 # ============================================================
 # LOAD DATA
@@ -230,6 +237,7 @@ def tool_refund():
 # ============================================================
 class ChatInput(BaseModel):
     message: str
+
 # ============================================================
 # MAIN CHAT ENDPOINT — 100% CLI LOGIC
 # ============================================================
@@ -238,7 +246,6 @@ def chat(req: ChatInput):
     user = req.message
     lower = user.lower()
 
-    # PRODUCT LIST INTENT (CLI)
     triggers = [
         "what are your products","show products","products?",
         "list products","all products","product list",
@@ -247,23 +254,19 @@ def chat(req: ChatInput):
     if any(t in lower for t in triggers):
         return {"reply": natural_format(user, tool_product_list())}
 
-    # REFUND INTENT
     if ai_wants_refund(user):
         return {"reply": natural_format(user, tool_refund())}
 
-    # ORDER INTENT
     if ai_wants_order(user):
         oid = extract_order_id(user)
         if oid:
             return {"reply": natural_format(user, tool_order_lookup(oid))}
         return {"reply": natural_format(user, {"type":"info","message":"Please provide your order ID."})}
 
-    # PRODUCT RESOLUTION
     product = ai_resolve_product(user)
     if product:
         return {"reply": natural_format(user, tool_product_info(product))}
 
-    # SUMMARY
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
         plist = []
         for name in memory["conversation_products"]:
@@ -272,20 +275,7 @@ def chat(req: ChatInput):
                     plist.append(p)
         return {"reply": natural_format(user, {"type":"summary","products":plist})}
 
-    # FALLBACK (CLI)
     return {"reply": natural_format(user, {
         "type":"info",
         "message":"I'm here to help with products, orders, or refunds. How can I assist?"
     })}
-
-
-# ============================================================
-# ROOT ENDPOINT
-# ============================================================
-@app.get("/", response_class=HTMLResponse)
-def index():
-    try:
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    except:
-        return "<h3>Frontend not found.</h3>"
