@@ -45,7 +45,7 @@ body {
     user-select: none;
 
     /* Neon glow + breathing pulse + vertical breathing */
-    animation: 
+    animation:
         robotBreath 2.8s ease-in-out infinite,
         glowPulse 3s ease-in-out infinite;
 }
@@ -124,6 +124,41 @@ body {
 
 .input-area button:hover {
     background: #00b7d6;
+}
+
+
+/* ===== SCROLL-TO-BOTTOM BUTTON ===== */
+.scroll-btn {
+    position: absolute;
+    bottom: 90px;
+    right: 25px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid #00eaff;
+    background: rgba(4, 7, 14, 0.7);
+    color: #00eaff;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 12px #00eaff;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+}
+
+.scroll-btn:hover {
+    transform: scale(1.15);
+    background: rgba(0, 234, 255, 0.2);
+}
+
+.scroll-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scroll-btn.show {
+    opacity: 1;
+    pointer-events: all;
 }
 
 

@@ -1,6 +1,6 @@
 const API_URL = "https://orhankarakopru.com.tr/chat"; // Backend URL
 
-// Thinking message references
+// Thinking animation references
 let thinkingMsg = null;
 let thinkingInterval = null;
 
@@ -13,10 +13,15 @@ function addMessage(msg, type) {
     div.textContent = msg;
 
     box.appendChild(div);
+
+    // Always scroll to bottom when message arrives
     box.scrollTop = box.scrollHeight;
+
+    // Update scroll-to-bottom button visibility
+    checkScrollButton();
 }
 
-// Thinking bubble in chat messages (NOT robot PNG)
+// Thinking bubble (chat message typing indicator)
 function showThinkingMessage() {
     const box = document.getElementById("chat-box");
 
@@ -28,7 +33,7 @@ function showThinkingMessage() {
     box.appendChild(thinkingMsg);
     box.scrollTop = box.scrollHeight;
 
-    // Animated dots
+    // Dots animation
     let dots = 0;
     thinkingInterval = setInterval(() => {
         dots = (dots + 1) % 4;
@@ -42,20 +47,17 @@ function hideThinkingMessage() {
     thinkingMsg = null;
 }
 
-// Send message
+// Handle sending message
 function sendMessage() {
     const input = document.getElementById("user-input");
     const text = input.value.trim();
     if (!text) return;
 
-    // User message
     addMessage(text, "user");
     input.value = "";
 
-    // Start thinking animation
     showThinkingMessage();
 
-    // Backend request
     fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,9 +74,36 @@ function sendMessage() {
     });
 }
 
-// Send message on Enter
+// Enter key to send message
 document.getElementById("user-input").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-        sendMessage();
+    if (e.key === "Enter") sendMessage();
+});
+
+
+// ==========================
+// SCROLL-TO-BOTTOM BUTTON
+// ==========================
+
+// Show/hide scroll-to-bottom button
+function checkScrollButton() {
+    const box = document.getElementById("chat-box");
+    const btn = document.getElementById("scroll-down-btn");
+
+    // Are we at bottom?
+    const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
+
+    if (atBottom) {
+        btn.classList.add("hidden");
+    } else {
+        btn.classList.remove("hidden");
     }
+}
+
+// On scroll
+document.getElementById("chat-box").addEventListener("scroll", checkScrollButton);
+
+// Scroll down button click
+document.getElementById("scroll-down-btn").addEventListener("click", () => {
+    const box = document.getElementById("chat-box");
+    box.scrollTop = box.scrollHeight;
 });
