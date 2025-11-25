@@ -25,7 +25,6 @@ function addMessage(msg, type) {
 function showThinkingMessage() {
     const box = document.getElementById("chat-box");
 
-    // Create bubble
     thinkingMsg = document.createElement("div");
     thinkingMsg.className = "message bot";
     thinkingMsg.textContent = "Thinking";
@@ -33,7 +32,6 @@ function showThinkingMessage() {
     box.appendChild(thinkingMsg);
     box.scrollTop = box.scrollHeight;
 
-    // Dots animation
     let dots = 0;
     thinkingInterval = setInterval(() => {
         dots = (dots + 1) % 4;
@@ -47,7 +45,7 @@ function hideThinkingMessage() {
     thinkingMsg = null;
 }
 
-// Handle sending message
+// Send message
 function sendMessage() {
     const input = document.getElementById("user-input");
     const text = input.value.trim();
@@ -74,7 +72,7 @@ function sendMessage() {
     });
 }
 
-// Enter key to send message
+// Enter key sends message
 document.getElementById("user-input").addEventListener("keypress", function (e) {
     if (e.key === "Enter") sendMessage();
 });
@@ -89,21 +87,47 @@ function checkScrollButton() {
     const box = document.getElementById("chat-box");
     const btn = document.getElementById("scroll-down-btn");
 
-    // Are we at bottom?
     const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
 
-    if (atBottom) {
-        btn.classList.add("hidden");
-    } else {
-        btn.classList.remove("hidden");
-    }
+    if (atBottom) btn.classList.add("hidden");
+    else btn.classList.remove("hidden");
 }
 
 // On scroll
-document.getElementById("chat-box").addEventListener("scroll", checkScrollButton);
+document.getElementById("chat-box")
+    .addEventListener("scroll", checkScrollButton);
 
-// Scroll down button click
-document.getElementById("scroll-down-btn").addEventListener("click", () => {
-    const box = document.getElementById("chat-box");
-    box.scrollTop = box.scrollHeight;
+// Scroll button click
+document.getElementById("scroll-down-btn")
+    .addEventListener("click", () => {
+        const box = document.getElementById("chat-box");
+        box.scrollTop = box.scrollHeight;
+    });
+
+
+// ==========================
+// RANDOM BLINK SYSTEM
+// ==========================
+function doBlink() {
+    const leftEye = document.querySelector(".left-eyelid");
+    const rightEye = document.querySelector(".right-eyelid");
+
+    // Play eyelid animation
+    leftEye.style.animation = "blinkDown 0.25s ease";
+    rightEye.style.animation = "blinkDown 0.25s ease";
+
+    // Reset animation
+    setTimeout(() => {
+        leftEye.style.animation = "";
+        rightEye.style.animation = "";
+    }, 300);
+
+    // Next blink at a random interval (4–9 seconds)
+    const nextBlink = Math.random() * (9000 - 4000) + 4000;
+    setTimeout(doBlink, nextBlink);
+}
+
+// Start blinking after page loads
+window.addEventListener("load", () => {
+    setTimeout(doBlink, 2000);
 });

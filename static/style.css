@@ -43,11 +43,51 @@ body {
     width: 480px;
     max-width: 80vw;
     user-select: none;
-
-    /* Neon glow + breathing pulse + vertical breathing */
     animation:
         robotBreath 2.8s ease-in-out infinite,
         glowPulse 3s ease-in-out infinite;
+}
+
+
+/* ===== EYELID OVERLAY (BLINK) ===== */
+.robot-eyelids {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Eyelid style */
+.eyelid {
+    position: absolute;
+    width: 80px;
+    height: 40px;
+    background: #04070e;
+    border-radius: 0 0 40px 40px;
+    opacity: 0;
+    transform-origin: top;
+    transform: scaleY(0);
+}
+
+/* PNG-based exact coordinates */
+.left-eyelid {
+    top: 165px;
+    left: 255px;
+}
+.right-eyelid {
+    top: 165px;
+    left: 345px;
+}
+
+/* Blink animation keyframes */
+@keyframes blinkDown {
+    0%   { transform: scaleY(0); opacity: 0; }
+    20%  { transform: scaleY(1); opacity: 1; }
+    40%  { transform: scaleY(1); opacity: 1; }
+    60%  { transform: scaleY(0); opacity: 0; }
+    100% { transform: scaleY(0); opacity: 0; }
 }
 
 
@@ -177,10 +217,28 @@ body {
     .robot-img {
         width: 350px;
     }
+
+    .left-eyelid {
+        left: 190px;
+        top: 120px;
+    }
+    .right-eyelid {
+        left: 255px;
+        top: 120px;
+    }
 }
 
 @media (max-width: 480px) {
     .robot-img {
         width: 260px;
+    }
+
+    .left-eyelid {
+        left: 145px;
+        top: 90px;
+    }
+    .right-eyelid {
+        left: 198px;
+        top: 90px;
     }
 }
