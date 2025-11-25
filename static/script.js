@@ -103,31 +103,3 @@ document.getElementById("scroll-down-btn")
         const box = document.getElementById("chat-box");
         box.scrollTop = box.scrollHeight;
     });
-
-
-// ==========================
-// RANDOM BLINK SYSTEM
-// ==========================
-function doBlink() {
-    const leftEye = document.querySelector(".left-eyelid");
-    const rightEye = document.querySelector(".right-eyelid");
-
-    // Play eyelid animation
-    leftEye.style.animation = "blinkDown 0.25s ease";
-    rightEye.style.animation = "blinkDown 0.25s ease";
-
-    // Reset animation
-    setTimeout(() => {
-        leftEye.style.animation = "";
-        rightEye.style.animation = "";
-    }, 300);
-
-    // Next blink at a random interval (4–9 seconds)
-    const nextBlink = Math.random() * (9000 - 4000) + 4000;
-    setTimeout(doBlink, nextBlink);
-}
-
-// Start blinking after page loads
-window.addEventListener("load", () => {
-    setTimeout(doBlink, 2000);
-});
