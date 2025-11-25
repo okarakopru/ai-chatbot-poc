@@ -18,25 +18,24 @@
     <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
-    <!-- SPEAKING INDICATOR (BOT TTS) -->
-    <div id="speaking-indicator" class="speaking hidden">🔊 Speaking...</div>
-
-    <!-- INPUT SECTION (NORMAL MODE) -->
+    <!-- INPUT SECTION (NORMAL TEXT MODE) -->
     <div id="input-area" class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
-
+        
         <!-- MIC BUTTON -->
         <button id="mic-btn" class="mic-btn">🎤</button>
 
-        <!-- WHATSAPP-STYLE SEND BUTTON -->
+        <!-- WHATSAPP-LIKE SEND BUTTON -->
         <button id="send-btn" class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 
-    <!-- VOICE RECORDING BAR -->
+    <!-- VOICE RECORDING BAR (REPLACES INPUT WHILE LISTENING) -->
     <div id="voice-bar" class="voice-bar hidden">
 
+        <!-- Cancel Recording -->
         <button id="voice-cancel" class="voice-btn cancel">✕</button>
 
+        <!-- Waveform -->
         <div class="wave-bars">
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
@@ -44,14 +43,13 @@
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
         </div>
 
+        <!-- Confirm Recording (Auto-Send) -->
         <button id="voice-send" class="voice-btn send">✓</button>
-
     </div>
 
 </div>
 
-<!-- STOP SPEAKING BUTTON -->
-<button id="stop-speaking-btn" class="stop-speaking hidden">Stop</button>
+<!-- STOP SPEAKING BUTTON REMOVED (stop now inside speaking bubble) -->
 
 <!-- SCROLL TO BOTTOM BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
