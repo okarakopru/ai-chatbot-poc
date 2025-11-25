@@ -26,11 +26,28 @@ body {
     padding-bottom: 10px;
 }
 
+/* ROBOT BREATH + GLOW ANIMATION */
+@keyframes robotBreath {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+    0% { filter: drop-shadow(0 0 22px #00eaff); }
+    50% { filter: drop-shadow(0 0 34px #00eaff); }
+    100% { filter: drop-shadow(0 0 22px #00eaff); }
+}
+
 .robot-img {
-    width: 480px;               /* Yeni robot PNG için ideal boyut */
-    max-width: 80vw;            /* Mobil uyumluluk */
+    width: 480px;
+    max-width: 80vw;
     user-select: none;
-    filter: drop-shadow(0 0 28px #00eaff);
+
+    /* Neon glow + breathing pulse + vertical breathing */
+    animation: 
+        robotBreath 2.8s ease-in-out infinite,
+        glowPulse 3s ease-in-out infinite;
 }
 
 
