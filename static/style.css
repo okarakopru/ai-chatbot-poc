@@ -59,34 +59,33 @@ body {
     pointer-events: none;
 }
 
-/* Eyelid style */
+/* Eyelids (black downward blink) */
 .eyelid {
     position: absolute;
     width: 80px;
-    height: 40px;
-    background: #04070e;
+    height: 50px;            /* slightly longer for natural coverage */
+    background: #1a1c1f;      /* robot face panel color */
     border-radius: 0 0 40px 40px;
     opacity: 0;
     transform-origin: top;
     transform: scaleY(0);
 }
 
-/* PNG-based exact coordinates */
+/* Exact coordinates for your robot.png */
 .left-eyelid {
-    top: 165px;
+    top: 145px;
     left: 255px;
 }
 .right-eyelid {
-    top: 165px;
+    top: 145px;
     left: 345px;
 }
 
-/* Blink animation keyframes */
+/* Blink animation */
 @keyframes blinkDown {
     0%   { transform: scaleY(0); opacity: 0; }
-    20%  { transform: scaleY(1); opacity: 1; }
-    40%  { transform: scaleY(1); opacity: 1; }
-    60%  { transform: scaleY(0); opacity: 0; }
+    30%  { transform: scaleY(1); opacity: 1; }
+    60%  { transform: scaleY(1); opacity: 1; }
     100% { transform: scaleY(0); opacity: 0; }
 }
 
