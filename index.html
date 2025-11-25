@@ -18,14 +18,34 @@
     <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
-    <!-- SPEAKING INDICATOR -->
+    <!-- SPEAKING INDICATOR (BOT TTS) -->
     <div id="speaking-indicator" class="speaking hidden">🔊 Speaking...</div>
 
-    <!-- INPUT SECTION -->
-    <div class="input-area">
+    <!-- INPUT SECTION (NORMAL MODE) -->
+    <div id="input-area" class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
+
+        <!-- MIC BUTTON -->
         <button id="mic-btn" class="mic-btn">🎤</button>
-        <button onclick="sendMessage()">Send</button>
+
+        <!-- WHATSAPP-STYLE SEND BUTTON -->
+        <button id="send-btn" class="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+
+    <!-- VOICE RECORDING BAR -->
+    <div id="voice-bar" class="voice-bar hidden">
+
+        <button id="voice-cancel" class="voice-btn cancel">✕</button>
+
+        <div class="wave-bars">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <button id="voice-send" class="voice-btn send">✓</button>
+
     </div>
 
 </div>
@@ -37,5 +57,6 @@
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
 <script src="/static/script.js"></script>
+
 </body>
 </html>
