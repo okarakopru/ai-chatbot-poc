@@ -21,7 +21,34 @@ function addMessage(msg, type) {
     checkScrollButton();
 }
 
-// Thinking bubble (chat message typing indicator)
+// ==========================
+// TYPEWRITER EFFECT
+// ==========================
+function typewriterMessage(fullText) {
+    const box = document.getElementById("chat-box");
+
+    // Create empty bot bubble
+    const div = document.createElement("div");
+    div.className = "message bot";
+    box.appendChild(div);
+
+    let index = 0;
+
+    function typeChar() {
+        if (index <= fullText.length) {
+            div.textContent = fullText.substring(0, index);
+            index++;
+            box.scrollTop = box.scrollHeight; // auto scroll during typing
+            setTimeout(typeChar, 15); // typing speed
+        }
+    }
+
+    typeChar();
+}
+
+// ==========================
+// THINKING ANIMATION
+// ==========================
 function showThinkingMessage() {
     const box = document.getElementById("chat-box");
 
@@ -45,7 +72,9 @@ function hideThinkingMessage() {
     thinkingMsg = null;
 }
 
-// Send message
+// ==========================
+// SEND MESSAGE
+// ==========================
 function sendMessage() {
     const input = document.getElementById("user-input");
     const text = input.value.trim();
@@ -64,7 +93,9 @@ function sendMessage() {
     .then(res => res.json())
     .then(data => {
         hideThinkingMessage();
-        addMessage(data.reply, "bot");
+
+        // 🔥 NEW: typewriter animation instead of static message
+        typewriterMessage(data.reply);
     })
     .catch(() => {
         hideThinkingMessage();
@@ -81,8 +112,6 @@ document.getElementById("user-input").addEventListener("keypress", function (e) 
 // ==========================
 // SCROLL-TO-BOTTOM BUTTON
 // ==========================
-
-// Show/hide scroll-to-bottom button
 function checkScrollButton() {
     const box = document.getElementById("chat-box");
     const btn = document.getElementById("scroll-down-btn");
@@ -93,11 +122,9 @@ function checkScrollButton() {
     else btn.classList.remove("hidden");
 }
 
-// On scroll
 document.getElementById("chat-box")
     .addEventListener("scroll", checkScrollButton);
 
-// Scroll button click
 document.getElementById("scroll-down-btn")
     .addEventListener("click", () => {
         const box = document.getElementById("chat-box");
