@@ -63,6 +63,7 @@ body {
 
 /* Base message bubble */
 .message {
+    position: relative; /* Badge için gerekli */
     max-width: 75%;
     padding: 12px 16px;
     line-height: 1.4;
@@ -86,6 +87,39 @@ body {
     align-self: flex-end;
     margin-left: auto;
     box-shadow: 0 0 12px rgba(255,0,255,0.4);
+}
+
+
+/* ===== AI / USER BADGES ===== */
+
+/* AI badge */
+.message.bot::after {
+    content: "AI";
+    position: absolute;
+    bottom: -12px;
+    left: 10px;
+    background: #00eaff;
+    color: #000;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 7px;
+    border-radius: 20px;
+    box-shadow: 0 0 6px #00eaff;
+}
+
+/* USER badge */
+.message.user::after {
+    content: "You";
+    position: absolute;
+    bottom: -12px;
+    right: 10px;
+    background: #ff00ff;
+    color: #000;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 7px;
+    border-radius: 20px;
+    box-shadow: 0 0 6px #ff00ff;
 }
 
 
