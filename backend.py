@@ -32,7 +32,6 @@ app.add_middleware(
 # ============================================================
 # STATIC FILE SERVE (FRONTEND)
 # ============================================================
-# Serve /static/... (CSS, JS, PNG)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================
@@ -43,7 +42,7 @@ orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
 # ============================================================
-# MEMORY (SAME AS CLI)
+# MEMORY
 # ============================================================
 memory = {
     "conversation_products": [],
@@ -52,7 +51,7 @@ memory = {
 }
 
 # ============================================================
-# LANGUAGE DETECTION (EXACT SAME AS CLI)
+# LANGUAGE DETECTION
 # ============================================================
 def detect_language(msg):
     try:
@@ -66,7 +65,7 @@ def detect_language(msg):
     return "English"
 
 # ============================================================
-# MESSAGE CLEANER (CLI VERSION)
+# MESSAGE CLEANER
 # ============================================================
 def clean_message(msg):
     text = msg.lower()
@@ -88,7 +87,7 @@ def clean_message(msg):
     return text.strip()
 
 # ============================================================
-# SEMANTIC PRODUCT RESOLVER (1:1 CLI)
+# SEMANTIC PRODUCT RESOLVER
 # ============================================================
 def ai_resolve_product(msg):
     cleaned = clean_message(msg)
@@ -107,14 +106,14 @@ Respond ONLY with the exact product name or NONE.
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
 
     out = r.choices[0].message.content.strip()
     return out if out in names else None
 
 # ============================================================
-# SEMANTIC ORDER / REFUND (1:1 CLI)
+# ORDER INTENT
 # ============================================================
 def ai_wants_order(msg):
 
@@ -147,17 +146,49 @@ USER: {msg}
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
 
     return r.choices[0].message.content.strip().lower() == "yes"
 
-
+# ============================================================
+# REFUND / RETURN INTENT — FIXED VERSION (EN + AR)
+# ============================================================
 def ai_wants_refund(msg):
-    prompt = f"Is user asking REFUND/RETURN? Respond REFUND or NO.\nUSER: {msg}"
+    prompt = f"""
+You are an intent classifier for REFUND/RETURN inquiries.
+
+Classify the user's message into one of TWO categories:
+- REFUND  → if the user wants to return an item OR is asking about return/refund policy.
+- NO      → if the message is unrelated.
+
+REFUND should be returned for BOTH:
+1) Actual refund/return requests
+   English:
+   - I want to return my order
+   - I need a refund
+   - Please process my return
+   Arabic:
+   - أريد إرجاع طلبي
+   - أريد استعادة مالي
+
+2) Questions about refund/return policy (these MUST also be REFUND)
+   English:
+   - What is your return policy?
+   - How do refunds work?
+   - Tell me about your refund policy
+   Arabic:
+   - ما هي سياسة الإرجاع؟
+   - ما هي سياسة الاسترجاع؟
+
+Respond ONLY with REFUND or NO.
+
+USER MESSAGE:
+{msg}
+"""
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
     return r.choices[0].message.content.strip().upper() == "REFUND"
 
@@ -165,15 +196,15 @@ def ai_wants_refund(msg):
 # ARABIC DIGITS
 # ============================================================
 ARABIC_DIGITS = {
-    "٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
-    "٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"
+    "٠": "0","١": "1","٢": "2","٣": "3","٤": "4",
+    "٥": "5","٦": "6","٧": "7","٨": "8","٩": "9"
 }
 
 def normalize_digits(msg):
     return "".join(ARABIC_DIGITS.get(ch, ch) for ch in msg)
 
 # ============================================================
-# ORDER ID EXTRACTION (CLI)
+# ORDER ID EXTRACTION
 # ============================================================
 def extract_order_id(msg):
     msg = normalize_digits(msg)
@@ -186,7 +217,7 @@ def extract_order_id(msg):
     return None
 
 # ============================================================
-# NATURAL FORMATTER (CLI VERSION)
+# NATURAL FORMATTER
 # ============================================================
 def natural_format(user_msg, tool_data):
     lang = detect_language(user_msg)
@@ -203,13 +234,13 @@ TOOL_DATA:
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
 
     return r.choices[0].message.content.strip()
 
 # ============================================================
-# TOOLS — EXACTLY LIKE CLI
+# TOOLS
 # ============================================================
 def tool_product_list():
     return {"type": "product_list", "products": list(products.values())}
@@ -249,6 +280,7 @@ def chat(req: ChatInput):
         "list products","all products","product list",
         "المنتجات","ما هي منتجاتك","عرض المنتجات","قائمة المنتجات"
     ]
+
     if any(t in lower for t in triggers):
         return {"reply": natural_format(user, tool_product_list())}
 
@@ -279,7 +311,7 @@ def chat(req: ChatInput):
     })}
 
 # ============================================================
-# ROOT ENDPOINT (SERVE index.html)
+# ROOT ENDPOINT
 # ============================================================
 @app.get("/", response_class=HTMLResponse)
 def index():
