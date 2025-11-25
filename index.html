@@ -4,22 +4,28 @@
     <meta charset="UTF-8">
     <title>Lean Scale Case Study – AI Chatbot by Orhan Karakopru</title>
 
-    <!-- Linked to your static CSS -->
+    <!-- Linked CSS -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div id="app">
 
-    <!-- Robot Section -->
+    <!-- ROBOT SECTION -->
     <div class="robot-container">
         <img src="/static/assets/robot.png" class="robot-img" alt="AI Robot">
+
+        <!-- EYELID OVERLAYS (for blinking) -->
+        <div class="robot-eyelids">
+            <div class="eyelid left-eyelid"></div>
+            <div class="eyelid right-eyelid"></div>
+        </div>
     </div>
 
-    <!-- Chat Section -->
+    <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
-    <!-- Input Section -->
+    <!-- INPUT SECTION -->
     <div class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
         <button onclick="sendMessage()">Send</button>
@@ -27,10 +33,10 @@
 
 </div>
 
-<!-- Scroll To Bottom Button -->
+<!-- SCROLL TO BOTTOM BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
-<!-- Linked JS -->
+<!-- JS -->
 <script src="/static/script.js"></script>
 
 </body>
