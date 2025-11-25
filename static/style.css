@@ -30,6 +30,7 @@ body {
     50% { transform: translateY(-6px); }
     100% { transform: translateY(0); }
 }
+
 @keyframes glowPulse {
     0% { filter: drop-shadow(0 0 22px #00eaff); }
     50% { filter: drop-shadow(0 0 34px #00eaff); }
@@ -72,6 +73,7 @@ body {
     border: 1px solid #00eaff;
     color: #b3faff;
 }
+
 .user {
     align-self: flex-end;
     border: 1px solid #ff00ff;
@@ -81,7 +83,8 @@ body {
 
 
 /* ===== BADGES ===== */
-.message.bot::after {
+.message.bot::after,
+.speaking-bubble::after {
     content: "AI";
     position: absolute;
     bottom: -12px;
@@ -92,6 +95,7 @@ body {
     font-size: 11px;
     border-radius: 12px;
 }
+
 .message.user::after {
     content: "You";
     position: absolute;
@@ -105,16 +109,50 @@ body {
 }
 
 
-/* ===== SPEAKING INDICATOR ===== */
-.speaking {
-    text-align: center;
-    padding: 8px 0;
-    color: #00eaff;
-    font-weight: bold;
-    font-size: 18px;
+/* ===== SPEAKING BUBBLE ===== */
+.speaking-bubble {
+    position: relative;
+    align-self: flex-start;
+    max-width: 75%;
+    padding: 12px 16px;
+    padding-right: 60px; /* boşluk: sağ tarafta stop butonu için */
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #00eaff;
+    color: #b3faff;
+    font-style: italic;
+    line-height: 1.4;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 0 12px rgba(0,234,255,0.45);
+    backdrop-filter: blur(6px);
 }
-.hidden {
-    display: none !important;
+
+
+/* ===== STOP BUTTON inside speaking bubble ===== */
+.speaking-stop-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    background: #ff0044;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px #ff0044;
+    transition: 0.2s ease;
+}
+
+.speaking-stop-btn:hover {
+    transform: translateY(-50%) scale(1.12);
+    background: #d10034;
 }
 
 
@@ -133,10 +171,11 @@ body {
     border: 1px solid #00eaff;
     border-radius: 8px;
     color: white;
+    outline: none;
 }
 
 
-/* MIC BUTTON */
+/* Mic Button */
 .mic-btn {
     margin-left: 10px;
     width: 48px;
@@ -152,7 +191,7 @@ body {
 }
 
 
-/* WHATSAPP-STYLE SEND BUTTON */
+/* WhatsApp-Style Send Button */
 .send-btn {
     margin-left: 10px;
     width: 48px;
@@ -169,7 +208,6 @@ body {
     box-shadow: 0 0 12px #00ff88;
     transition: 0.2s ease;
 }
-
 .send-btn:hover {
     transform: scale(1.12);
     background: #00cc6e;
@@ -197,14 +235,13 @@ body {
 .voice-btn.send { color: #00ff88; }
 
 
-/* WAVEFORM */
+/* Waveform */
 .wave-bars {
     display: flex;
     gap: 4px;
     flex: 1;
     justify-content: center;
 }
-
 .bar {
     width: 4px;
     height: 10px;
@@ -223,22 +260,6 @@ body {
 .bar:nth-child(even) { animation-delay: 0.25s; }
 
 
-/* ===== STOP SPEAKING BUTTON ===== */
-.stop-speaking {
-    position: absolute;
-    bottom: 150px;
-    right: 25px;
-    padding: 10px 18px;
-    background: #ff0044;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-}
-.stop-speaking.hidden {
-    display: none;
-}
-
-
 /* ===== SCROLL BUTTON ===== */
 .scroll-btn {
     position: absolute;
@@ -252,6 +273,7 @@ body {
     color: #00eaff;
     font-size: 22px;
     cursor: pointer;
+    transition: 0.2s ease;
 }
 .scroll-btn.hidden {
     opacity: 0;

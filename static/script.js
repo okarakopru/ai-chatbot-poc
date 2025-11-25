@@ -1,7 +1,7 @@
 const API_URL = "https://orhankarakopru.com.tr/chat";
 
 // ==========================
-// DETECT ARABIC OR ENGLISH
+// LANGUAGE DETECTION (EN vs AR)
 // ==========================
 function detectLang(text) {
     return /[\u0600-\u06FF]/.test(text) ? "ar" : "en";
@@ -11,14 +11,16 @@ function detectLang(text) {
 // ==========================
 // GLOBALS
 // ==========================
-let currentBotReply = ""; // fallback for Stop
+let currentBotReply = "";     // fallback for Stop
+let speakingBubble = null;    // DOM element for speaking bubble
 
 
 // ==========================
-// TYPEWRITER
+// TYPEWRITER EFFECT
 // ==========================
 function typewriterMessage(fullText) {
     const box = document.getElementById("chat-box");
+
     const div = document.createElement("div");
     div.className = "message bot";
     box.appendChild(div);
@@ -26,62 +28,91 @@ function typewriterMessage(fullText) {
     let i = 0;
     function type() {
         if (i <= fullText.length) {
-            div.textContent = fullText.slice(0, i);
+            div.textContent = fullText.substring(0, i);
             i++;
             box.scrollTop = box.scrollHeight;
             setTimeout(type, 15);
         }
     }
+
     type();
 }
 
 
 // ==========================
-// TEXT TO SPEECH (EN/AR)
+// AI TEXT-TO-SPEECH (EN/AR)
 // ==========================
 function speak(text, lang) {
     currentBotReply = text;
 
+    // Remove old speaking bubble if exists
+    if (speakingBubble) speakingBubble.remove();
+
+    // Create speaking bubble dynamically
+    const box = document.getElementById("chat-box");
+    speakingBubble = document.createElement("div");
+    speakingBubble.className = "speaking-bubble";
+    speakingBubble.innerHTML = `
+        🔊 Speaking...
+        <button class="speaking-stop-btn">⏹</button>
+    `;
+    box.appendChild(speakingBubble);
+    box.scrollTop = box.scrollHeight;
+
+    // Stop button inside bubble
+    const stopBtn = speakingBubble.querySelector(".speaking-stop-btn");
+    stopBtn.onclick = () => stopSpeaking();
+
+
+    // TTS
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang === "ar" ? "ar-SA" : "en-US";
-
-    const indicator = document.getElementById("speaking-indicator");
-    const stopBtn = document.getElementById("stop-speaking-btn");
-
-    indicator.classList.remove("hidden");
-    stopBtn.classList.remove("hidden");
+    utter.rate = 1;
+    utter.pitch = 1;
 
     speechSynthesis.speak(utter);
 
     utter.onend = () => {
-        indicator.classList.add("hidden");
-        stopBtn.classList.add("hidden");
+        // Remove speaking bubble
+        if (speakingBubble) speakingBubble.remove();
+        speakingBubble = null;
+
+        // Write message after speaking (Option C)
         typewriterMessage(text);
     };
 }
 
-// STOP → fallback yazı
-document.getElementById("stop-speaking-btn").onclick = () => {
-    speechSynthesis.cancel();
-    document.getElementById("speaking-indicator").classList.add("hidden");
-    document.getElementById("stop-speaking-btn").classList.add("hidden");
 
+// ==========================
+// STOP SPEAKING
+// ==========================
+function stopSpeaking() {
+    speechSynthesis.cancel();
+
+    // Remove speaking bubble
+    if (speakingBubble) speakingBubble.remove();
+    speakingBubble = null;
+
+    // Write the message
     typewriterMessage(currentBotReply);
-};
+}
 
 
 // ==========================
-// THINKING
+// THINKING ANIMATION
 // ==========================
 let thinking = null;
 let dotTimer = null;
 
 function showThinking() {
     const box = document.getElementById("chat-box");
+
     thinking = document.createElement("div");
     thinking.className = "message bot";
     thinking.textContent = "Thinking";
+
     box.appendChild(thinking);
+    box.scrollTop = box.scrollHeight;
 
     let dots = 0;
     dotTimer = setInterval(() => {
@@ -109,7 +140,8 @@ if ("webkitSpeechRecognition" in window) {
 document.getElementById("mic-btn").onclick = () => {
     if (!rec) return alert("Browser does not support voice recognition.");
 
-    rec.lang = "en-US"; // Start default EN
+    // Default EN to start; detect after transcript
+    rec.lang = "en-US";
 
     document.getElementById("input-area").classList.add("hidden");
     document.getElementById("voice-bar").classList.remove("hidden");
@@ -121,6 +153,7 @@ rec.onresult = (e) => {
     const text = e.results[0][0].transcript;
     const lang = detectLang(text);
 
+    // Auto-send on ✓ 
     document.getElementById("voice-send").onclick = () => {
         sendDirect(text, lang);
     };
@@ -131,12 +164,12 @@ rec.onerror = () => {
 };
 
 rec.onend = () => {
-    // Keep wave bar open until cancel or send
+    // voice-bar stays open until cancel or send
 };
 
 
 // ==========================
-// RECORDING UI CONTROL
+// VOICE RECORDING UI CONTROL
 // ==========================
 function stopRecordingUI() {
     document.getElementById("voice-bar").classList.add("hidden");
@@ -150,10 +183,11 @@ document.getElementById("voice-cancel").onclick = () => {
 
 
 // ==========================
-// AUTO-SEND (VOICE MESSAGE)
+// AUTO-SEND VOICE MESSAGE
 // ==========================
 function sendDirect(text, lang) {
     stopRecordingUI();
+
     addMessage(text, "user");
 
     showThinking();
@@ -163,8 +197,8 @@ function sendDirect(text, lang) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text })
     })
-        .then(r => r.json())
-        .then(data => {
+        .then((r) => r.json())
+        .then((data) => {
             hideThinking();
 
             const reply = data.reply;
@@ -180,7 +214,7 @@ function sendDirect(text, lang) {
 
 
 // ==========================
-// NORMAL SEND BUTTON
+// NORMAL TEXT SEND BUTTON
 // ==========================
 function sendMessage() {
     const input = document.getElementById("user-input");
@@ -199,8 +233,8 @@ function sendMessage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text })
     })
-        .then(r => r.json())
-        .then(data => {
+        .then((r) => r.json())
+        .then((data) => {
             hideThinking();
 
             const reply = data.reply;
@@ -220,7 +254,7 @@ document.getElementById("user-input").addEventListener("keypress", (e) => {
 
 
 // ==========================
-// ADD MESSAGE
+// ADD MESSAGE (USER/BOT)
 // ==========================
 function addMessage(msg, type) {
     const box = document.getElementById("chat-box");
@@ -239,16 +273,18 @@ function addMessage(msg, type) {
 // ==========================
 function checkScrollButton() {
     const box = document.getElementById("chat-box");
-    const b = document.getElementById("scroll-down-btn");
+    const btn = document.getElementById("scroll-down-btn");
 
-    const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
+    const atBottom =
+        box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
 
-    if (atBottom) b.classList.add("hidden");
-    else b.classList.remove("hidden");
+    if (atBottom) btn.classList.add("hidden");
+    else btn.classList.remove("hidden");
 }
 
 document.getElementById("chat-box").addEventListener("scroll", checkScrollButton);
+
 document.getElementById("scroll-down-btn").addEventListener("click", () => {
-    const b = document.getElementById("chat-box");
-    b.scrollTop = b.scrollHeight;
+    const box = document.getElementById("chat-box");
+    box.scrollTop = box.scrollHeight;
 });
