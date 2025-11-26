@@ -10,50 +10,48 @@
 
 <div id="app">
 
-    <!-- ROBOT -->
+    <!-- ROBOT SECTION -->
     <div class="robot-container">
         <img src="/static/assets/robot.png" class="robot-img" alt="AI Robot">
     </div>
 
-    <!-- CHAT AREA -->
+    <!-- CHAT BOX -->
     <div id="chat-box"></div>
 
-    <!-- NORMAL INPUT AREA -->
-    <div id="input-area" class="input-area">
-        <input id="user-input" type="text" placeholder="Type your message...">
+    <!-- TEXT MODE INPUT ROW -->
+    <div id="text-row" class="input-row">
+        <div class="input-box">
+            <input id="user-input" type="text" placeholder="Type your message...">
+        </div>
         <button id="mic-btn" class="mic-btn">🎤</button>
         <button id="send-btn" class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 
-    <!-- VOICE RECORDING ROW (WAVEFORM + STOP + SEND) -->
-    <div id="voice-row" class="voice-row hidden">
+    <!-- VOICE MODE INPUT ROW -->
+    <div id="voice-row" class="input-row hidden">
 
-        <!-- Waveform input-like box -->
-        <div id="voice-bar" class="voice-bar">
-            <div class="wave-container">
-                <div class="wave-bars">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                </div>
+        <!-- Waveform box (same height/width as text input box) -->
+        <div id="voice-box" class="input-box">
+            <div class="wave-bars">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
         </div>
 
-        <!-- STOP BUTTON (outside input box) -->
-        <button id="voice-stop" class="voice-stop-btn">⏹</button>
+        <!-- STOP btn -->
+        <button id="voice-stop" class="stop-btn">⏹</button>
 
-        <!-- SEND BUTTON (outside input box) -->
-        <button id="voice-send" class="voice-send-btn">➤</button>
-
+        <!-- SEND btn -->
+        <button id="voice-send" class="send-btn">➤</button>
     </div>
 
 </div>
 
-<!-- Scroll Bottom -->
+<!-- SCROLL DOWN BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
 <script src="/static/script.js"></script>
-
 </body>
 </html>
