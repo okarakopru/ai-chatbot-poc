@@ -1,5 +1,5 @@
 # ============================================================
-#  backend.py  (Telegram + Email + Location Fix + UID + Summary)
+#  backend.py  (Telegram + Location + UID + Summary) — Email OFF
 # ============================================================
 
 import json
@@ -73,7 +73,7 @@ def notify_telegram(text):
 
 
 # ============================================================
-# EMAIL CONFIG
+# EMAIL CONFIG (NOT USED)
 # ============================================================
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
@@ -82,21 +82,8 @@ EMAIL_PASS = os.getenv("EMAIL_PASS")
 EMAIL_TO   = os.getenv("EMAIL_TO")
 
 def notify_email(subject, body):
-    if not EMAIL_USER or not EMAIL_PASS or not EMAIL_TO:
-        return
-    try:
-        msg = MIMEText(body)
-        msg["Subject"] = subject
-        msg["From"] = EMAIL_USER
-        msg["To"] = EMAIL_TO
-
-        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.sendmail(EMAIL_USER, EMAIL_TO, msg.as_string())
-        server.quit()
-    except Exception as e:
-        print("Email error:", e)
+    # EMAIL DISABLED
+    return
 
 
 # ============================================================
@@ -164,7 +151,7 @@ def ai_wants_refund(msg):
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-    return r.choices[0].message.content.strip().upper() == "REFUND"
+    return r.choices[0].message.content.strip().upper()=="REFUND"
 
 
 # ============================================================
@@ -177,7 +164,7 @@ def normalize_digits(msg):
 
 def extract_order_id(msg):
     msg = normalize_digits(msg)
-    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\د\d)", msg)
+    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\د\d[\s\.\-]?\د\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
         if clean.isdigit() and len(clean)==5:
@@ -200,7 +187,7 @@ TOOL_DATA:
 """
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt}]
+        messages=[{"role":"user","content":prompt]}
     )
     return r.choices[0].message.content.strip()
 
@@ -222,46 +209,17 @@ def generate_session_summary():
 
 
 # ============================================================
-# GEOLOCATION (CITY + COUNTRY) — FIXED VERSION
+# GEOLOCATION (City + Country) — FIXED VERSION
 # ============================================================
 def get_geo_info(ip):
     try:
         r = requests.get(f"http://ip-api.com/json/{ip}")
         data = r.json()
-
         if data.get("status") != "success":
             return "Unknown", "Unknown"
-
-        city = data.get("city", "Unknown")
-        country = data.get("country", "Unknown")
-        return city, country
-
-    except Exception as e:
-        print("Geo error:", e)
+        return data.get("city","Unknown"), data.get("country","Unknown")
+    except:
         return "Unknown", "Unknown"
-
-
-# ============================================================
-# TOOLS
-# ============================================================
-def tool_product_list():
-    return {"type": "product_list", "products": list(products.values())}
-
-def tool_product_info(name):
-    for p in products.values():
-        if p["name"].lower() == name.lower():
-            if p["name"] not in memory["conversation_products"]:
-                memory["conversation_products"].append(p["name"])
-            return {"type":"product_info", **p}
-    return {"type":"info","message":"Product not found."}
-
-def tool_order_lookup(id):
-    if id in orders:
-        return {"type":"order_info", **orders[id]}
-    return {"type":"order_info","error":"Order not found"}
-
-def tool_refund():
-    return {"type":"refund_policy","policy":return_policy["policy"]}
 
 
 # ============================================================
@@ -278,28 +236,26 @@ class ChatInput(BaseModel):
 @app.post("/chat")
 def chat(req: ChatInput, request: Request):
 
-    # REAL IP (X-Forwarded-For FIX)
+    # CORRECT IP (Render proxy fix)
     ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
 
     user = req.message
     uid = req.uid
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    # GEOLOCATION
+    # GEO
     city, country = get_geo_info(ip)
     location_text = f"{city}, {country}"
 
-    # SAVE TRANSCRIPT
+    # Save user message
     memory["conversation_transcript"].append(f"USER: {user}")
 
-    # GPT SUMMARY
+    # Summary
     session_summary = generate_session_summary()
 
-    # ---------------------------------------------------------
-    # TELEGRAM + EMAIL NOTIFICATION
-    # ---------------------------------------------------------
+    # NOTIFICATION (Telegram only)
     notify_text = (
-        f"CHATBOT KULLANILDI!\n\n"
+        f"📩 NEW CHAT MESSAGE\n\n"
         f"UID: {uid}\n"
         f"IP: {ip}\n"
         f"Location: {location_text}\n"
@@ -307,13 +263,10 @@ def chat(req: ChatInput, request: Request):
         f"User Message:\n{user}\n\n"
         f"Session Summary:\n{session_summary}\n"
     )
-
     notify_telegram(notify_text)
-    notify_email("CHATBOT KULLANILDI!", notify_text)
+    # Email disabled:
+    # notify_email("New Chatbot Message", notify_text)
 
-    # ---------------------------------------------------------
-    # LOGIC
-    # ---------------------------------------------------------
     lower = user.lower()
 
     # PRODUCT LIST
@@ -333,26 +286,24 @@ def chat(req: ChatInput, request: Request):
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # ORDER
+    # ORDER TRACKING
     if ai_wants_order(user):
         oid = extract_order_id(user)
-
         if oid:
             reply = natural_format(user, tool_order_lookup(oid))
         else:
             reply = natural_format(user, {"type":"info","message":"Please provide your order ID."})
-
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # PRODUCT INFO
+    # PRODUCT
     product = ai_resolve_product(user)
     if product:
         reply = natural_format(user, tool_product_info(product))
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # SUMMARY COMMAND
+    # SUMMARY CMD
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
         full_summary = generate_session_summary()
         memory["conversation_transcript"].append(f"BOT: {full_summary}")
