@@ -1,6 +1,7 @@
 # ============================================================
-#  backend.py  (Telegram + Location + UID + Summary)
-#  Email disabled, Refund intent fully fixed
+# backend.py  — FINAL VERSION
+# Telegram + Location + Refund Fix + UID + Summary
+# Email disabled for stability
 # ============================================================
 
 import json
@@ -115,7 +116,6 @@ Products:
 
 Respond ONLY with the exact product name or NONE.
 """
-
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
@@ -125,7 +125,7 @@ Respond ONLY with the exact product name or NONE.
 
 
 # ============================================================
-# REFUND INTENT — FIXED (refund request + policy inquiry)
+# REFUND INTENT — FIXED (policy + request)
 # ============================================================
 def ai_wants_refund(msg):
     prompt = f"""
@@ -133,34 +133,29 @@ Determine if the user is asking about refund OR return policy.
 
 This includes BOTH:
 
-1) REFUND/RETURN REQUEST
-   Examples:
-   - I want to return my order
-   - I need a refund
-   - I want to send the product back
-   - I want my money back
-   - I want to return this item
-   - Please refund me
+1) REFUND REQUEST:
+- I want to return my order
+- I need a refund
+- I want my money back
+- I want to return this item
+- Please refund me
 
-2) RETURN/REFUND POLICY QUESTIONS
-   Examples:
-   - What is your return policy?
-   - What is your refund policy?
-   - How does refund work?
-   - Return policy please
-   - İade politikası nedir
-   - İade koşulları nedir
-   - İade süreci nasıl işler
+2) RETURN POLICY QUESTIONS:
+- What is your return policy?
+- What is your refund policy?
+- How does refund work?
+- Return policy please
+- İade politikası nedir
+- İade koşulları nedir
+- İade süreci nasıl işler
 
-If message matches ANY of these categories, respond ONLY:
+If message matches ANY category, respond ONLY:
 REFUND
-
-Otherwise respond ONLY:
+Else respond:
 NO
 
 USER: {msg}
 """
-
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
@@ -172,7 +167,7 @@ USER: {msg}
 # ORDER INTENT
 # ============================================================
 def ai_wants_order(msg):
-    prompt = f"Does user want ORDER TRACKING? Respond YES or NO.\nUSER: {msg}"
+    prompt = f"Does the user want ORDER TRACKING? Respond YES or NO.\nUSER: {msg}"
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
@@ -181,12 +176,10 @@ def ai_wants_order(msg):
 
 
 # ============================================================
-# ARABIC DIGITS + ORDER ID EXTRACTION (FIXED)
+# ARABIC DIGITS + ORDER ID EXTRACTION
 # ============================================================
-ARABIC_DIGITS = {
-    "٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
-    "٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"
-}
+ARABIC_DIGITS = {"٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
+                 "٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"}
 
 def normalize_digits(msg):
     return "".join(ARABIC_DIGITS.get(ch, ch) for ch in msg)
@@ -194,6 +187,7 @@ def normalize_digits(msg):
 def extract_order_id(msg):
     msg = normalize_digits(msg)
 
+    # Correct 5-digit regex
     found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
@@ -210,7 +204,7 @@ def natural_format(user_msg, tool_data):
 
     prompt = f"""
 Respond ONLY in {lang}.
-Convert TOOL_DATA into a clean natural answer.
+Convert TOOL_DATA into a clean natural-language answer.
 No hallucinations.
 
 TOOL_DATA:
@@ -224,7 +218,7 @@ TOOL_DATA:
 
 
 # ============================================================
-# GPT SESSION SUMMARY
+# GPT SUMMARY
 # ============================================================
 def generate_session_summary():
     if not memory["conversation_transcript"]:
@@ -241,7 +235,7 @@ def generate_session_summary():
 
 
 # ============================================================
-# GEOLOCATION (City + Country)
+# GEOLOCATION
 # ============================================================
 def get_geo_info(ip):
     try:
@@ -254,6 +248,29 @@ def get_geo_info(ip):
         return data.get("city","Unknown"), data.get("country","Unknown")
     except:
         return "Unknown", "Unknown"
+
+
+# ============================================================
+# TOOL FUNCTIONS  (PRODUCTS / ORDERS / REFUNDS)
+# ============================================================
+def tool_product_list():
+    return {"type": "product_list", "products": list(products.values())}
+
+def tool_product_info(name):
+    for p in products.values():
+        if p["name"].lower() == name.lower():
+            if p["name"] not in memory["conversation_products"]:
+                memory["conversation_products"].append(p["name"])
+            return {"type": "product_info", **p}
+    return {"type": "info", "message": "Product not found."}
+
+def tool_order_lookup(id):
+    if id in orders:
+        return {"type": "order_info", **orders[id]}
+    return {"type": "order_info", "error": "Order not found"}
+
+def tool_refund():
+    return {"type": "refund_policy", "policy": return_policy["policy"]}
 
 
 # ============================================================
@@ -270,6 +287,7 @@ class ChatInput(BaseModel):
 @app.post("/chat")
 def chat(req: ChatInput, request: Request):
 
+    # Real IP (Render proxy fix)
     ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
 
     user = req.message
@@ -297,7 +315,7 @@ def chat(req: ChatInput, request: Request):
 
     lower = user.lower()
 
-    # PRODUCT LIST
+    # === PRODUCT LIST INTENT
     triggers = [
         "what are your products","show products","products?",
         "list products","all products","product list",
@@ -308,40 +326,39 @@ def chat(req: ChatInput, request: Request):
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # REFUND (Now includes return policy questions)
+    # === REFUND (policy + refund request)
     if ai_wants_refund(user):
         reply = natural_format(user, tool_refund())
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # ORDER
+    # === ORDER TRACKING
     if ai_wants_order(user):
         oid = extract_order_id(user)
         if oid:
             reply = natural_format(user, tool_order_lookup(oid))
         else:
-            reply = natural_format(user,
-                {"type":"info","message":"Please provide your order ID."})
+            reply = natural_format(user, {"type":"info","message":"Please provide your order ID."})
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # PRODUCT INFO
+    # === PRODUCT INFO
     product = ai_resolve_product(user)
     if product:
         reply = natural_format(user, tool_product_info(product))
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # SUMMARY CMD
+    # === SUMMARY COMMAND
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
         full_summary = generate_session_summary()
         memory["conversation_transcript"].append(f"BOT: {full_summary}")
         return {"reply": full_summary}
 
-    # FALLBACK
+    # === DEFAULT FALLBACK
     reply = natural_format(user, {
-        "type":"info",
-        "message":"I'm here to help with products, orders, or refunds. How can I assist?"
+        "type": "info",
+        "message": "I'm here to help with products, orders, or refunds. How can I assist?"
     })
     memory["conversation_transcript"].append(f"BOT: {reply}")
 
