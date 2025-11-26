@@ -18,24 +18,24 @@
     <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
-    <!-- INPUT SECTION (NORMAL TEXT MODE) -->
+    <!-- INPUT SECTION -->
     <div id="input-area" class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
 
-        <!-- Mic Button -->
+        <!-- MICROPHONE BUTTON -->
         <button id="mic-btn" class="mic-btn">🎤</button>
 
-        <!-- WhatsApp-style send button -->
+        <!-- WHATSAPP-STYLE SEND BUTTON -->
         <button id="send-btn" class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 
-    <!-- VOICE RECORDING BAR -->
+    <!-- VOICE RECORDING BAR (HIDDEN BY DEFAULT) -->
     <div id="voice-bar" class="voice-bar hidden">
 
-        <!-- Cancel Recording -->
+        <!-- CANCEL BUTTON -->
         <button id="voice-cancel" class="voice-btn cancel">✕</button>
 
-        <!-- Waveform -->
+        <!-- WAVEFORM -->
         <div class="wave-bars">
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
@@ -43,13 +43,14 @@
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
         </div>
 
-        <!-- Confirm Recording -->
+        <!-- CONFIRM SEND -->
         <button id="voice-send" class="voice-btn send">✓</button>
+
     </div>
 
 </div>
 
-<!-- Scroll to Bottom -->
+<!-- SCROLL TO BOTTOM BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
 <script src="/static/script.js"></script>
