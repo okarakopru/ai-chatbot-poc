@@ -23,6 +23,7 @@ body {
     display: flex;
     justify-content: center;
     padding-top: 30px;
+    padding-bottom: 5px;
 }
 
 @keyframes robotBreath {
@@ -39,6 +40,7 @@ body {
 
 .robot-img {
     width: 480px;
+    max-width: 80vw;
     animation:
         robotBreath 2.8s ease-in-out infinite,
         glowPulse 3s ease-in-out infinite;
@@ -47,14 +49,15 @@ body {
 /* ===== CHAT BOX ===== */
 #chat-box {
     flex: 1;
-    overflow-y: auto;
     padding: 15px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 14px;
+    scroll-behavior: smooth;
 }
 
-/* ===== CHAT MESSAGES ===== */
+/* ===== MESSAGE BUBBLES ===== */
 .message {
     position: relative;
     max-width: 75%;
@@ -82,53 +85,102 @@ body {
     content: "AI";
     position: absolute;
     bottom: -12px;
-    left: 10px;
-    padding: 3px 7px;
+    left: 12px;
     background: #00eaff;
     color: black;
-    border-radius: 12px;
+    padding: 3px 6px;
     font-size: 11px;
+    border-radius: 12px;
 }
 
 .message.user::after {
     content: "You";
     position: absolute;
     bottom: -12px;
-    right: 10px;
-    padding: 3px 7px;
+    right: 12px;
     background: #ff00ff;
     color: black;
-    border-radius: 12px;
+    padding: 3px 6px;
     font-size: 11px;
+    border-radius: 12px;
 }
 
 /* ===== SPEAKING BUBBLE ===== */
 .speaking-bubble {
     position: relative;
-    align-self: flex-start;
+    max-width: 75%;
     padding: 12px 16px;
     padding-right: 60px;
     border-radius: 12px;
     border: 1px solid #00eaff;
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(5px);
-    color: #b3faff;
     font-style: italic;
+    color: #b3faff;
     margin: 10px 0;
+    box-shadow: 0 0 12px #00eaff;
 }
 
-/* STOP INSIDE SPEAKING BUBBLE */
+/* STOP inside speaking bubble */
 .speaking-stop-btn {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
+    transform: translateY(-50%);
     width: 38px;
     height: 38px;
-    transform: translateY(-50%);
     border-radius: 50%;
     background: #ff0044;
     border: none;
     color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =======================================================================
+   ========================= INPUT ROW (TEXT MODE) =======================
+   ======================================================================= */
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+}
+
+/* INPUT BOX ITSELF */
+.input-box {
+    flex: 1;
+    background: #0b1120;
+    border: 1px solid #00eaff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    height: 58px; /* FIXED HEIGHT – same as waveform mode */
+    box-shadow: 0 0 12px #00eaff;
+    display: flex;
+    align-items: center;
+}
+
+/* TEXT INPUT INSIDE BOX */
+.input-box input {
+    flex: 1;
+    font-size: 16px;
+    color: white;
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+/* MIC BUTTON (OUTSIDE INPUT BOX, SAME ROW RIGHT) */
+.mic-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #00eaff;
+    border: none;
+    color: black;
     font-size: 22px;
     display: flex;
     justify-content: center;
@@ -136,142 +188,91 @@ body {
     cursor: pointer;
 }
 
-/* ===== NORMAL INPUT AREA ===== */
-.input-area {
-    display: flex;
-    align-items: center;
-    background: #0b1120;
-    border: 1px solid #00eaff;
-    border-radius: 12px;
-    padding: 12px;
-    margin: 10px;
-    box-shadow: 0 0 12px #00eaff;
-}
-
-.input-area input {
-    flex: 1;
-    font-size: 16px;
-    padding: 12px;
-    background: #0b1120;
-    border: none;
-    color: white;
-    outline: none;
-}
-
-/* MIC BUTTON */
-.mic-btn {
-    margin-left: 10px;
-    width: 48px;
-    height: 48px;
-    background: #00eaff;
-    border-radius: 50%;
-    border: none;
-    font-size: 20px;
-    color: black;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* ===== SEND BUTTONS (TEXT MODE & VOICE MODE) ===== */
+/* SEND BUTTON (TEXT & VOICE MODE SHARED) */
 .send-btn,
 .voice-send-btn {
-    margin-left: 10px;
     width: 48px;
     height: 48px;
     border-radius: 50%;
     background: #00ff88;
     border: none;
-    font-size: 26px;
-    color: #000;
+    color: black;
+    font-size: 24px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     cursor: pointer;
     box-shadow: 0 0 12px #00ff88;
 }
 
-/* ===== VOICE RECORDING ROW ===== */
-.voice-row {
+/* =======================================================================
+   ========================= VOICE ROW (VOICE MODE) =======================
+   ======================================================================= */
+#voice-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
+    padding: 10px;
 }
 
-/* VOICE INPUT BOX (WAVEFORM BOX) */
-.voice-bar {
+/* VOICE BOX (INPUT LOOK, NO TEXT INSIDE) */
+#voice-box {
     flex: 1;
     background: #0b1120;
     border: 1px solid #00eaff;
     border-radius: 12px;
-    padding: 12px;
+    height: 58px; /* SAME as input box */
+    padding: 10px 14px;
     box-shadow: 0 0 12px #00eaff;
-}
-
-/* WAVEFORM INSIDE THE BOX */
-.wave-container {
-    flex: 1;
     display: flex;
     align-items: center;
-    padding-left: 5px;
 }
 
+/* WAVEFORM BARS */
 .wave-bars {
     display: flex;
     gap: 4px;
+    align-items: flex-end; /* NO BOUNCING */
+    height: 100%;          /* Fills the box */
 }
 
+/* EACH BAR */
 .bar {
-    width: 3px;
-    height: 10px;
+    width: 4px;
+    height: 12px;
     background: #00eaff;
-    border-radius: 2px;
+    border-radius: 3px;
     animation: wave 0.8s ease-in-out infinite;
 }
 
+/* WAVE ANIMATION */
 @keyframes wave {
-    0% { height: 10px; }
-    50% { height: 32px; }
-    100% { height: 10px; }
+    0% { height: 12px; }
+    50% { height: 34px; }
+    100% { height: 12px; }
 }
 
-.bar:nth-child(odd) { animation-delay: 0.12s; }
+/* Off-beat stagger for realism */
+.bar:nth-child(odd) { animation-delay: 0.1s; }
 .bar:nth-child(even) { animation-delay: 0.25s; }
 
-/* STOP BUTTON OUTSIDE INPUT */
-.voice-stop-btn {
+/* STOP BUTTON (outside input box, same row) */
+.stop-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: #ff0044;
     border: none;
-    font-size: 28px;
+    background: #ff0044;
     color: white;
-    cursor: pointer;
+    font-size: 26px;
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
     box-shadow: 0 0 12px #ff0044;
 }
 
-/* SEND BUTTON OUTSIDE INPUT */
-.voice-send-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #00ff88;
-    border: none;
-    font-size: 26px;
-    color: #000;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* ===== SCROLL-BUTTON ===== */
+/* SCROLL BUTTON */
 .scroll-btn {
     position: absolute;
     bottom: 90px;
@@ -282,9 +283,15 @@ body {
     border: 2px solid #00eaff;
     background: rgba(4,7,14,0.7);
     color: #00eaff;
+    font-size: 22px;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.scroll-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* ===== RESPONSIVE ===== */

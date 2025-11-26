@@ -5,7 +5,7 @@ const API_URL = "https://orhankarakopru.com.tr/chat";
 ============================================================ */
 window.addEventListener("load", () => {
     document.getElementById("voice-row").classList.add("hidden");
-    document.getElementById("input-area").classList.remove("hidden");
+    document.getElementById("text-row").classList.remove("hidden");
 });
 
 /* ============================================================
@@ -40,6 +40,7 @@ function typewriterMessage(fullText) {
             setTimeout(type, 15);
         }
     }
+
     type();
 }
 
@@ -59,8 +60,8 @@ function speak(text, lang) {
         🔊 Speaking...
         <button class="speaking-stop-btn">⏹</button>
     `;
-
     box.appendChild(speakingBubble);
+
     box.scrollTop = box.scrollHeight;
 
     speakingBubble.querySelector(".speaking-stop-btn").onclick = () => stopSpeaking();
@@ -68,7 +69,6 @@ function speak(text, lang) {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang === "ar" ? "ar-SA" : "en-US";
     utter.rate = 1;
-    utter.pitch = 1;
 
     speechSynthesis.speak(utter);
 
@@ -80,7 +80,7 @@ function speak(text, lang) {
 }
 
 /* ============================================================
-   STOP SPEAKING (THE ⏹ BUTTON)
+   STOP SPEAKING (⏹ INSIDE SPEAKING BUBBLE)
 ============================================================ */
 function stopSpeaking() {
     speechSynthesis.cancel();
@@ -99,6 +99,7 @@ let dotTimer = null;
 
 function showThinking() {
     const box = document.getElementById("chat-box");
+
     thinking = document.createElement("div");
     thinking.className = "message bot";
     thinking.textContent = "Thinking";
@@ -122,6 +123,7 @@ function hideThinking() {
    SPEECH RECOGNITION (VOICE INPUT)
 ============================================================ */
 let rec;
+
 if ("webkitSpeechRecognition" in window) {
     rec = new webkitSpeechRecognition();
     rec.continuous = false;
@@ -138,8 +140,7 @@ document.getElementById("mic-btn").onclick = () => {
 
     rec.lang = "en-US";
 
-    // Switch to VOICE-ROW layout
-    document.getElementById("input-area").classList.add("hidden");
+    document.getElementById("text-row").classList.add("hidden");
     document.getElementById("voice-row").classList.remove("hidden");
 
     rec.start();
@@ -163,11 +164,11 @@ rec.onend = () => {
 };
 
 /* ============================================================
-   RECORDING UI CONTROL
+   RECORDING UI CONTROL (STOP & EXIT VOICE MODE)
 ============================================================ */
 function stopRecordingUI() {
     document.getElementById("voice-row").classList.add("hidden");
-    document.getElementById("input-area").classList.remove("hidden");
+    document.getElementById("text-row").classList.remove("hidden");
 }
 
 document.getElementById("voice-stop").onclick = () => {
@@ -198,7 +199,7 @@ function sendDirect(text, lang) {
             const reply = data.reply;
             const replyLang = detectLang(reply);
 
-            speak(reply, replyLang);   // voice input → voice output
+            speak(reply, replyLang);
         })
         .catch(() => {
             hideThinking();
@@ -207,13 +208,14 @@ function sendDirect(text, lang) {
 }
 
 /* ============================================================
-   NORMAL TEXT SEND
+   NORMAL TEXT SEND (TEXT MODE OUTPUT ONLY)
 ============================================================ */
 function sendMessage() {
     lastUserMessageSource = "text";
 
     const input = document.getElementById("user-input");
     const text = input.value.trim();
+
     if (!text) return;
 
     const lang = detectLang(text);
@@ -234,7 +236,7 @@ function sendMessage() {
 
             const reply = data.reply;
 
-            // Text input → text output (no TTS)
+            // TEXT MODE → NO TTS
             typewriterMessage(reply);
         })
         .catch(() => {
@@ -243,7 +245,6 @@ function sendMessage() {
         });
 }
 
-// ENTER key sends text
 document.getElementById("user-input").addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
@@ -263,7 +264,7 @@ function addMessage(msg, type) {
 }
 
 /* ============================================================
-   SCROLL BUTTON
+   SCROLL DOWN BUTTON
 ============================================================ */
 function checkScrollButton() {
     const box = document.getElementById("chat-box");
