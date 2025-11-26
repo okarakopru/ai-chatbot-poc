@@ -1,6 +1,14 @@
 const API_URL = "https://orhankarakopru.com.tr/chat";
 
 /* ============================================================
+   ASSIGN USER UID (one-time persistent identity)
+============================================================ */
+if (!localStorage.getItem("uid")) {
+    localStorage.setItem("uid", crypto.randomUUID());
+}
+const USER_UID = localStorage.getItem("uid");
+
+/* ============================================================
    FORCE NORMAL UI ON PAGE LOAD
 ============================================================ */
 window.addEventListener("load", () => {
@@ -80,7 +88,7 @@ function speak(text, lang) {
 }
 
 /* ============================================================
-   STOP SPEAKING (⏹ INSIDE SPEAKING BUBBLE)
+   STOP SPEAKING (⏹)
 ============================================================ */
 function stopSpeaking() {
     speechSynthesis.cancel();
@@ -150,6 +158,7 @@ rec.onresult = (e) => {
     const text = e.results[0][0].transcript;
     const lang = detectLang(text);
 
+    // SEND BUTTON FOR VOICE
     document.getElementById("voice-send").onclick = () => {
         sendDirect(text, lang);
     };
@@ -164,7 +173,7 @@ rec.onend = () => {
 };
 
 /* ============================================================
-   RECORDING UI CONTROL (STOP & EXIT VOICE MODE)
+   RECORDING UI CONTROL
 ============================================================ */
 function stopRecordingUI() {
     document.getElementById("voice-row").classList.add("hidden");
@@ -190,7 +199,7 @@ function sendDirect(text, lang) {
     fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, uid: USER_UID })
     })
         .then(res => res.json())
         .then(data => {
@@ -208,7 +217,7 @@ function sendDirect(text, lang) {
 }
 
 /* ============================================================
-   NORMAL TEXT SEND (TEXT MODE OUTPUT ONLY)
+   NORMAL TEXT SEND
 ============================================================ */
 function sendMessage() {
     lastUserMessageSource = "text";
@@ -228,7 +237,7 @@ function sendMessage() {
     fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, uid: USER_UID })
     })
         .then(res => res.json())
         .then(data => {
@@ -236,8 +245,7 @@ function sendMessage() {
 
             const reply = data.reply;
 
-            // TEXT MODE → NO TTS
-            typewriterMessage(reply);
+            typewriterMessage(reply);  // TEXT → WRITE
         })
         .catch(() => {
             hideThinking();
@@ -277,9 +285,11 @@ function checkScrollButton() {
     else btn.classList.remove("hidden");
 }
 
-document.getElementById("chat-box").addEventListener("scroll", checkScrollButton);
+document.getElementById("chat-box")
+    .addEventListener("scroll", checkScrollButton);
 
-document.getElementById("scroll-down-btn").addEventListener("click", () => {
-    const box = document.getElementById("chat-box");
-    box.scrollTop = box.scrollHeight;
-});
+document.getElementById("scroll-down-btn")
+    .addEventListener("click", () => {
+        const box = document.getElementById("chat-box");
+        box.scrollTop = box.scrollHeight;
+    });
