@@ -57,7 +57,7 @@ body {
     scroll-behavior: smooth;
 }
 
-/* ===== MESSAGE BUBBLES ===== */
+/* ===== MESSAGES ===== */
 .message {
     position: relative;
     max-width: 75%;
@@ -140,9 +140,10 @@ body {
     align-items: center;
 }
 
-/* =======================================================================
-   ========================= INPUT ROW (TEXT MODE) =======================
-   ======================================================================= */
+/* ===================================================================
+   ======================= INPUT ROW (TEXT MODE) =====================
+   =================================================================== */
+
 .input-row {
     display: flex;
     align-items: center;
@@ -150,20 +151,19 @@ body {
     padding: 10px;
 }
 
-/* INPUT BOX ITSELF */
+/* TEXT INPUT BOX */
 .input-box {
     flex: 1;
     background: #0b1120;
     border: 1px solid #00eaff;
     border-radius: 12px;
+    height: 58px; /* FIXED HEIGHT so wave doesn't shake layout */
     padding: 10px 14px;
-    height: 58px; /* FIXED HEIGHT – same as waveform mode */
     box-shadow: 0 0 12px #00eaff;
     display: flex;
     align-items: center;
 }
 
-/* TEXT INPUT INSIDE BOX */
 .input-box input {
     flex: 1;
     font-size: 16px;
@@ -173,7 +173,7 @@ body {
     outline: none;
 }
 
-/* MIC BUTTON (OUTSIDE INPUT BOX, SAME ROW RIGHT) */
+/* MIC BUTTON (outside input) */
 .mic-btn {
     width: 48px;
     height: 48px;
@@ -182,13 +182,13 @@ body {
     border: none;
     color: black;
     font-size: 22px;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
 }
 
-/* SEND BUTTON (TEXT & VOICE MODE SHARED) */
+/* SEND BUTTON (text + voice) */
 .send-btn,
 .voice-send-btn {
     width: 48px;
@@ -197,17 +197,18 @@ body {
     background: #00ff88;
     border: none;
     color: black;
-    font-size: 24px;
+    font-size: 26px;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
     box-shadow: 0 0 12px #00ff88;
 }
 
-/* =======================================================================
-   ========================= VOICE ROW (VOICE MODE) =======================
-   ======================================================================= */
+/* ===================================================================
+   ======================= VOICE ROW (VOICE MODE) ====================
+   =================================================================== */
+
 #voice-row {
     display: flex;
     align-items: center;
@@ -215,33 +216,36 @@ body {
     padding: 10px;
 }
 
-/* VOICE BOX (INPUT LOOK, NO TEXT INSIDE) */
+/* WAVEFORM BOX — EXACT SAME SIZE AS TEXT INPUT BOX */
 #voice-box {
     flex: 1;
     background: #0b1120;
     border: 1px solid #00eaff;
     border-radius: 12px;
-    height: 58px; /* SAME as input box */
+    height: 58px; /* SAME as text input */
     padding: 10px 14px;
     box-shadow: 0 0 12px #00eaff;
     display: flex;
     align-items: center;
 }
 
-/* WAVEFORM BARS */
+/* WAVEFORM FULL WIDTH */
 .wave-bars {
     display: flex;
-    gap: 4px;
-    align-items: flex-end; /* NO BOUNCING */
-    height: 100%;          /* Fills the box */
+    flex: 1;                  /* ← THIS MAKES IT FILL FULL WIDTH */
+    height: 100%;             /* fill input box vertically */
+    align-items: flex-end;    /* bars bottom aligned */
+    justify-content: space-between;
 }
 
-/* EACH BAR */
+/* WAVE BARS */
 .bar {
-    width: 4px;
+    flex: 1;          /* ← stretch horizontally */
+    min-width: 3px;
+    margin: 0 2px;
     height: 12px;
     background: #00eaff;
-    border-radius: 3px;
+    border-radius: 2px;
     animation: wave 0.8s ease-in-out infinite;
 }
 
@@ -252,27 +256,33 @@ body {
     100% { height: 12px; }
 }
 
-/* Off-beat stagger for realism */
-.bar:nth-child(odd) { animation-delay: 0.1s; }
-.bar:nth-child(even) { animation-delay: 0.25s; }
+.bar:nth-child(odd) {
+    animation-delay: 0.12s;
+}
+.bar:nth-child(even) {
+    animation-delay: 0.25s;
+}
 
-/* STOP BUTTON (outside input box, same row) */
+/* STOP BUTTON (outside waveform box) */
 .stop-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: none;
     background: #ff0044;
+    border: none;
     color: white;
     font-size: 26px;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
     box-shadow: 0 0 12px #ff0044;
 }
 
-/* SCROLL BUTTON */
+/* ===================================================================
+   ========================== SCROLL BUTTON ==========================
+   =================================================================== */
+
 .scroll-btn {
     position: absolute;
     bottom: 90px;
@@ -283,15 +293,9 @@ body {
     border: 2px solid #00eaff;
     background: rgba(4,7,14,0.7);
     color: #00eaff;
-    font-size: 22px;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.scroll-btn.hidden {
-    opacity: 0;
-    pointer-events: none;
 }
 
 /* ===== RESPONSIVE ===== */
