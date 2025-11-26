@@ -1,10 +1,11 @@
 # ============================================================
-#  backend.py  (UID + IP + Timestamp + GPT Summary Enabled)
+#  backend.py  (UID + IP + Timestamp + GPT Summary + Telegram)
 # ============================================================
 
 import json
 import os
 import re
+import requests
 from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +32,7 @@ app.add_middleware(
 )
 
 # ============================================================
-# STATIC FILE SERVE (FRONTEND)
+# STATIC FILE SERVE
 # ============================================================
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -43,14 +44,35 @@ orders = json.load(open("orders.json"))
 return_policy = json.load(open("return_policy.json"))
 
 # ============================================================
-# MEMORY
+# MEMORY (GLOBAL)
 # ============================================================
 memory = {
     "conversation_products": [],
     "last_intent": None,
     "last_order_id": None,
-    "conversation_transcript": []   # NEW — full conversation log
+    "conversation_transcript": []
 }
+
+# ============================================================
+# TELEGRAM NOTIFICATION SYSTEM
+# ============================================================
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+def notify_telegram(text):
+    """
+    Sends Telegram message to admin phone.
+    """
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = {"chat_id": TELEGRAM_CHAT_ID, "text": text}
+        requests.post(url, data=data)
+    except:
+        pass
+
 
 # ============================================================
 # LANGUAGE DETECTION
@@ -65,6 +87,7 @@ def detect_language(msg):
     except:
         pass
     return "English"
+
 
 # ============================================================
 # CLEAN MESSAGE
@@ -88,8 +111,9 @@ def clean_message(msg):
         text = text.replace(p, "")
     return text.strip()
 
+
 # ============================================================
-# RESOLVE PRODUCT
+# PRODUCT NAME RESOLUTION (AI)
 # ============================================================
 def ai_resolve_product(msg):
     cleaned = clean_message(msg)
@@ -114,28 +138,21 @@ Respond ONLY with the exact product name or NONE.
     out = r.choices[0].message.content.strip()
     return out if out in names else None
 
+
 # ============================================================
 # ORDER / REFUND INTENT
 # ============================================================
 def ai_wants_order(msg):
-
     prompt = f"""
 Does the user want ORDER TRACKING?
 
 English examples:
 - where is my order
-- order status
 - track my order
-- delivery date
-- order id is 12345
+- order status
 
 Arabic examples:
 - ما هي حالة الطلب
-- ما حالة طلبي
-- ما هو وضع الطلب
-- اريد معرفة حالة الطلب
-- ما هو موعد التسليم
-- رقم الطلب
 - تتبع طلبي
 
 Respond ONLY with YES or NO.
@@ -159,6 +176,7 @@ def ai_wants_refund(msg):
     )
     return r.choices[0].message.content.strip().upper() == "REFUND"
 
+
 # ============================================================
 # ARABIC DIGITS
 # ============================================================
@@ -169,6 +187,7 @@ ARABIC_DIGITS = {
 
 def normalize_digits(msg):
     return "".join(ARABIC_DIGITS.get(ch, ch) for ch in msg)
+
 
 # ============================================================
 # ORDER ID EXTRACTION
@@ -183,16 +202,16 @@ def extract_order_id(msg):
             return clean
     return None
 
+
 # ============================================================
-# NATURAL FORMAT ANSWER
+# NATURAL FORMAT RESPONSE
 # ============================================================
 def natural_format(user_msg, tool_data):
     lang = detect_language(user_msg)
 
     prompt = f"""
 Respond ONLY in {lang}.
-
-Convert TOOL_DATA into a clean natural-language answer.
+Convert TOOL_DATA into a clean natural answer.
 No hallucinations.
 
 TOOL_DATA:
@@ -203,22 +222,22 @@ TOOL_DATA:
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-
     return r.choices[0].message.content.strip()
 
+
 # ============================================================
-# SUMMARY GENERATION (GPT)
+# GPT SESSION SUMMARY
 # ============================================================
 def generate_session_summary():
     transcript = memory["conversation_transcript"]
 
     if len(transcript) == 0:
-        return "No conversation so far."
+        return "No conversation yet."
 
     convo = "\n".join(transcript)
 
     prompt = f"""
-Summarize the conversation in 1–2 sentences.
+Summarize this conversation in 1–2 sentences.
 
 Conversation:
 {convo}
@@ -226,10 +245,11 @@ Conversation:
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
 
     return r.choices[0].message.content.strip()
+
 
 # ============================================================
 # TOOLS
@@ -243,7 +263,7 @@ def tool_product_info(name):
             if p["name"] not in memory["conversation_products"]:
                 memory["conversation_products"].append(p["name"])
             return {"type": "product_info", **p}
-    return {"type":"info","message":"Product not found."}
+    return {"type": "info", "message": "Product not found."}
 
 def tool_order_lookup(id):
     if id in orders:
@@ -259,7 +279,7 @@ def tool_refund():
 # ============================================================
 class ChatInput(BaseModel):
     message: str
-    uid: str = "unknown"   # NEW
+    uid: str = "unknown"
 # ============================================================
 # MAIN CHAT ENDPOINT
 # ============================================================
@@ -271,12 +291,31 @@ def chat(req: ChatInput, request: Request):
     ip = request.client.host
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    # Add to transcript
+    # Save user message to transcript
     memory["conversation_transcript"].append(f"USER: {user}")
 
     lower = user.lower()
 
-    # PRODUCT LIST
+    # ---------------------------------------------------------
+    # TELEGRAM NOTIFICATION (user message + UID + IP + summary)
+    # ---------------------------------------------------------
+    session_summary = generate_session_summary()
+
+    notify_text = (
+        f"📩 NEW CHAT MESSAGE\n\n"
+        f"UID: {uid}\n"
+        f"IP: {ip}\n"
+        f"Time: {timestamp}\n\n"
+        f"User Message:\n{user}\n\n"
+        f"Session Summary:\n{session_summary}\n"
+    )
+
+    notify_telegram(notify_text)
+
+    # ---------------------------------------------------------
+    # LOGIC FLOW: PRODUCTS / REFUND / ORDER / PRODUCT INFO
+    # ---------------------------------------------------------
+
     triggers = [
         "what are your products","show products","products?",
         "list products","all products","product list",
@@ -296,6 +335,7 @@ def chat(req: ChatInput, request: Request):
     # ORDER TRACKING
     if ai_wants_order(user):
         oid = extract_order_id(user)
+
         if oid:
             reply = natural_format(user, tool_order_lookup(oid))
         else:
@@ -330,7 +370,7 @@ def chat(req: ChatInput, request: Request):
         "uid": uid,
         "ip": ip,
         "time": timestamp,
-        "summary": generate_session_summary()
+        "summary": session_summary
     }
 
 
