@@ -1,13 +1,12 @@
 # ============================================================
-#  backend.py  (Telegram + Location + UID + Summary) — Email OFF
+#  backend.py  (Telegram + Location + UID + Summary)
+#  Email disabled for stability
 # ============================================================
 
 import json
 import os
 import re
 import requests
-import smtplib
-from email.mime.text import MIMEText
 from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,7 +38,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ============================================================
-# LOAD DATA
+# LOAD JSON DATA
 # ============================================================
 products = json.load(open("products.json"))
 orders = json.load(open("orders.json"))
@@ -73,29 +72,13 @@ def notify_telegram(text):
 
 
 # ============================================================
-# EMAIL CONFIG (NOT USED)
-# ============================================================
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USER = os.getenv("EMAIL_USER")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
-EMAIL_TO   = os.getenv("EMAIL_TO")
-
-def notify_email(subject, body):
-    # EMAIL DISABLED
-    return
-
-
-# ============================================================
 # LANGUAGE DETECTION
 # ============================================================
 def detect_language(msg):
     try:
         code = lang_detect(msg)
-        if code.startswith("en"):
-            return "English"
-        if code.startswith("ar"):
-            return "Arabic"
+        if code.startswith("en"): return "English"
+        if code.startswith("ar"): return "Arabic"
     except:
         pass
     return "English"
@@ -106,8 +89,10 @@ def detect_language(msg):
 # ============================================================
 def clean_message(msg):
     text = msg.lower()
-    en = ["tell me more about","tell me about","tell me more","can you tell me","can you tell me about","please","pls"]
-    ar = ["أخبرني عن","اخبرني عن","أخبرني أكثر عن","اخبرني اكثر عن","هل يمكنك شرح","من فضلك","لو سمحت"]
+    en = ["tell me more about","tell me about","tell me more",
+          "can you tell me","can you tell me about","please","pls"]
+    ar = ["أخبرني عن","اخبرني عن","أخبرني أكثر عن","اخبرني اكثر عن",
+          "هل يمكنك شرح","من فضلك","لو سمحت"]
     for p in en + ar:
         text = text.replace(p, "")
     return text.strip()
@@ -119,13 +104,18 @@ def clean_message(msg):
 def ai_resolve_product(msg):
     cleaned = clean_message(msg)
     names = [p["name"] for p in products.values()]
+
     prompt = f"""
 The user refers to a product.
+
 USER: "{cleaned}"
+
 Products:
 {names}
+
 Respond ONLY with the exact product name or NONE.
 """
+
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
@@ -135,15 +125,16 @@ Respond ONLY with the exact product name or NONE.
 
 
 # ============================================================
-# INTENTS
+# INTENT DETECTION
 # ============================================================
 def ai_wants_order(msg):
-    prompt = f"Does user want order tracking? Respond YES or NO.\nUSER: {msg}"
+    prompt = f"Does the user want ORDER TRACKING? Respond YES or NO.\nUSER: {msg}"
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip().lower() == "yes"
+
 
 def ai_wants_refund(msg):
     prompt = f"Is user asking REFUND/RETURN? Respond REFUND or NO.\nUSER: {msg}"
@@ -151,23 +142,28 @@ def ai_wants_refund(msg):
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-    return r.choices[0].message.content.strip().upper()=="REFUND"
+    return r.choices[0].message.content.strip().upper() == "REFUND"
 
 
 # ============================================================
-# ARABIC DIGITS + ORDER ID
+# ARABIC DIGITS + ORDER ID EXTRACTION (FIXED)
 # ============================================================
-ARABIC_DIGITS = {"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"}
+ARABIC_DIGITS = {
+    "٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
+    "٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"
+}
 
 def normalize_digits(msg):
     return "".join(ARABIC_DIGITS.get(ch, ch) for ch in msg)
 
 def extract_order_id(msg):
     msg = normalize_digits(msg)
-    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\د\d[\s\.\-]?\د\d)", msg)
+
+    # Correct 5-digit flexible regex
+    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
-        if clean.isdigit() and len(clean)==5:
+        if clean.isdigit() and len(clean) == 5:
             return clean
     return None
 
@@ -177,6 +173,7 @@ def extract_order_id(msg):
 # ============================================================
 def natural_format(user_msg, tool_data):
     lang = detect_language(user_msg)
+
     prompt = f"""
 Respond ONLY in {lang}.
 Convert TOOL_DATA into a clean natural answer.
@@ -187,7 +184,7 @@ TOOL_DATA:
 """
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role":"user","content":prompt]}
+        messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip()
 
@@ -196,34 +193,60 @@ TOOL_DATA:
 # GPT SESSION SUMMARY
 # ============================================================
 def generate_session_summary():
-    transcript = memory["conversation_transcript"]
-    if len(transcript) == 0:
+    if not memory["conversation_transcript"]:
         return "No conversation yet."
-    convo = "\n".join(transcript)
-    prompt = f"Summarize this conversation in 1–2 sentences.\n\n{convo}"
+
+    convo = "\n".join(memory["conversation_transcript"])
+    prompt = f"Summarize the conversation in 1–2 sentences.\n\n{convo}"
+
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip()
 
 
 # ============================================================
-# GEOLOCATION (City + Country) — FIXED VERSION
+# GEOLOCATION (City + Country)
 # ============================================================
 def get_geo_info(ip):
     try:
         r = requests.get(f"http://ip-api.com/json/{ip}")
         data = r.json()
+
         if data.get("status") != "success":
             return "Unknown", "Unknown"
+
         return data.get("city","Unknown"), data.get("country","Unknown")
     except:
         return "Unknown", "Unknown"
 
 
 # ============================================================
-# REQUEST MODEL
+# TOOLS
+# ============================================================
+def tool_product_list():
+    return {"type": "product_list", "products": list(products.values())}
+
+def tool_product_info(name):
+    for p in products.values():
+        if p["name"].lower() == name.lower():
+            if p["name"] not in memory["conversation_products"]:
+                memory["conversation_products"].append(p["name"])
+            return {"type":"product_info", **p}
+    return {"type":"info","message":"Product not found."}
+
+def tool_order_lookup(id):
+    if id in orders:
+        return {"type":"order_info", **orders[id]}
+    return {"type":"order_info","error":"Order not found"}
+
+def tool_refund():
+    return {"type":"refund_policy","policy":return_policy["policy"]}
+
+
+# ============================================================
+# INPUT MODEL
 # ============================================================
 class ChatInput(BaseModel):
     message: str
@@ -236,24 +259,24 @@ class ChatInput(BaseModel):
 @app.post("/chat")
 def chat(req: ChatInput, request: Request):
 
-    # CORRECT IP (Render proxy fix)
+    # Get REAL IP (Render proxy fix)
     ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
 
     user = req.message
     uid = req.uid
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    # GEO
+    # GEOLOCATION
     city, country = get_geo_info(ip)
     location_text = f"{city}, {country}"
 
-    # Save user message
+    # Save user message to transcript
     memory["conversation_transcript"].append(f"USER: {user}")
 
-    # Summary
+    # SESSION SUMMARY
     session_summary = generate_session_summary()
 
-    # NOTIFICATION (Telegram only)
+    # TELEGRAM NOTIFICATION
     notify_text = (
         f"📩 NEW CHAT MESSAGE\n\n"
         f"UID: {uid}\n"
@@ -264,8 +287,6 @@ def chat(req: ChatInput, request: Request):
         f"Session Summary:\n{session_summary}\n"
     )
     notify_telegram(notify_text)
-    # Email disabled:
-    # notify_email("New Chatbot Message", notify_text)
 
     lower = user.lower()
 
@@ -292,18 +313,19 @@ def chat(req: ChatInput, request: Request):
         if oid:
             reply = natural_format(user, tool_order_lookup(oid))
         else:
-            reply = natural_format(user, {"type":"info","message":"Please provide your order ID."})
+            reply = natural_format(user,
+                {"type":"info","message":"Please provide your order ID."})
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # PRODUCT
+    # PRODUCT INFO
     product = ai_resolve_product(user)
     if product:
         reply = natural_format(user, tool_product_info(product))
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # SUMMARY CMD
+    # SUMMARY REQUEST
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
         full_summary = generate_session_summary()
         memory["conversation_transcript"].append(f"BOT: {full_summary}")
@@ -314,7 +336,6 @@ def chat(req: ChatInput, request: Request):
         "type":"info",
         "message":"I'm here to help with products, orders, or refunds. How can I assist?"
     })
-
     memory["conversation_transcript"].append(f"BOT: {reply}")
 
     return {
