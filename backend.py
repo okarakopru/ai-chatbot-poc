@@ -1,11 +1,12 @@
 # ============================================================
-#  backend.py  (Static files + Chatbot logic fully working on Render)
+#  backend.py  (UID + IP + Timestamp + GPT Summary Enabled)
 # ============================================================
 
 import json
 import os
 import re
-from fastapi import FastAPI
+from datetime import datetime
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -47,7 +48,8 @@ return_policy = json.load(open("return_policy.json"))
 memory = {
     "conversation_products": [],
     "last_intent": None,
-    "last_order_id": None
+    "last_order_id": None,
+    "conversation_transcript": []   # NEW — full conversation log
 }
 
 # ============================================================
@@ -65,7 +67,7 @@ def detect_language(msg):
     return "English"
 
 # ============================================================
-# MESSAGE CLEANER
+# CLEAN MESSAGE
 # ============================================================
 def clean_message(msg):
     text = msg.lower()
@@ -87,7 +89,7 @@ def clean_message(msg):
     return text.strip()
 
 # ============================================================
-# SEMANTIC PRODUCT RESOLVER
+# RESOLVE PRODUCT
 # ============================================================
 def ai_resolve_product(msg):
     cleaned = clean_message(msg)
@@ -106,14 +108,14 @@ Respond ONLY with the exact product name or NONE.
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
 
     out = r.choices[0].message.content.strip()
     return out if out in names else None
 
 # ============================================================
-# ORDER INTENT
+# ORDER / REFUND INTENT
 # ============================================================
 def ai_wants_order(msg):
 
@@ -134,10 +136,7 @@ Arabic examples:
 - اريد معرفة حالة الطلب
 - ما هو موعد التسليم
 - رقم الطلب
-- معرّف الطلب
-- معرف الطلب
 - تتبع طلبي
-- أريد تتبع الطلب
 
 Respond ONLY with YES or NO.
 
@@ -146,49 +145,17 @@ USER: {msg}
 
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
 
     return r.choices[0].message.content.strip().lower() == "yes"
 
-# ============================================================
-# REFUND / RETURN INTENT — FIXED VERSION (EN + AR)
-# ============================================================
+
 def ai_wants_refund(msg):
-    prompt = f"""
-You are an intent classifier for REFUND/RETURN inquiries.
-
-Classify the user's message into one of TWO categories:
-- REFUND  → if the user wants to return an item OR is asking about return/refund policy.
-- NO      → if the message is unrelated.
-
-REFUND should be returned for BOTH:
-1) Actual refund/return requests
-   English:
-   - I want to return my order
-   - I need a refund
-   - Please process my return
-   Arabic:
-   - أريد إرجاع طلبي
-   - أريد استعادة مالي
-
-2) Questions about refund/return policy (these MUST also be REFUND)
-   English:
-   - What is your return policy?
-   - How do refunds work?
-   - Tell me about your refund policy
-   Arabic:
-   - ما هي سياسة الإرجاع؟
-   - ما هي سياسة الاسترجاع؟
-
-Respond ONLY with REFUND or NO.
-
-USER MESSAGE:
-{msg}
-"""
+    prompt = f"Is user asking REFUND/RETURN? Respond REFUND or NO.\nUSER: {msg}"
     r = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip().upper() == "REFUND"
 
@@ -196,8 +163,8 @@ USER MESSAGE:
 # ARABIC DIGITS
 # ============================================================
 ARABIC_DIGITS = {
-    "٠": "0","١": "1","٢": "2","٣": "3","٤": "4",
-    "٥": "5","٦": "6","٧": "7","٨": "8","٩": "9"
+    "٠":"0","١":"1","٢":"2","٣":"3","٤":"4",
+    "٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"
 }
 
 def normalize_digits(msg):
@@ -212,12 +179,12 @@ def extract_order_id(msg):
     found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
-        if clean.isdigit() and len(clean) == 5:
+        if clean.isdigit() and len(clean)==5:
             return clean
     return None
 
 # ============================================================
-# NATURAL FORMATTER
+# NATURAL FORMAT ANSWER
 # ============================================================
 def natural_format(user_msg, tool_data):
     lang = detect_language(user_msg)
@@ -230,6 +197,31 @@ No hallucinations.
 
 TOOL_DATA:
 {json.dumps(tool_data, indent=2)}
+"""
+
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"user","content":prompt}]
+    )
+
+    return r.choices[0].message.content.strip()
+
+# ============================================================
+# SUMMARY GENERATION (GPT)
+# ============================================================
+def generate_session_summary():
+    transcript = memory["conversation_transcript"]
+
+    if len(transcript) == 0:
+        return "No conversation so far."
+
+    convo = "\n".join(transcript)
+
+    prompt = f"""
+Summarize the conversation in 1–2 sentences.
+
+Conversation:
+{convo}
 """
 
     r = client.chat.completions.create(
@@ -251,64 +243,96 @@ def tool_product_info(name):
             if p["name"] not in memory["conversation_products"]:
                 memory["conversation_products"].append(p["name"])
             return {"type": "product_info", **p}
-    return {"type": "info", "message": "Product not found."}
+    return {"type":"info","message":"Product not found."}
 
 def tool_order_lookup(id):
     if id in orders:
-        return {"type": "order_info", **orders[id]}
-    return {"type": "order_info", "error": "Order not found"}
+        return {"type":"order_info", **orders[id]}
+    return {"type":"order_info","error":"Order not found"}
 
 def tool_refund():
-    return {"type": "refund_policy", "policy": return_policy["policy"]}
+    return {"type":"refund_policy","policy":return_policy["policy"]}
+
 
 # ============================================================
 # REQUEST MODEL
 # ============================================================
 class ChatInput(BaseModel):
     message: str
-
+    uid: str = "unknown"   # NEW
 # ============================================================
 # MAIN CHAT ENDPOINT
 # ============================================================
 @app.post("/chat")
-def chat(req: ChatInput):
+def chat(req: ChatInput, request: Request):
+
     user = req.message
+    uid = req.uid
+    ip = request.client.host
+    timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+    # Add to transcript
+    memory["conversation_transcript"].append(f"USER: {user}")
+
     lower = user.lower()
 
+    # PRODUCT LIST
     triggers = [
         "what are your products","show products","products?",
         "list products","all products","product list",
         "المنتجات","ما هي منتجاتك","عرض المنتجات","قائمة المنتجات"
     ]
-
     if any(t in lower for t in triggers):
-        return {"reply": natural_format(user, tool_product_list())}
+        reply = natural_format(user, tool_product_list())
+        memory["conversation_transcript"].append(f"BOT: {reply}")
+        return {"reply": reply}
 
+    # REFUND
     if ai_wants_refund(user):
-        return {"reply": natural_format(user, tool_refund())}
+        reply = natural_format(user, tool_refund())
+        memory["conversation_transcript"].append(f"BOT: {reply}")
+        return {"reply": reply}
 
+    # ORDER TRACKING
     if ai_wants_order(user):
         oid = extract_order_id(user)
         if oid:
-            return {"reply": natural_format(user, tool_order_lookup(oid))}
-        return {"reply": natural_format(user, {"type": "info", "message": "Please provide your order ID."})}
+            reply = natural_format(user, tool_order_lookup(oid))
+        else:
+            reply = natural_format(user, {"type":"info","message":"Please provide your order ID."})
 
+        memory["conversation_transcript"].append(f"BOT: {reply}")
+        return {"reply": reply}
+
+    # PRODUCT RESOLUTION
     product = ai_resolve_product(user)
     if product:
-        return {"reply": natural_format(user, tool_product_info(product))}
+        reply = natural_format(user, tool_product_info(product))
+        memory["conversation_transcript"].append(f"BOT: {reply}")
+        return {"reply": reply}
 
+    # SUMMARY REQUEST
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
-        plist = []
-        for name in memory["conversation_products"]:
-            for p in products.values():
-                if p["name"] == name:
-                    plist.append(p)
-        return {"reply": natural_format(user, {"type": "summary", "products": plist})}
+        full_summary = generate_session_summary()
+        memory["conversation_transcript"].append(f"BOT: {full_summary}")
+        return {"reply": full_summary}
 
-    return {"reply": natural_format(user, {
-        "type": "info",
-        "message": "I'm here to help with products, orders, or refunds. How can I assist?"
-    })}
+    # FALLBACK
+    reply = natural_format(user, {
+        "type":"info",
+        "message":"I'm here to help with products, orders, or refunds. How can I assist?"
+    })
+
+    memory["conversation_transcript"].append(f"BOT: {reply}")
+
+    return {
+        "reply": reply,
+        "uid": uid,
+        "ip": ip,
+        "time": timestamp,
+        "summary": generate_session_summary()
+    }
+
 
 # ============================================================
 # ROOT ENDPOINT
