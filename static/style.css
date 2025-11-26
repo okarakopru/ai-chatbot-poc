@@ -115,7 +115,7 @@ body {
     align-self: flex-start;
     max-width: 75%;
     padding: 12px 16px;
-    padding-right: 60px; /* boşluk: sağ tarafta stop butonu için */
+    padding-right: 60px; /* space for stop button */
     border-radius: 12px;
     background: rgba(255,255,255,0.05);
     border: 1px solid #00eaff;
@@ -129,7 +129,7 @@ body {
 }
 
 
-/* ===== STOP BUTTON inside speaking bubble ===== */
+/* ===== STOP BUTTON (INSIDE SPEAKING BUBBLE) ===== */
 .speaking-stop-btn {
     position: absolute;
     right: 10px;
@@ -140,7 +140,7 @@ body {
     background: #ff0044;
     border: none;
     border-radius: 50%;
-    color: #fff;
+    color: white;
     font-size: 22px;
     cursor: pointer;
     display: flex;
@@ -175,7 +175,7 @@ body {
 }
 
 
-/* Mic Button */
+/* MIC BUTTON */
 .mic-btn {
     margin-left: 10px;
     width: 48px;
@@ -191,7 +191,7 @@ body {
 }
 
 
-/* WhatsApp-Style Send Button */
+/* WHATSAPP-STYLE SEND BUTTON */
 .send-btn {
     margin-left: 10px;
     width: 48px;
@@ -235,13 +235,14 @@ body {
 .voice-btn.send { color: #00ff88; }
 
 
-/* Waveform */
+/* WAVEFORM */
 .wave-bars {
     display: flex;
     gap: 4px;
     flex: 1;
     justify-content: center;
 }
+
 .bar {
     width: 4px;
     height: 10px;
@@ -275,6 +276,7 @@ body {
     cursor: pointer;
     transition: 0.2s ease;
 }
+
 .scroll-btn.hidden {
     opacity: 0;
     pointer-events: none;
@@ -285,6 +287,7 @@ body {
 @media (max-width: 768px) {
     .robot-img { width: 350px; }
 }
+
 @media (max-width: 480px) {
     .robot-img { width: 260px; }
 }
