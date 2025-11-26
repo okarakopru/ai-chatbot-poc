@@ -1,13 +1,12 @@
 const API_URL = "https://orhankarakopru.com.tr/chat";
 
 /* ============================================================
-   FORCE DEFAULT UI ON LOAD (IMPORTANT FIX)
+   FORCE NORMAL UI ON PAGE LOAD
 ============================================================ */
 window.addEventListener("load", () => {
     document.getElementById("voice-bar").classList.add("hidden");
     document.getElementById("input-area").classList.remove("hidden");
 });
-
 
 /* ============================================================
    LANGUAGE DETECTION (EN vs AR)
@@ -16,28 +15,26 @@ function detectLang(text) {
     return /[\u0600-\u06FF]/.test(text) ? "ar" : "en";
 }
 
-
 /* ============================================================
-   GLOBALS
+   GLOBAL STATE
 ============================================================ */
-let currentBotReply = "";
 let speakingBubble = null;
+let currentBotReply = "";
 let lastUserMessageSource = "text";   // "text" | "voice"
-
 
 /* ============================================================
    TYPEWRITER EFFECT
 ============================================================ */
 function typewriterMessage(fullText) {
     const box = document.getElementById("chat-box");
-    const div = document.createElement("div");
-    div.className = "message bot";
-    box.appendChild(div);
+    const bubble = document.createElement("div");
+    bubble.className = "message bot";
+    box.appendChild(bubble);
 
     let i = 0;
     function type() {
         if (i <= fullText.length) {
-            div.textContent = fullText.slice(0, i);
+            bubble.textContent = fullText.substring(0, i);
             i++;
             box.scrollTop = box.scrollHeight;
             setTimeout(type, 15);
@@ -46,50 +43,46 @@ function typewriterMessage(fullText) {
     type();
 }
 
-
 /* ============================================================
-   AI TEXT-TO-SPEECH (SPEAKING MODE)
+   AI TEXT-TO-SPEECH (WITH SPEAKING BUBBLE)
 ============================================================ */
 function speak(text, lang) {
     currentBotReply = text;
 
+    // Remove any previous speaking bubble
     if (speakingBubble) speakingBubble.remove();
 
-    // Create speaking bubble
     const box = document.getElementById("chat-box");
+
     speakingBubble = document.createElement("div");
     speakingBubble.className = "speaking-bubble";
     speakingBubble.innerHTML = `
         🔊 Speaking...
         <button class="speaking-stop-btn">⏹</button>
     `;
+
     box.appendChild(speakingBubble);
     box.scrollTop = box.scrollHeight;
 
-    // STOP button inside bubble
+    // Stop button inside bubble
     speakingBubble.querySelector(".speaking-stop-btn").onclick = () => stopSpeaking();
 
-    // Start TTS
+    // TTS engine
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang === "ar" ? "ar-SA" : "en-US";
     utter.rate = 1;
-    utter.pitch = 1;
 
     speechSynthesis.speak(utter);
 
     utter.onend = () => {
-        // Remove bubble
         if (speakingBubble) speakingBubble.remove();
         speakingBubble = null;
-
-        // Then typewriter text
         typewriterMessage(text);
     };
 }
 
-
 /* ============================================================
-   STOP SPEAKING (STOP BUTTON)
+   STOP SPEAKING (THE ⏹ BUTTON)
 ============================================================ */
 function stopSpeaking() {
     speechSynthesis.cancel();
@@ -100,7 +93,6 @@ function stopSpeaking() {
     typewriterMessage(currentBotReply);
 }
 
-
 /* ============================================================
    THINKING BUBBLE
 ============================================================ */
@@ -109,7 +101,6 @@ let dotTimer = null;
 
 function showThinking() {
     const box = document.getElementById("chat-box");
-
     thinking = document.createElement("div");
     thinking.className = "message bot";
     thinking.textContent = "Thinking";
@@ -129,7 +120,6 @@ function hideThinking() {
     if (thinking) thinking.remove();
 }
 
-
 /* ============================================================
    SPEECH RECOGNITION (VOICE INPUT)
 ============================================================ */
@@ -143,10 +133,14 @@ if ("webkitSpeechRecognition" in window) {
 document.getElementById("mic-btn").onclick = () => {
     lastUserMessageSource = "voice";
 
-    if (!rec) return alert("Browser does not support voice recognition.");
+    if (!rec) {
+        alert("Your browser does not support voice recognition.");
+        return;
+    }
 
-    rec.lang = "en-US";
+    rec.lang = "en-US"; // starting language
 
+    // Switch UI: hide input, show voice-bar
     document.getElementById("input-area").classList.add("hidden");
     document.getElementById("voice-bar").classList.remove("hidden");
 
@@ -157,6 +151,7 @@ rec.onresult = (e) => {
     const text = e.results[0][0].transcript;
     const lang = detectLang(text);
 
+    // The send button in recording mode
     document.getElementById("voice-send").onclick = () => {
         sendDirect(text, lang);
     };
@@ -170,7 +165,6 @@ rec.onend = () => {
     stopRecordingUI();
 };
 
-
 /* ============================================================
    RECORDING UI CONTROL
 ============================================================ */
@@ -179,11 +173,10 @@ function stopRecordingUI() {
     document.getElementById("input-area").classList.remove("hidden");
 }
 
-document.getElementById("voice-cancel").onclick = () => {
+document.getElementById("voice-stop").onclick = () => {
     rec.stop();
     stopRecordingUI();
 };
-
 
 /* ============================================================
    AUTO-SEND VOICE MESSAGE
@@ -201,14 +194,14 @@ function sendDirect(text, lang) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text })
     })
-        .then(r => r.json())
+        .then(res => res.json())
         .then(data => {
             hideThinking();
 
             const reply = data.reply;
             const replyLang = detectLang(reply);
 
-            // Voice → Speak
+            // Voice input → voice output
             speak(reply, replyLang);
         })
         .catch(() => {
@@ -217,9 +210,8 @@ function sendDirect(text, lang) {
         });
 }
 
-
 /* ============================================================
-   NORMAL TEXT SEND (TYPE ANSWER)
+   NORMAL TEXT SEND
 ============================================================ */
 function sendMessage() {
     lastUserMessageSource = "text";
@@ -240,14 +232,13 @@ function sendMessage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text })
     })
-        .then(r => r.json())
+        .then(res => res.json())
         .then(data => {
             hideThinking();
 
             const reply = data.reply;
-            const replyLang = detectLang(reply);
 
-            // TEXT → TYPEWRITER ANSWER (NO SPEAKING)
+            // TEXT input → TEXT output (no TTS)
             typewriterMessage(reply);
         })
         .catch(() => {
@@ -256,35 +247,31 @@ function sendMessage() {
         });
 }
 
+// ENTER key sends text
 document.getElementById("user-input").addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
-
 
 /* ============================================================
    ADD MESSAGE TO CHAT
 ============================================================ */
 function addMessage(msg, type) {
     const box = document.getElementById("chat-box");
-
     const div = document.createElement("div");
     div.className = "message " + type;
     div.textContent = msg;
-
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
-
 /* ============================================================
-   SCROLL BUTTON
+   SCROLL TO BOTTOM BUTTON
 ============================================================ */
 function checkScrollButton() {
     const box = document.getElementById("chat-box");
     const btn = document.getElementById("scroll-down-btn");
 
-    const atBottom =
-        box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
+    const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
 
     if (atBottom) btn.classList.add("hidden");
     else btn.classList.remove("hidden");
