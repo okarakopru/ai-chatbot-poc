@@ -18,39 +18,42 @@
     <!-- CHAT SECTION -->
     <div id="chat-box"></div>
 
-    <!-- INPUT SECTION -->
+    <!-- NORMAL INPUT AREA -->
     <div id="input-area" class="input-area">
         <input id="user-input" type="text" placeholder="Type your message...">
 
-        <!-- MICROPHONE BUTTON -->
+        <!-- MIC BUTTON -->
         <button id="mic-btn" class="mic-btn">🎤</button>
 
-        <!-- WHATSAPP-STYLE SEND BUTTON -->
+        <!-- SEND BUTTON -->
         <button id="send-btn" class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 
-    <!-- VOICE RECORDING BAR (HIDDEN BY DEFAULT) -->
+
+    <!-- VOICE RECORDING BAR (Replaces Input Area) -->
     <div id="voice-bar" class="voice-bar hidden">
 
-        <!-- CANCEL BUTTON -->
-        <button id="voice-cancel" class="voice-btn cancel">✕</button>
-
-        <!-- WAVEFORM -->
-        <div class="wave-bars">
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <!-- WAVEFORM LEFT SIDE -->
+        <div class="wave-container">
+            <div class="wave-bars">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
         </div>
 
-        <!-- CONFIRM SEND -->
-        <button id="voice-send" class="voice-btn send">✓</button>
+        <!-- STOP BUTTON (⏹) -->
+        <button id="voice-stop" class="voice-stop-btn">⏹</button>
+
+        <!-- SEND BUTTON (same position as text mode) -->
+        <button id="voice-send" class="voice-send-btn">➤</button>
 
     </div>
 
 </div>
 
-<!-- SCROLL TO BOTTOM BUTTON -->
+<!-- SCROLL BUTTON -->
 <button id="scroll-down-btn" class="scroll-btn hidden">↓</button>
 
 <script src="/static/script.js"></script>
