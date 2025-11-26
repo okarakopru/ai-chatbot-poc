@@ -1,5 +1,5 @@
 # ============================================================
-#  backend.py  (Telegram + Email + Location + UID + Summary)
+#  backend.py  (Telegram + Email + Location Fix + UID + Summary)
 # ============================================================
 
 import json
@@ -127,7 +127,7 @@ def clean_message(msg):
 
 
 # ============================================================
-# PRODUCT NAME RESOLUTION (AI)
+# PRODUCT RESOLUTION
 # ============================================================
 def ai_resolve_product(msg):
     cleaned = clean_message(msg)
@@ -148,20 +148,15 @@ Respond ONLY with the exact product name or NONE.
 
 
 # ============================================================
-# INTENTS (ORDER / REFUND)
+# INTENTS
 # ============================================================
 def ai_wants_order(msg):
-    prompt = f"""
-Does the user want ORDER TRACKING?
-Respond YES or NO.
-USER: {msg}
-"""
+    prompt = f"Does user want order tracking? Respond YES or NO.\nUSER: {msg}"
     r = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
     return r.choices[0].message.content.strip().lower() == "yes"
-
 
 def ai_wants_refund(msg):
     prompt = f"Is user asking REFUND/RETURN? Respond REFUND or NO.\nUSER: {msg}"
@@ -169,7 +164,7 @@ def ai_wants_refund(msg):
         model="gpt-4o-mini",
         messages=[{"role":"user","content":prompt}]
     )
-    return r.choices[0].message.content.strip().upper()=="REFUND"
+    return r.choices[0].message.content.strip().upper() == "REFUND"
 
 
 # ============================================================
@@ -182,7 +177,7 @@ def normalize_digits(msg):
 
 def extract_order_id(msg):
     msg = normalize_digits(msg)
-    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d)", msg)
+    found = re.findall(r"(\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\d[\s\.\-]?\د\d)", msg)
     if found:
         clean = re.sub(r"[\s\.\-]", "", found[0])
         if clean.isdigit() and len(clean)==5:
@@ -191,13 +186,13 @@ def extract_order_id(msg):
 
 
 # ============================================================
-# NATURAL FORMATTER (GPT)
+# NATURAL FORMATTER
 # ============================================================
 def natural_format(user_msg, tool_data):
     lang = detect_language(user_msg)
     prompt = f"""
 Respond ONLY in {lang}.
-Convert TOOL_DATA into a clean natural-language answer.
+Convert TOOL_DATA into a clean natural answer.
 No hallucinations.
 
 TOOL_DATA:
@@ -227,16 +222,22 @@ def generate_session_summary():
 
 
 # ============================================================
-# GEOLOCATION LOOKUP (City + Country)
+# GEOLOCATION (CITY + COUNTRY) — FIXED VERSION
 # ============================================================
 def get_geo_info(ip):
     try:
-        r = requests.get(f"https://ipapi.co/{ip}/json/")
+        r = requests.get(f"http://ip-api.com/json/{ip}")
         data = r.json()
+
+        if data.get("status") != "success":
+            return "Unknown", "Unknown"
+
         city = data.get("city", "Unknown")
-        country = data.get("country_name", "Unknown")
+        country = data.get("country", "Unknown")
         return city, country
-    except:
+
+    except Exception as e:
+        print("Geo error:", e)
         return "Unknown", "Unknown"
 
 
@@ -277,19 +278,21 @@ class ChatInput(BaseModel):
 @app.post("/chat")
 def chat(req: ChatInput, request: Request):
 
+    # REAL IP (X-Forwarded-For FIX)
+    ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
+
     user = req.message
     uid = req.uid
-    ip = request.client.host
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    # Geolocation
+    # GEOLOCATION
     city, country = get_geo_info(ip)
     location_text = f"{city}, {country}"
 
-    # Save conversation
+    # SAVE TRANSCRIPT
     memory["conversation_transcript"].append(f"USER: {user}")
 
-    # Summary for notification
+    # GPT SUMMARY
     session_summary = generate_session_summary()
 
     # ---------------------------------------------------------
@@ -306,11 +309,14 @@ def chat(req: ChatInput, request: Request):
     )
 
     notify_telegram(notify_text)
-    notify_email("Chatbot Mesajı Var", notify_text)
+    notify_email("CHATBOT KULLANILDI!", notify_text)
 
+    # ---------------------------------------------------------
+    # LOGIC
+    # ---------------------------------------------------------
     lower = user.lower()
 
-    # PRODUCTS LIST
+    # PRODUCT LIST
     triggers = [
         "what are your products","show products","products?",
         "list products","all products","product list",
@@ -339,14 +345,14 @@ def chat(req: ChatInput, request: Request):
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # SPECIFIC PRODUCT
+    # PRODUCT INFO
     product = ai_resolve_product(user)
     if product:
         reply = natural_format(user, tool_product_info(product))
         memory["conversation_transcript"].append(f"BOT: {reply}")
         return {"reply": reply}
 
-    # SUMMARY REQUEST
+    # SUMMARY COMMAND
     if "summary" in lower or "summarize" in lower or "ملخص" in lower:
         full_summary = generate_session_summary()
         memory["conversation_transcript"].append(f"BOT: {full_summary}")
@@ -357,6 +363,7 @@ def chat(req: ChatInput, request: Request):
         "type":"info",
         "message":"I'm here to help with products, orders, or refunds. How can I assist?"
     })
+
     memory["conversation_transcript"].append(f"BOT: {reply}")
 
     return {
