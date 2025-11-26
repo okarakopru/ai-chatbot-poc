@@ -4,7 +4,7 @@ const API_URL = "https://orhankarakopru.com.tr/chat";
    FORCE NORMAL UI ON PAGE LOAD
 ============================================================ */
 window.addEventListener("load", () => {
-    document.getElementById("voice-bar").classList.add("hidden");
+    document.getElementById("voice-row").classList.add("hidden");
     document.getElementById("input-area").classList.remove("hidden");
 });
 
@@ -49,7 +49,6 @@ function typewriterMessage(fullText) {
 function speak(text, lang) {
     currentBotReply = text;
 
-    // Remove any previous speaking bubble
     if (speakingBubble) speakingBubble.remove();
 
     const box = document.getElementById("chat-box");
@@ -64,13 +63,12 @@ function speak(text, lang) {
     box.appendChild(speakingBubble);
     box.scrollTop = box.scrollHeight;
 
-    // Stop button inside bubble
     speakingBubble.querySelector(".speaking-stop-btn").onclick = () => stopSpeaking();
 
-    // TTS engine
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang === "ar" ? "ar-SA" : "en-US";
     utter.rate = 1;
+    utter.pitch = 1;
 
     speechSynthesis.speak(utter);
 
@@ -138,11 +136,11 @@ document.getElementById("mic-btn").onclick = () => {
         return;
     }
 
-    rec.lang = "en-US"; // starting language
+    rec.lang = "en-US";
 
-    // Switch UI: hide input, show voice-bar
+    // Switch to VOICE-ROW layout
     document.getElementById("input-area").classList.add("hidden");
-    document.getElementById("voice-bar").classList.remove("hidden");
+    document.getElementById("voice-row").classList.remove("hidden");
 
     rec.start();
 };
@@ -151,7 +149,6 @@ rec.onresult = (e) => {
     const text = e.results[0][0].transcript;
     const lang = detectLang(text);
 
-    // The send button in recording mode
     document.getElementById("voice-send").onclick = () => {
         sendDirect(text, lang);
     };
@@ -169,7 +166,7 @@ rec.onend = () => {
    RECORDING UI CONTROL
 ============================================================ */
 function stopRecordingUI() {
-    document.getElementById("voice-bar").classList.add("hidden");
+    document.getElementById("voice-row").classList.add("hidden");
     document.getElementById("input-area").classList.remove("hidden");
 }
 
@@ -201,8 +198,7 @@ function sendDirect(text, lang) {
             const reply = data.reply;
             const replyLang = detectLang(reply);
 
-            // Voice input → voice output
-            speak(reply, replyLang);
+            speak(reply, replyLang);   // voice input → voice output
         })
         .catch(() => {
             hideThinking();
@@ -238,7 +234,7 @@ function sendMessage() {
 
             const reply = data.reply;
 
-            // TEXT input → TEXT output (no TTS)
+            // Text input → text output (no TTS)
             typewriterMessage(reply);
         })
         .catch(() => {
@@ -257,21 +253,24 @@ document.getElementById("user-input").addEventListener("keypress", (e) => {
 ============================================================ */
 function addMessage(msg, type) {
     const box = document.getElementById("chat-box");
+
     const div = document.createElement("div");
     div.className = "message " + type;
     div.textContent = msg;
+
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
 
 /* ============================================================
-   SCROLL TO BOTTOM BUTTON
+   SCROLL BUTTON
 ============================================================ */
 function checkScrollButton() {
     const box = document.getElementById("chat-box");
     const btn = document.getElementById("scroll-down-btn");
 
-    const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
+    const atBottom =
+        box.scrollHeight - box.scrollTop <= box.clientHeight + 20;
 
     if (atBottom) btn.classList.add("hidden");
     else btn.classList.remove("hidden");
