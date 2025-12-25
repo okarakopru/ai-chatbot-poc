@@ -1,11 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Msg = {
   role: "user" | "assistant";
   content: string;
 };
+
+function LabUpload({ onUploaded }: { onUploaded: () => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    await fetch("/api/lab/upload", {
+      method: "POST",
+      body: fd
+    });
+
+    setUploading(false);
+    e.target.value = "";
+    onUploaded();
+  }
+
+  return (
+    <div className="mb-4">
+      <label className="inline-flex items-center gap-2 bg-gray-900 border border-gray-700 px-3 py-2 rounded cursor-pointer">
+        <input type="file" className="hidden" onChange={onChange} />
+        <span>{uploading ? "Yükleniyor..." : "Doküman Yükle"}</span>
+      </label>
+      <p className="text-xs text-gray-500 mt-1">
+        Şimdilik .txt / .md (PDF bir sonraki adım)
+      </p>
+    </div>
+  );
+}
 
 export default function LabPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -13,6 +48,17 @@ export default function LabPage() {
   const [model, setModel] = useState("auto");
   const [temperature, setTemperature] = useState(0.7);
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [docCount, setDocCount] = useState(0);
+
+  async function refreshDocs() {
+    const res = await fetch("/api/lab/documents");
+    const docs = await res.json();
+    setDocCount(Array.isArray(docs) ? docs.length : 0);
+  }
+
+  useEffect(() => {
+    refreshDocs();
+  }, []);
 
   async function send() {
     if (!input.trim()) return;
@@ -42,7 +88,12 @@ export default function LabPage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white p-6">
-      <h1 className="text-2xl font-bold mb-4">OrhanGPT Lab</h1>
+      <h1 className="text-2xl font-bold mb-2">OrhanGPT Lab</h1>
+      <p className="text-sm text-gray-400 mb-4">
+        Yüklü doküman: {docCount}
+      </p>
+
+      <LabUpload onUploaded={refreshDocs} />
 
       {/* Controls */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -53,7 +104,7 @@ export default function LabPage() {
         >
           <option value="auto">Auto</option>
           <option value="openai">OpenAI</option>
-          <option value="groq">Groq (yakında)</option>
+          <option value="groq">Groq</option>
         </select>
 
         <input
