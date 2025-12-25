@@ -21,8 +21,7 @@ export async function chatWithGroq(
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        // 🔥 MODEL ADINI DÜZELTİYORUZ
-        model: "llama-3.1-70b-versatile",
+        model: "llama-3.3-70b",
         temperature,
         messages
       })
@@ -31,13 +30,8 @@ export async function chatWithGroq(
 
   const data = await res.json();
 
-  // 🔥 DEBUG LOG (Render Logs'ta göreceğiz)
-  console.log("GROQ RAW RESPONSE:", JSON.stringify(data));
-
   if (data?.error) {
-    throw new Error(
-      `Groq error: ${data.error.message || "unknown"}`
-    );
+    throw new Error(`Groq error: ${data.error.message}`);
   }
 
   const content = data?.choices?.[0]?.message?.content;
