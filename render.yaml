@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: orhan-gpt
+    env: node
+    region: frankfurt
+    plan: free
+
+    rootDir: .
+
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
