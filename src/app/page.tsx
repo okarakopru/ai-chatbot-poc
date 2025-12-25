@@ -42,44 +42,81 @@ export default function Home() {
     setLoading(true);
     setTypingText("");
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: userMessage.content,
-        history: messages // session memory
-      })
-    });
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage.content,
+          history: messages
+        })
+      });
 
-    const data = await res.json();
-    const fullText: string = data.answer ?? "";
+      const data = await res.json();
+      const fullText: string = data.answer ?? "";
 
-    let index = 0;
-
-    // 🔥 Adaptive typing speed (ChatGPT-like)
-    const length = fullText.length;
-    const speed =
-      length < 200 ? 25 :
-      length < 600 ? 15 :
-      8;
-
-    const interval = setInterval(() => {
-      index++;
-      setTypingText(fullText.slice(0, index));
-
-      if (index >= fullText.length) {
-        clearInterval(interval);
+      // Eğer cevap boşsa → direkt toparla
+      if (!fullText) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: fullText }
+          {
+            role: "assistant",
+            content: "Şu an cevap veremedim, tekrar dener misin?"
+          }
         ]);
+        setLoading(false);
+        setTypingText("");
+        return;
+      }
+
+      let index = 0;
+
+      // Adaptive typing speed
+      const length = fullText.length;
+      const speed =
+        length < 200 ? 25 :
+        length < 600 ? 15 :
+        8;
+
+      const interval = setInterval(() => {
+        index++;
+        setTypingText(fullText.slice(0, index));
+
+        if (index >= fullText.length) {
+          clearInterval(interval);
+          setMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: fullText }
+          ]);
+          setTypingText("");
+          setLoading(false);
+        }
+      }, speed);
+
+      // 🔒 HARD SAFETY: ne olursa olsun UI kilitlenmesin
+      setTimeout(() => {
+        clearInterval(interval);
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") return prev;
+          return [...prev, { role: "assistant", content: fullText }];
+        });
         setTypingText("");
         setLoading(false);
-      }
-    }, speed);
+      }, 15000);
 
-    // Safety cleanup
-    setTimeout(() => clearInterval(interval), 12000);
+    } catch (error) {
+      console.error("SEND MESSAGE ERROR:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Bir hata oluştu, tekrar dener misin?"
+        }
+      ]);
+      setTypingText("");
+      setLoading(false);
+    }
   }
 
   return (
