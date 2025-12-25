@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-// Profile (src root uyumlu, relative import)
+// Profile data
 import profile from "../../../data/orhan.profile.json";
 
 // Admin metrics
@@ -8,6 +8,14 @@ import {
   recordChatStarted,
   recordMessage
 } from "../../../lib/adminMetrics";
+
+// Telegram & Geo helpers
+import { sendTelegramMessage } from "../../../lib/telegram";
+import {
+  extractClientIp,
+  lookupGeo,
+  maskIp
+} from "../../../lib/geo";
 
 export const runtime = "nodejs";
 
@@ -18,10 +26,6 @@ type ChatMessage = {
 
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
-  const ip =
-    req.headers.get("x-forwarded-for") ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
 
   try {
     const body = await req.json();
@@ -30,9 +34,21 @@ export async function POST(req: NextRequest) {
       history?: ChatMessage[];
     };
 
-    // İlk user mesajı → yeni chat
+    // İlk mesaj = yeni sohbet
     if (!history || history.length <= 1) {
       recordChatStarted();
+
+      const rawIp = extractClientIp(req.headers);
+      const geo = await lookupGeo(rawIp);
+
+      const location =
+        [geo.city, geo.region, geo.country]
+          .filter(Boolean)
+          .join(", ") || "Unknown";
+
+      await sendTelegramMessage(
+        `🤖 *OrhanGPT*\n\nYeni sohbet başlatıldı.\n📍 *Lokasyon:* ${location}\n🌐 *IP:* ${maskIp(rawIp)}\n🕒 *Saat:* ${new Date().toLocaleTimeString("tr-TR")}`
+      );
     }
 
     const systemPrompt = `
@@ -43,15 +59,15 @@ Use first-person language in Turkish ("ben", "çalışıyorum", "deneyimim var")
 Use Turkish as default but understand the message language and reply with that language. For example if message is in English, reply in English.
 
 Tone & style:
-- Speak like a real person in a natural conversation, not like a CV.
-- Use **bold text** naturally for emphasis.
+- Speak naturally, like a real conversation.
+- Use **bold text** for emphasis when appropriate.
 - Prefer short paragraphs.
-- Lists are allowed only if explicitly requested.
+- Avoid CV-style listing unless explicitly asked.
 
 Factual rules:
 - Base your answers ONLY on the profile data below.
 - Do NOT invent information.
-- If information is missing, say you don’t have that information.
+- If something is unknown, say so clearly.
 
 PROFILE DATA:
 ${JSON.stringify(profile, null, 2)}
@@ -82,16 +98,16 @@ ${JSON.stringify(profile, null, 2)}
       data?.choices?.[0]?.message?.content ??
       "Şu anda bu soruya cevap veremiyorum.";
 
-    // Başarılı istek kaydı
-    recordMessage(Date.now() - t0, true, String(ip));
+    // Başarılı mesaj metriği
+    recordMessage(Date.now() - t0, true, extractClientIp(req.headers));
 
     return Response.json({ answer });
 
   } catch (error) {
     console.error("CHAT API ERROR:", error);
 
-    // Hatalı istek kaydı
-    recordMessage(Date.now() - t0, false, String(ip));
+    // Hata metriği
+    recordMessage(Date.now() - t0, false, extractClientIp(req.headers));
 
     return Response.json(
       { answer: "Bir hata oluştu, lütfen tekrar dene." },
