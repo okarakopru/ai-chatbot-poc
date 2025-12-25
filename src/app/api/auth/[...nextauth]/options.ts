@@ -14,8 +14,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: {
           label: "Email",
-          type: "email",
-          placeholder: "o.karakopru@gmail.com"
+          type: "email"
         }
       },
       async authorize(credentials) {
@@ -28,5 +27,12 @@ export const authOptions: NextAuthOptions = {
         return null;
       }
     })
-  ]
+  ],
+
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Login sonrası her zaman /admin
+      return `${baseUrl}/admin`;
+    }
+  }
 };
