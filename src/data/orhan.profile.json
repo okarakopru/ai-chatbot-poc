@@ -1,0 +1,125 @@
+{
+  "identity": {
+    "full_name": "Uğur Orhan Karaköprü",
+    "title": "AI Product Manager",
+    "location": "Izmir, Turkey",
+    "summary": "AI Product Manager with 4+ years of experience building and scaling SaaS, data-driven, and AI-powered products across different industries. Experienced in experimentation, analytics, and user-centric product development, with hands-on exposure to digital health products."
+  },
+
+  "core_focus": [
+    "AI-powered product development",
+    "SaaS & B2B products",
+    "Data-driven decision making",
+    "Experimentation & growth",
+    "User journey & funnel optimization"
+  ],
+
+  "industry_experience": [
+    "SaaS",
+    "B2B Products",
+    "AI & Data Products",
+    "Digital Health"
+  ],
+
+  "skills": {
+    "product_management": [
+      "Product Strategy",
+      "Roadmap Planning",
+      "MVP Development",
+      "User Journey Design",
+      "Customer Interviewing"
+    ],
+    "growth_analytics": [
+      "A/B Testing",
+      "Funnel Optimization",
+      "Behavioral Analytics",
+      "Google Analytics",
+      "Hotjar"
+    ],
+    "ai_product": [
+      "AI feature ideation",
+      "LLM-based product concepts",
+      "Experiment-driven AI product decisions",
+      "Human-in-the-loop product design"
+    ],
+    "tools": [
+      "Jira",
+      "Notion",
+      "Figma"
+    ]
+  },
+
+  "experience": [
+    {
+      "company": "Medibulut",
+      "role": "Product Manager",
+      "period": "Dec 2023 – Present",
+      "type": "Remote",
+      "industry": "Digital Health",
+      "highlights": [
+        "Led data-informed product initiatives using A/B testing, Google Analytics, and Hotjar.",
+        "Achieved a 3x subscription growth target within 6 months through onboarding and activation improvements.",
+        "Collaborated with clinicians, engineers, and marketers on cross-functional product decisions.",
+        "Improved mobile and web user flows, resulting in a ~30% increase in appointment bookings."
+      ]
+    },
+    {
+      "company": "optimum7.com",
+      "role": "Business Analyst",
+      "period": "Nov 2022 – Dec 2023",
+      "type": "Remote",
+      "industry": "SaaS / Marketing Analytics",
+      "highlights": [
+        "Delivered performance and profitability analyses for high-traffic SaaS customers.",
+        "Improved traffic outcomes by ~30% using data-driven insights.",
+        "Supported sales and SEO teams with actionable analytics."
+      ]
+    },
+    {
+      "company": "gigaaa Voice Assistant",
+      "role": "Product Manager",
+      "period": "Jan 2021 – Nov 2022",
+      "type": "Remote",
+      "industry": "B2B SaaS / AI Voice",
+      "highlights": [
+        "Led the development of the company’s first B2B mobile SaaS product.",
+        "Defined MVP scope, user stories, and launch strategy.",
+        "Supported early market adoption after MVP launch."
+      ]
+    }
+  ],
+
+  "education": [
+    {
+      "degree": "PhD in Business Management",
+      "institution": "Istanbul University",
+      "period": "2018 – Present",
+      "details": "Thesis: Demand Estimation with Machine Learning Models Under Uncertainty (GPA: 3.55/4)"
+    },
+    {
+      "degree": "MSc in International Logistics Management",
+      "institution": "Yasar University",
+      "period": "2014 – 2017",
+      "details": "Full scholarship, GPA: 3.43/4"
+    },
+    {
+      "degree": "BSc in International Logistics Management",
+      "institution": "Yasar University",
+      "period": "2010 – 2014",
+      "details": "Full scholarship, GPA: 3.35/4"
+    }
+  ],
+
+  "languages": {
+    "Turkish": "Native",
+    "English": "Proficient (C2)",
+    "German": "Basic (A2)",
+    "Polish": "Basic (A2)"
+  },
+
+  "links": {
+    "linkedin": "https://www.linkedin.com/in/orhankarakopru",
+    "github": "https://github.com/okarakopru",
+    "website": "https://orhankarakopru.com.tr"
+  }
+}
