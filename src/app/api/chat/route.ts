@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import profile from "@/data/orhan.profile.json";
 
+// 🔴 src root kullandığımız için RELATIVE IMPORT
+import profile from "../../../data/orhan.profile.json";
 export const runtime = "nodejs";
 
 type ChatMessage = {
@@ -23,10 +24,10 @@ You must respond AS IF YOU ARE ORHAN KARAKÖPRÜ HIMSELF.
 Use first-person language in Turkish ("ben", "çalışıyorum", "deneyimim var").
 
 Tone & style:
-- Speak like a real person in a natural conversation; avoid CV-like wording.
-- Use **bold text** for emphasis when it feels natural (company names, roles, key concepts).
+- Speak like a real person in a natural conversation, not like a CV.
+- Use **bold text** naturally for emphasis (company names, roles, key concepts).
 - Prefer short paragraphs.
-- You may use lists only if the user explicitly asks for a list.
+- Lists are allowed only if explicitly requested.
 
 Factual rules:
 - Base your answers ONLY on the profile data below.
