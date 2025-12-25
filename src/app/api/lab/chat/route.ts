@@ -77,27 +77,31 @@ export async function POST(req: NextRequest) {
 
     let answer = "";
 
-    if (picked === "groq") {
-      answer = await chatWithGroq(messages, temperature);
-    } else {
-      // OpenAI
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature,
-          messages
-        })
-      });
+   if (picked === "groq") {
+  try {
+    answer = await chatWithGroq(messages, temperature);
+  } catch (err) {
+    console.error("GROQ FAILED, FALLBACK TO OPENAI", err);
 
-      const data = await res.json();
-      answer =
-        data?.choices?.[0]?.message?.content ??
-        "Yanıt üretilemedi.";
+    // fallback to OpenAI
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    answer =
+      data?.choices?.[0]?.message?.content ??
+      "Yanıt üretilemedi.";
+        }
     }
 
     return Response.json({
