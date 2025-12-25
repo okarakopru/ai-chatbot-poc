@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-openai
-numpy
-pydantic
-python-multipart
-langdetect
-requests
