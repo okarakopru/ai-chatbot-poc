@@ -28,9 +28,15 @@ function Avatar({ size = 36 }: { size?: number }) {
   return (
     <div
       style={{ width: size, height: size, minWidth: size }}
-      className="rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold text-sm select-none"
+      className="rounded-full overflow-hidden ring-2 ring-indigo-500/40 select-none"
     >
-      OK
+      <img
+        src="/avatar.jpg"
+        alt="Orhan"
+        width={size}
+        height={size}
+        style={{ width: size, height: size, objectFit: "cover" }}
+      />
     </div>
   );
 }
