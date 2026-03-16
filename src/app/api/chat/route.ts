@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       await sendTelegramMessage(
         `🤖 *OrhanGPT — Yeni Sohbet*\n\n` +
         `💬 *İlk mesaj:* ${preview}\n\n` +
-        `📍 *Lokasyon:* ${location}\n` +
+        `📍 *Ziyaretçi Lokasyonu:* ${location}\n` +
         `🌐 *IP:* ${maskIp(rawIp)}\n` +
         `🕒 *Saat:* ${new Date().toLocaleTimeString("tr-TR")}`
       );
