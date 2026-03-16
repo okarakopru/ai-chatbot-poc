@@ -67,7 +67,14 @@ export async function loadMemory(ip: string): Promise<Memory | null> {
     const hash = await hashIp(ip);
     const raw = await redisGet(`memory:${hash}`);
     if (!raw) return null;
-    return JSON.parse(raw) as Memory;
+    const parsed = JSON.parse(raw);
+    // Eski Redis kayıtlarında 'topics' olmayabilir — varsayılan değerlerle normalize et
+    return {
+      summary: parsed.summary ?? "",
+      topics: Array.isArray(parsed.topics) ? parsed.topics : [],
+      lastSeen: parsed.lastSeen ?? "",
+      messageCount: parsed.messageCount ?? 0,
+    };
   } catch {
     return null;
   }
@@ -113,7 +120,7 @@ export async function saveMemory(
 
 // Hafızayı prompt için formatlı string'e çevir
 export function formatMemoryForPrompt(memory: Memory): string {
-  const topicList = memory.topics.slice(-5).join(" / ");
+  const topicList = (memory.topics ?? []).slice(-5).join(" / ");
   return (
     `Bu kullanıcı daha önce seninle konuştu (${memory.lastSeen}). ` +
     `Toplam ${memory.messageCount} mesaj gönderdi. ` +
