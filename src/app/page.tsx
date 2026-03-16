@@ -58,6 +58,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [typingText, setTypingText] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -89,6 +92,52 @@ export default function Home() {
   function clearHistory() {
     localStorage.removeItem(STORAGE_KEY);
     setMessages([WELCOME_MESSAGE]);
+    stopAudio();
+  }
+
+  function stopAudio() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    setPlayingIndex(null);
+    setLoadingAudio(null);
+  }
+
+  async function playMessage(text: string, index: number) {
+    // Zaten çalıyorsa durdur
+    if (playingIndex === index) {
+      stopAudio();
+      return;
+    }
+
+    stopAudio();
+    setLoadingAudio(index);
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) throw new Error("TTS failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const audio = new Audio(url);
+      audioRef.current = audio;
+
+      audio.onplay = () => { setPlayingIndex(index); setLoadingAudio(null); };
+      audio.onended = () => { setPlayingIndex(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setPlayingIndex(null); setLoadingAudio(null); URL.revokeObjectURL(url); };
+
+      await audio.play();
+    } catch {
+      setPlayingIndex(null);
+      setLoadingAudio(null);
+    }
   }
 
   async function sendMessage(text?: string) {
@@ -211,6 +260,45 @@ export default function Home() {
                     {msg.content}
                   </ReactMarkdown>
                 </div>
+
+                {/* Ses butonu — sadece asistan mesajları */}
+                {msg.role === "assistant" && (
+                  <button
+                    onClick={() => playMessage(msg.content, i)}
+                    title={playingIndex === i ? "Durdur" : "Sesli dinle"}
+                    className={`mt-1.5 flex items-center gap-1 text-[11px] transition-all px-2 py-0.5 rounded-full
+                      ${playingIndex === i
+                        ? "text-indigo-400 bg-indigo-500/10 border border-indigo-500/25"
+                        : "text-white/20 hover:text-white/50 opacity-0 group-hover:opacity-100"
+                      }
+                      ${loadingAudio === i ? "text-white/40 opacity-100" : ""}
+                    `}
+                  >
+                    {loadingAudio === i ? (
+                      <>
+                        <span className="w-2.5 h-2.5 border border-white/30 border-t-white/70 rounded-full animate-spin" />
+                        <span>yükleniyor</span>
+                      </>
+                    ) : playingIndex === i ? (
+                      <>
+                        <span className="flex gap-px items-end h-3">
+                          {[1, 2, 3].map((b) => (
+                            <span key={b} className="w-0.5 bg-indigo-400 rounded-full animate-bounce"
+                              style={{ height: `${[8, 12, 6][b-1]}px`, animationDelay: `${(b-1) * 100}ms` }} />
+                          ))}
+                        </span>
+                        <span>durdur</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                          <path d="M2 2l6 3-6 3V2z" />
+                        </svg>
+                        <span>dinle</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           ))}
