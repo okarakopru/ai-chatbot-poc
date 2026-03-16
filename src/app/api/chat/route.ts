@@ -161,11 +161,13 @@ ${memoryBlock ? `\n## GEÇMİŞ SOHBET BAĞLAMI\n${memoryBlock}` : ""}
 
     return Response.json({ answer });
   } catch (error) {
-    console.error("CHAT API ERROR:", error instanceof Error ? error.message : error);
+    const errMsg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error("CHAT API ERROR:", errMsg);
     recordMessage(Date.now() - t0, false, extractClientIp(req.headers));
+    // DEBUG — hata mesajını geçici olarak göster (sonra kaldırılacak)
     return Response.json(
-      { answer: "Şu an bir sorun var, birkaç saniye sonra tekrar dener misin?" },
-      { status: 200 }  // 500 yerine 200 — frontend'i crash'lemez
+      { answer: `[DEBUG] ${errMsg}` },
+      { status: 200 }
     );
   }
 }
