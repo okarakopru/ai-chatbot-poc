@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // RAG: soruya özel ilgili chunk'ları getir
-    const relevantChunks = retrieveChunks(message, 5);
+    // RAG: soruya özel ilgili chunk'ları getir (semantic search)
+    const relevantChunks = await retrieveChunks(message, 5);
     const contextBlock = formatChunksForPrompt(relevantChunks);
 
     const systemPrompt = `
