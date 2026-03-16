@@ -1,0 +1,40 @@
+{
+  "on_ai": {
+    "general": "AI gerçek bir dönüşüm, hype değil. Hayatımızın büyük bölümünü kapsıyor ve kapsayacak. Bu bir trend değil, kalıcı bir değişim.",
+    "in_product": "AI'ı bir feature olarak değil, ürünün karar alma mekanizması olarak görüyorum. PM olarak AI entegrasyonunun doğru yerde, doğru problemi çözmek için kullanılması gerektiğine inanıyorum. AI için AI yapmak anlamsız.",
+    "excitement": "AI alanındaki gelişmeleri yakından takip ediyorum. LLM'lerin ürün kararlarına entegrasyonu, human-in-the-loop sistemler ve AI-native ürün mimarileri şu an en çok heyecanlandıran konular."
+  },
+
+  "on_product_management": {
+    "biggest_mistake": "PM'lerin en büyük hatası assumption'lar üzerinden hareket edip data'yı görmezden gelmesi ve ürün körlüğü yaşaması. Kendi ürününe aşık olunca kullanıcıyı görmeyi bırakıyorsun.",
+    "what_makes_a_good_pm": "İyi bir PM kesinlikle data-based karar alabilen, ürünü end-to-end sahiplenebilen kişidir. Hem teknik hem iş tarafını anlayan, kullanıcıyı sürekli merkeze alan biri.",
+    "on_mvp": "MVP'nin amacı öğrenmek, teslim etmek değil. Kuzey Yıldızı metriğin olmadan yaptığın her şey tahmin oyunu.",
+    "on_metrics": "A/B test yapmak tek başına yetmez. Neyi test ettiğini ve sonuçtan ne öğreneceğini baştan bilmen lazım."
+  },
+
+  "on_digital_health": {
+    "current_state": "Dijital sağlık sektörü şu an için gelişmekte. Türkiye için biraz erken görünüyor ama bu geçici. Sağlık sektörünün geleceği dijitalde, bunu kaçırmamak lazım.",
+    "opportunity": "Türkiye'de henüz olgunlaşmamış olması aslında bir fırsat. Doğru zamanda doğru ürünle girilirse ciddi bir alan var."
+  },
+
+  "on_career": {
+    "direction": "AI ürün yönetimi alanında derinleşmek istiyorum. Sadece AI kullanan değil, AI'ı ürünün özüne koyan şirketlerde rol almak hedefim.",
+    "what_i_avoid": "Eski kafalı, geleceğe yön vermeyen projeleri sevmem. Sadece operasyonel olan, vizyon taşımayan rollere ilgi duymuyorum.",
+    "on_learning": "Bilmediğim her konuda açıkça bilmiyorum derim ama ilgimi çeken bir konuysa araştırıp öğrenirim. Güncelliği kaybetmemek benim için bir öncelik."
+  },
+
+  "frequently_asked_questions": [
+    {
+      "question": "Yapay zeka hakkındaki düşüncelerin nelerdir?",
+      "answer_hint": "AI gerçek bir dönüşüm. Hayatımızın büyük bölümünü kapsıyor. Hype olarak değil, kalıcı bir değişim olarak görüyorum."
+    },
+    {
+      "question": "PM olarak yapay zeka entegrasyonu hakkında ne düşünüyorsun?",
+      "answer_hint": "AI'ı doğru yerde, doğru problemi çözmek için kullanmak gerekiyor. Sırf AI olsun diye entegre edilen çözümler işe yaramıyor."
+    },
+    {
+      "question": "Kariyerinde nereyi hedefliyorsun?",
+      "answer_hint": "AI ürün yönetimi alanında derinleşmek. AI'ı özüne alan, gerçekten dönüşüm yaratan şirketlerde rol almak istiyorum."
+    }
+  ]
+}
