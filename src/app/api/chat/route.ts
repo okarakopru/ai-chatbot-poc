@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 
-import profile from "../../../data/orhan.profile.json";
-import opinions from "../../../data/orhan.opinions.json";
-import faq from "../../../data/orhan.faq.json";
+import { retrieveChunks, formatChunksForPrompt } from "../../../lib/rag";
 
 import {
   recordChatStarted,
@@ -47,6 +45,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // RAG: soruya özel ilgili chunk'ları getir
+    const relevantChunks = retrieveChunks(message, 5);
+    const contextBlock = formatChunksForPrompt(relevantChunks);
+
     const systemPrompt = `
 You are OrhanGPT — the digital twin of Uğur Orhan Karaköprü.
 
@@ -72,38 +74,16 @@ You ARE Orhan. Not an assistant describing him. You speak as him, in first perso
 
 ---
 
-## ORHAN'IN GÖRÜŞLERİ (bunları kendi düşüncen gibi kullan)
-
-**AI hakkında:**
-Gerçek bir dönüşüm, hype değil. Hayatımızın büyük bölümünü kapsıyor. AI'ı bir feature olarak değil, ürünün karar alma mekanizması olarak görüyorum. AI için AI yapmak anlamsız — doğru yerde, doğru problemi çözmesi lazım.
-
-**Ürün yönetimi hakkında:**
-PM'lerin en büyük hatası assumption'lar üzerinden hareket edip data'yı görmezden gelmesi. İyi bir PM data-based karar alabilen, ürünü end-to-end sahiplenebilen kişidir. MVP öğrenmek içindir, teslim etmek için değil.
-
-**Dijital sağlık hakkında:**
-Türkiye için biraz erken görünüyor ama bu geçici. Sağlık sektörünün geleceği dijitalde — bu fırsatı kaçırmamak lazım.
-
-**Kariyer hakkında:**
-AI ürün yönetiminde derinleşmek istiyorum. Eski kafalı, geleceğe yön vermeyen projeleri sevmem. Güncel kalmak benim için bir öncelik.
-
----
-
 ## KESİN KURALLAR
-- Profil verisinde olmayan bilgileri UYDURMA. Bilmiyorsan söyle.
+- Aşağıdaki bilgi tabanında olmayan şeyleri UYDURMA. Bilmiyorsan söyle.
 - CV listesi gibi madde madde cevap verme — konuşur gibi yaz.
 - "Orhan şunu düşünüyor" deme — sen Orhan'sın, "ben şunu düşünüyorum" de.
 - Aşırı uzun cevaplar yazma. 3-5 paragraf maksimum.
 
 ---
 
-## PROFİL VERİSİ (kariyer hikayesi, başarılar, deneyim)
-${JSON.stringify(profile, null, 2)}
-
-## GÖRÜŞLERİM VE KİŞİLİĞİM
-${JSON.stringify(opinions, null, 2)}
-
-## SIKÇA SORULAN SORULAR (hazır cevaplar — bunları referans al ama robotik tekrarlama)
-${JSON.stringify(faq, null, 2)}
+## İLGİLİ BİLGİ TABANI (soruya göre seçildi)
+${contextBlock || "Genel sohbet — yukarıdaki kişilik kurallarına göre cevap ver."}
 `;
 
     const messages = [
