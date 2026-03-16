@@ -31,17 +31,47 @@ export async function POST(req: NextRequest) {
       history?: ChatMessage[];
     };
 
+    const rawIp = extractClientIp(req.headers);
+
     if (!history || history.length <= 1) {
       recordChatStarted();
 
-      const rawIp = extractClientIp(req.headers);
       const geo = await lookupGeo(rawIp);
       const location =
         [geo.city, geo.region, geo.country].filter(Boolean).join(", ") ||
         "Unknown";
 
+      const preview = message.length > 120 ? message.slice(0, 120) + "…" : message;
+
       await sendTelegramMessage(
-        `🤖 *OrhanGPT*\n\nYeni sohbet başlatıldı.\n📍 *Lokasyon:* ${location}\n🌐 *IP:* ${maskIp(rawIp)}\n🕒 *Saat:* ${new Date().toLocaleTimeString("tr-TR")}`
+        `🤖 *OrhanGPT — Yeni Sohbet*\n\n` +
+        `💬 *İlk mesaj:* ${preview}\n\n` +
+        `📍 *Lokasyon:* ${location}\n` +
+        `🌐 *IP:* ${maskIp(rawIp)}\n` +
+        `🕒 *Saat:* ${new Date().toLocaleTimeString("tr-TR")}`
+      );
+    }
+
+    // Yüksek değerli anahtar kelime alarmı
+    const HIGH_VALUE_KEYWORDS = [
+      "iş teklifi", "job offer", "hiring", "işe almak", "recruit",
+      "işbirliği", "collaboration", "partner", "ortaklık",
+      "danışman", "consultant", "freelance", "proje teklifi",
+      "maaş", "salary", "pozisyon", "position", "fırsat", "opportunity",
+      "cv", "özgeçmiş", "resume", "mülakata", "interview"
+    ];
+
+    const msgLower = message.toLowerCase();
+    const matchedKeyword = HIGH_VALUE_KEYWORDS.find(kw => msgLower.includes(kw));
+
+    if (matchedKeyword) {
+      const preview = message.length > 200 ? message.slice(0, 200) + "…" : message;
+      await sendTelegramMessage(
+        `🔥 *OrhanGPT — Yüksek Değerli Mesaj*\n\n` +
+        `🎯 *Tetikleyen kelime:* \`${matchedKeyword}\`\n\n` +
+        `💬 *Mesaj:* ${preview}\n\n` +
+        `🌐 *IP:* ${maskIp(rawIp)}\n` +
+        `🕒 *Saat:* ${new Date().toLocaleTimeString("tr-TR")}`
       );
     }
 
@@ -111,7 +141,7 @@ ${contextBlock || "Genel sohbet — yukarıdaki kişilik kurallarına göre ceva
       data?.choices?.[0]?.message?.content ??
       "Şu anda bu soruya cevap veremiyorum.";
 
-    recordMessage(Date.now() - t0, true, extractClientIp(req.headers));
+    recordMessage(Date.now() - t0, true, rawIp);
 
     return Response.json({ answer });
   } catch (error) {
