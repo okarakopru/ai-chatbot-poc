@@ -21,8 +21,19 @@ const SUGGESTED_QUESTIONS = [
 const WELCOME_MESSAGE: Message = {
   role: "assistant",
   content:
-    "Merhaba 👋 Ben **Orhan**.\n\nBurada benimle birebir sohbet ediyormuş gibi düşünebilirsin. Kariyerim, ürün yönetimi ya da **AI** ile ilgili aklına gelen her şeyi sorabilirsin.",
+    "Merhaba! Ben **Orhan**.\n\nKariyerim, ürün yönetimi ya da AI hakkında aklına gelen her şeyi sorabilirsin.",
 };
+
+function Avatar({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      style={{ width: size, height: size, minWidth: size }}
+      className="rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold text-sm select-none"
+    >
+      OK
+    </div>
+  );
+}
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,7 +44,6 @@ export default function Home() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -45,20 +55,18 @@ export default function Home() {
           return;
         }
       } catch {
-        // invalid data, start fresh
+        // invalid data
       }
     }
     setMessages([WELCOME_MESSAGE]);
     setHydrated(true);
   }, []);
 
-  // Save to localStorage on every change
   useEffect(() => {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
   }, [messages, hydrated]);
 
-  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingText]);
@@ -73,7 +81,6 @@ export default function Home() {
     if (!messageText.trim() || loading) return;
 
     const userMessage: Message = { role: "user", content: messageText };
-
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -83,10 +90,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage.content,
-          history: messages,
-        }),
+        body: JSON.stringify({ message: userMessage.content, history: messages }),
       });
 
       const data = await res.json();
@@ -98,18 +102,15 @@ export default function Home() {
           { role: "assistant", content: "Şu an cevap veremedim, tekrar dener misin?" },
         ]);
         setLoading(false);
-        setTypingText("");
         return;
       }
 
       let index = 0;
-      const length = fullText.length;
-      const speed = length < 200 ? 25 : length < 600 ? 15 : 8;
+      const speed = fullText.length < 200 ? 25 : fullText.length < 600 ? 15 : 8;
 
       const interval = setInterval(() => {
         index++;
         setTypingText(fullText.slice(0, index));
-
         if (index >= fullText.length) {
           clearInterval(interval);
           setMessages((prev) => [...prev, { role: "assistant", content: fullText }]);
@@ -128,8 +129,7 @@ export default function Home() {
         setTypingText("");
         setLoading(false);
       }, 15000);
-    } catch (error) {
-      console.error("SEND MESSAGE ERROR:", error);
+    } catch {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Bir hata oluştu, tekrar dener misin?" },
@@ -143,38 +143,74 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white flex flex-col">
+
       {/* Header */}
-      <header className="p-6 border-b border-gray-800 flex items-center justify-between">
-        <div className="flex-1 text-center">
-          <h1 className="text-3xl font-bold">OrhanGPT</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Orhan Karaköprü&apos;nün dijital ikizi
-          </p>
+      <header className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar size={42} />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-semibold text-white text-base leading-tight">
+                Orhan Karaköprü
+              </h1>
+              <span className="flex items-center gap-1 text-xs text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                aktif
+              </span>
+            </div>
+            <p className="text-gray-400 text-xs mt-0.5">AI Product Manager · Dijital İkiz</p>
+          </div>
         </div>
-        {isConversationStarted && (
-          <button
-            onClick={clearHistory}
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg"
-          >
-            Sohbeti temizle
-          </button>
-        )}
+
+        <div className="flex items-center gap-3">
+          {/* Social links */}
+          <div className="hidden sm:flex items-center gap-3 text-gray-500 text-xs">
+            <a
+              href="https://www.linkedin.com/in/orhankarakopru"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-400 transition-colors"
+            >
+              LinkedIn
+            </a>
+            <span>·</span>
+            <a
+              href="https://orhankarakopru.com.tr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-400 transition-colors"
+            >
+              Website
+            </a>
+          </div>
+
+          {isConversationStarted && (
+            <button
+              onClick={clearHistory}
+              className="text-xs text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Temizle
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5">
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`max-w-2xl ${
-              msg.role === "user" ? "ml-auto text-right" : "mr-auto"
+            className={`flex items-end gap-2.5 ${
+              msg.role === "user" ? "flex-row-reverse" : "flex-row"
             }`}
           >
+            {msg.role === "assistant" && <Avatar size={30} />}
+
             <div
-              className={`inline-block px-4 py-3 rounded-2xl leading-relaxed ${
+              className={`max-w-xl px-4 py-3 rounded-2xl leading-relaxed text-sm ${
                 msg.role === "user"
-                  ? "bg-white text-black"
-                  : "bg-gray-900 border border-gray-800"
+                  ? "bg-indigo-600 text-white rounded-br-sm"
+                  : "bg-gray-900 border border-gray-800 text-gray-100 rounded-bl-sm"
               }`}
             >
               <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -182,33 +218,43 @@ export default function Home() {
           </div>
         ))}
 
-        {/* Typing effect */}
+        {/* Typing */}
         {typingText && (
-          <div className="max-w-2xl mr-auto">
-            <div className="inline-block px-4 py-3 rounded-2xl bg-gray-900 border border-gray-800 text-gray-200 leading-relaxed">
+          <div className="flex items-end gap-2.5">
+            <Avatar size={30} />
+            <div className="max-w-xl px-4 py-3 rounded-2xl rounded-bl-sm bg-gray-900 border border-gray-800 text-gray-100 leading-relaxed text-sm">
               <ReactMarkdown>{typingText}</ReactMarkdown>
-              <span className="animate-pulse">▍</span>
+              <span className="animate-pulse text-indigo-400">▍</span>
             </div>
           </div>
         )}
 
-        {/* Thinking indicator */}
+        {/* Thinking */}
         {loading && !typingText && (
-          <div className="text-gray-500 text-sm">Bir saniye, düşünüyorum…</div>
+          <div className="flex items-end gap-2.5">
+            <Avatar size={30} />
+            <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-gray-900 border border-gray-800 text-gray-500 text-sm flex items-center gap-2">
+              <span className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-500 animate-bounce [animation-delay:300ms]" />
+              </span>
+            </div>
+          </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Suggested questions — only when not started */}
+      {/* Suggested questions */}
       {!isConversationStarted && !loading && (
-        <div className="px-6 pb-2">
+        <div className="px-4 sm:px-6 pb-3">
           <div className="max-w-3xl mx-auto flex flex-wrap gap-2">
             {SUGGESTED_QUESTIONS.map((q) => (
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
-                className="text-sm text-gray-300 border border-gray-700 hover:border-gray-400 hover:text-white px-4 py-2 rounded-full transition-colors"
+                className="text-xs text-gray-400 border border-gray-700 hover:border-indigo-500 hover:text-indigo-300 px-3 py-2 rounded-full transition-colors"
               >
                 {q}
               </button>
@@ -218,12 +264,12 @@ export default function Home() {
       )}
 
       {/* Input */}
-      <footer className="p-6 border-t border-gray-800">
-        <div className="max-w-3xl mx-auto flex gap-4">
+      <footer className="px-4 sm:px-6 py-4 border-t border-gray-800">
+        <div className="max-w-3xl mx-auto flex gap-3 items-end">
           <textarea
             rows={2}
-            className="flex-1 resize-none rounded-xl bg-gray-900 border border-gray-700 p-4 focus:outline-none focus:ring-2 focus:ring-white"
-            placeholder="Kariyerim, ürün yönetimi veya AI hakkında bir soru sor..."
+            className="flex-1 resize-none rounded-xl bg-gray-900 border border-gray-700 focus:border-indigo-500 p-3 text-sm focus:outline-none transition-colors"
+            placeholder="Bir şey sor..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -236,12 +282,16 @@ export default function Home() {
           <button
             onClick={() => sendMessage()}
             disabled={loading}
-            className="bg-white text-black font-semibold px-6 rounded-xl disabled:opacity-50"
+            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium px-5 py-3 rounded-xl text-sm transition-colors"
           >
             Gönder
           </button>
         </div>
+        <p className="text-center text-gray-600 text-xs mt-3">
+          Bu bir AI simülasyonu — gerçek Orhan ile konuşmuyorsunuz.
+        </p>
       </footer>
+
     </main>
   );
 }
