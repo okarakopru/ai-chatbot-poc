@@ -33,9 +33,8 @@ function Avatar({ size = 36 }: { size?: number }) {
     >
       {imgError ? (
         <div
-          style={{ width: size, height: size }}
+          style={{ width: size, height: size, fontSize: size * 0.35 }}
           className="bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-semibold select-none"
-          style2={{ fontSize: size * 0.35 }}
         >
           OK
         </div>
