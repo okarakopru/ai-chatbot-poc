@@ -49,6 +49,28 @@
     ]
   },
 
+  "career_story": "Akademisyenlik yaparak başladım. İstanbul Üniversitesi’nde işletme doktorası yapıyorum, tezim Machine Learning ile talep tahmini üzerine. Veriyi ve insan yönetimini akademide öğrendim. PM olmak istedim çünkü bu iki beceriyi bir arada kullanabileceğim en iyi yol buydu. İlk PM rolüm gigaaa Voice Assistant’ta oldu, şirketin ilk B2B SaaS ürününü sıfırdan çıkardık. Sonra optimum7’de Business Analyst olarak çalıştım. Şu an Medibulut’ta AI odaklı ürün kararları alıyorum.",
+
+  "current_focus": "Yapay zeka ile uğraşıyorum — hem kendi hayatıma hem de projelere adapte etmek istiyorum. AI gelişmelerini yakından takip ediyor, LLM’leri ve AI-native ürün mimarilerini keşfediyorum.",
+
+  "success_stories": [
+    {
+      "title": "3x Abonelik Büyümesi — Medibulut",
+      "description": "Onboarding ve aktivasyon akışlarını veriyle yeniden tasarladım. 6 ay içinde abonelik büyüme hedefini 3x gerçekleştirdik. Randevu rezervasyonları %30 arttı.",
+      "impact": "3x subscription growth, %30 appointment booking increase in 6 months"
+    },
+    {
+      "title": "Medibulut Ekstra SEO Aracı",
+      "description": "SEO yükseltmek için herkese açık bir tool geliştirdim. Kısa sürede sitenin en çok ziyaretçi çeken bölümü haline geldi.",
+      "impact": "Sitenin en yüksek trafik kaynağı"
+    },
+    {
+      "title": "gigaaa — İlk B2B SaaS Ürünü",
+      "description": "Şirketin ilk B2B mobil SaaS ürününü sıfırdan çıkardım. MVP kapsamını, user story’leri ve lansman stratejisini tanımladım.",
+      "impact": "Şirketin ilk SaaS ürünü pazara çıktı"
+    }
+  ],
+
   "experience": [
     {
       "company": "Medibulut",
@@ -60,7 +82,8 @@
         "Led data-informed product initiatives using A/B testing, Google Analytics, and Hotjar.",
         "Achieved a 3x subscription growth target within 6 months through onboarding and activation improvements.",
         "Collaborated with clinicians, engineers, and marketers on cross-functional product decisions.",
-        "Improved mobile and web user flows, resulting in a ~30% increase in appointment bookings."
+        "Improved mobile and web user flows, resulting in a ~30% increase in appointment bookings.",
+        "Developed Medibulut Ekstra — a publicly accessible SEO tool that became the most visited section of the website."
       ]
     },
     {

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 import profile from "../../../data/orhan.profile.json";
 import opinions from "../../../data/orhan.opinions.json";
+import faq from "../../../data/orhan.faq.json";
 
 import {
   recordChatStarted,
@@ -95,11 +96,14 @@ AI ürün yönetiminde derinleşmek istiyorum. Eski kafalı, geleceğe yön verm
 
 ---
 
-## PROFİL VERİSİ
+## PROFİL VERİSİ (kariyer hikayesi, başarılar, deneyim)
 ${JSON.stringify(profile, null, 2)}
 
 ## GÖRÜŞLERİM VE KİŞİLİĞİM
 ${JSON.stringify(opinions, null, 2)}
+
+## SIKÇA SORULAN SORULAR (hazır cevaplar — bunları referans al ama robotik tekrarlama)
+${JSON.stringify(faq, null, 2)}
 `;
 
     const messages = [
