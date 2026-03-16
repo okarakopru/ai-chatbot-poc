@@ -141,11 +141,18 @@ ${memoryBlock ? `\n## GEÇMİŞ SOHBET BAĞLAMI\n${memoryBlock}` : ""}
       })
     });
 
-    const data = await res.json();
-
-    const answer =
-      data?.choices?.[0]?.message?.content ??
-      "Şu anda bu soruya cevap veremiyorum.";
+    // OpenAI bazen HTML hata sayfası döner (Cloudflare 502 vb.) — JSON parse'ı güvenli yap
+    let answer = "Şu anda bu soruya cevap veremiyorum.";
+    if (res.ok) {
+      try {
+        const data = await res.json();
+        answer = data?.choices?.[0]?.message?.content ?? answer;
+      } catch {
+        console.error("OpenAI JSON parse error, status:", res.status);
+      }
+    } else {
+      console.error("OpenAI non-OK response:", res.status, res.statusText);
+    }
 
     recordMessage(Date.now() - t0, true, rawIp);
 
@@ -154,11 +161,11 @@ ${memoryBlock ? `\n## GEÇMİŞ SOHBET BAĞLAMI\n${memoryBlock}` : ""}
 
     return Response.json({ answer });
   } catch (error) {
-    console.error("CHAT API ERROR:", error);
+    console.error("CHAT API ERROR:", error instanceof Error ? error.message : error);
     recordMessage(Date.now() - t0, false, extractClientIp(req.headers));
     return Response.json(
-      { answer: "Bir hata oluştu, lütfen tekrar dene." },
-      { status: 500 }
+      { answer: "Şu an bir sorun var, birkaç saniye sonra tekrar dener misin?" },
+      { status: 200 }  // 500 yerine 200 — frontend'i crash'lemez
     );
   }
 }
