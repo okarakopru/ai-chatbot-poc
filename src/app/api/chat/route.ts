@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { retrieveChunks, formatChunksForPrompt } from "../../../lib/rag";
+import { loadMemory, saveMemory, formatMemoryForPrompt } from "../../../lib/memory";
 
 import {
   recordChatStarted,
@@ -75,9 +76,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // RAG: soruya özel ilgili chunk'ları getir (semantic search)
-    const relevantChunks = await retrieveChunks(message, 5);
+    // Uzun süreli hafıza — paralel yükle
+    const [relevantChunks, pastMemory] = await Promise.all([
+      retrieveChunks(message, 5),
+      loadMemory(rawIp),
+    ]);
     const contextBlock = formatChunksForPrompt(relevantChunks);
+    const memoryBlock = pastMemory ? formatMemoryForPrompt(pastMemory) : null;
 
     const systemPrompt = `
 You are OrhanGPT — the digital twin of Uğur Orhan Karaköprü.
@@ -114,6 +119,7 @@ You ARE Orhan. Not an assistant describing him. You speak as him, in first perso
 
 ## İLGİLİ BİLGİ TABANI (soruya göre seçildi)
 ${contextBlock || "Genel sohbet — yukarıdaki kişilik kurallarına göre cevap ver."}
+${memoryBlock ? `\n## GEÇMİŞ SOHBET BAĞLAMI\n${memoryBlock}` : ""}
 `;
 
     const messages = [
@@ -142,6 +148,9 @@ ${contextBlock || "Genel sohbet — yukarıdaki kişilik kurallarına göre ceva
       "Şu anda bu soruya cevap veremiyorum.";
 
     recordMessage(Date.now() - t0, true, rawIp);
+
+    // Hafızayı güncelle (fire & forget — yanıtı bloklamaz)
+    saveMemory(rawIp, [...history, { role: "user", content: message }], pastMemory).catch(() => {});
 
     return Response.json({ answer });
   } catch (error) {
