@@ -7,11 +7,9 @@ services:
 
     rootDir: src
 
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm run start
 
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: OPENAI_API_KEY
         sync: false
