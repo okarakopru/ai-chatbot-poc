@@ -303,19 +303,21 @@ export default function Home() {
                 {msg.role === "assistant" && (
                   <button
                     onClick={() => playMessage(msg.content, i)}
+                    disabled={loadingAudio === i}
                     title={playingIndex === i ? "Durdur" : "Sesli dinle"}
-                    className={`mt-1.5 flex items-center gap-1 text-[11px] transition-all px-2 py-0.5 rounded-full
-                      ${playingIndex === i
-                        ? "text-indigo-400 bg-indigo-500/10 border border-indigo-500/25"
+                    className={`mt-1.5 flex items-center gap-1 text-[11px] transition-all px-2 py-0.5 rounded-full disabled:cursor-not-allowed
+                      ${loadingAudio === i
+                        ? "text-white/50 bg-white/5 border border-white/15 opacity-100"
+                        : playingIndex === i
+                        ? "text-indigo-400 bg-indigo-500/10 border border-indigo-500/25 opacity-100"
                         : "text-white/20 hover:text-white/50 opacity-0 group-hover:opacity-100"
                       }
-                      ${loadingAudio === i ? "text-white/40 opacity-100" : ""}
                     `}
                   >
                     {loadingAudio === i ? (
                       <>
-                        <span className="w-2.5 h-2.5 border border-white/30 border-t-white/70 rounded-full animate-spin" />
-                        <span>yükleniyor</span>
+                        <span className="w-2.5 h-2.5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                        <span>ses yükleniyor...</span>
                       </>
                     ) : playingIndex === i ? (
                       <>
