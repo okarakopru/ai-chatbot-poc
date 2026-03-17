@@ -40,7 +40,6 @@ src/
 ├── app/
 │   ├── page.tsx              # Ana chat UI
 │   ├── layout.tsx            # OG meta, font
-│   ├── admin/page.tsx        # Admin dashboard
 │   └── api/
 │       ├── chat/route.ts     # Ana chat endpoint (RAG + hafıza + Telegram)
 │       └── tts/route.ts      # Text-to-speech endpoint
