@@ -15,7 +15,6 @@ Uğur Orhan Karaköprü'nün AI destekli dijital ikizi. Ziyaretçiler Orhan hakk
 - **CTA Kartı** — Yüksek değerli konularda cevabın altında LinkedIn ve e-posta butonları çıkar
 - **Ses Katmanı** — OpenAI TTS ile asistan cevapları sesli dinlenebilir
 - **Rate Limiting** — Dakikada 15 mesaj / IP (in-memory)
-- **Admin Dashboard** — `/admin` sayfasında sohbet ve mesaj istatistikleri
 - **OG Meta** — LinkedIn/WhatsApp paylaşımında profil önizlemesi
 
 ---
@@ -31,7 +30,6 @@ Uğur Orhan Karaköprü'nün AI destekli dijital ikizi. Ziyaretçiler Orhan hakk
 | Bildirim | Telegram Bot API |
 | Stil | Tailwind CSS v4 |
 | Deploy | Render (auto-deploy on push) |
-| Auth | next-auth (admin panel) |
 
 ---
 
@@ -63,42 +61,3 @@ src/
 ```
 
 ---
-
-## Ortam Değişkenleri
-
-```env
-OPENAI_API_KEY=
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-ADMIN_KEY=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
-```
-
----
-
-## Geliştirme
-
-```bash
-cd src
-npm install
-npm run dev
-```
-
-Embedding'leri yenilemek için (chunks değiştiğinde):
-
-```bash
-cd src
-OPENAI_API_KEY=sk-... npm run embeddings
-```
-
----
-
-## Deploy
-
-Render üzerinde `main` branch'e push yapıldığında otomatik deploy edilir.
-Build komutu: `npm install && npm run build`
-Start komutu: `npm start`
-Root directory: `src`
