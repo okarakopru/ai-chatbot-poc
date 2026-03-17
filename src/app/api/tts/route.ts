@@ -2,10 +2,7 @@ import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 
-// ElevenLabs — Roger voice (laid-back, casual)
-// Render env'de ELEVENLABS_VOICE_ID set edilerek değiştirilebilir
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? "CwhRBWXzGAHq8TQ4Fs17";
-const XI_API_KEY = process.env.ELEVENLABS_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Markdown işaretlerini temizle (TTS için düz metin)
 function stripMarkdown(text: string): string {
@@ -21,7 +18,7 @@ function stripMarkdown(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  if (!XI_API_KEY) {
+  if (!OPENAI_API_KEY) {
     return new Response(JSON.stringify({ error: "TTS not configured" }), {
       status: 503,
       headers: { "Content-Type": "application/json" },
@@ -37,48 +34,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const cleanText = stripMarkdown(text).slice(0, 2500); // ElevenLabs free tier limit
+    const cleanText = stripMarkdown(text).slice(0, 4096); // OpenAI TTS limit
 
-    // /stream yerine direkt endpoint — ücretsiz planda daha güvenilir
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": XI_API_KEY,
-          "Content-Type": "application/json",
-          Accept: "audio/mpeg",
-        },
-        body: JSON.stringify({
-          text: cleanText,
-          model_id: "eleven_turbo_v2_5", // hızlı + tüm planlarda mevcut
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
-        }),
-      }
-    );
+    const res = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "tts-1",          // tts-1-hd daha kaliteli ama yavaş
+        voice: "onyx",           // onyx: derin erkek sesi — en doğal
+        input: cleanText,
+        response_format: "mp3",
+        speed: 1.0,
+      }),
+    });
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("ElevenLabs error:", res.status, err);
-      return new Response(JSON.stringify({ error: "TTS failed", status: res.status }), {
+      console.error("OpenAI TTS error:", res.status, err);
+      return new Response(JSON.stringify({ error: "TTS failed" }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Buffer audio — stream passthrough Node.js'te güvenilmez
     const audioBuffer = await res.arrayBuffer();
-    if (audioBuffer.byteLength === 0) {
-      console.error("ElevenLabs returned empty audio buffer");
-      return new Response(JSON.stringify({ error: "Empty audio" }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
     return new Response(audioBuffer, {
       headers: {
         "Content-Type": "audio/mpeg",
