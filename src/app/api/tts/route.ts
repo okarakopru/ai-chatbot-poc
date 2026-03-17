@@ -62,18 +62,27 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("ElevenLabs error:", err);
-      return new Response(JSON.stringify({ error: "TTS failed" }), {
+      console.error("ElevenLabs error:", res.status, err);
+      return new Response(JSON.stringify({ error: "TTS failed", status: res.status }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // Stream audio directly to client
-    return new Response(res.body, {
+    // Buffer audio — stream passthrough Node.js'te güvenilmez
+    const audioBuffer = await res.arrayBuffer();
+    if (audioBuffer.byteLength === 0) {
+      console.error("ElevenLabs returned empty audio buffer");
+      return new Response(JSON.stringify({ error: "Empty audio" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(audioBuffer, {
       headers: {
         "Content-Type": "audio/mpeg",
-        "Transfer-Encoding": "chunked",
+        "Content-Length": String(audioBuffer.byteLength),
         "Cache-Control": "no-store",
       },
     });

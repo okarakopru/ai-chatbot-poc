@@ -121,20 +121,33 @@ export default function Home() {
         body: JSON.stringify({ text }),
       });
 
-      if (!res.ok) throw new Error("TTS failed");
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("TTS API error:", res.status, errText);
+        throw new Error(`TTS failed: ${res.status}`);
+      }
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      console.log("TTS blob size:", blob.size, "type:", blob.type);
 
+      if (blob.size === 0) throw new Error("Empty audio blob");
+
+      const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
 
       audio.onplay = () => { setPlayingIndex(index); setLoadingAudio(null); };
       audio.onended = () => { setPlayingIndex(null); URL.revokeObjectURL(url); };
-      audio.onerror = () => { setPlayingIndex(null); setLoadingAudio(null); URL.revokeObjectURL(url); };
+      audio.onerror = (e) => {
+        console.error("Audio playback error:", e);
+        setPlayingIndex(null);
+        setLoadingAudio(null);
+        URL.revokeObjectURL(url);
+      };
 
       await audio.play();
-    } catch {
+    } catch (err) {
+      console.error("playMessage error:", err);
       setPlayingIndex(null);
       setLoadingAudio(null);
     }
