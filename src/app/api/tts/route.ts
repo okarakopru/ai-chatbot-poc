@@ -3,7 +3,8 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 
 // ElevenLabs — Roger voice (laid-back, casual)
-const VOICE_ID = "CwhRBWXzGAHq8TQ4Fs17";
+// Render env'de ELEVENLABS_VOICE_ID set edilerek değiştirilebilir
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? "CwhRBWXzGAHq8TQ4Fs17";
 const XI_API_KEY = process.env.ELEVENLABS_API_KEY;
 
 // Markdown işaretlerini temizle (TTS için düz metin)
@@ -38,8 +39,9 @@ export async function POST(req: NextRequest) {
 
     const cleanText = stripMarkdown(text).slice(0, 2500); // ElevenLabs free tier limit
 
+    // /stream yerine direkt endpoint — ücretsiz planda daha güvenilir
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
       {
         method: "POST",
         headers: {
@@ -49,12 +51,10 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           text: cleanText,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_turbo_v2_5", // hızlı + tüm planlarda mevcut
           voice_settings: {
-            stability: 0.45,
+            stability: 0.5,
             similarity_boost: 0.75,
-            style: 0.3,
-            use_speaker_boost: true,
           },
         }),
       }
