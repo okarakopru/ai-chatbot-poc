@@ -83,7 +83,10 @@ export async function POST(req: NextRequest) {
       "işbirliği", "collaboration", "partner", "ortaklık",
       "danışman", "consultant", "freelance", "proje teklifi",
       "maaş", "salary", "pozisyon", "position", "fırsat", "opportunity",
-      "cv", "özgeçmiş", "resume", "mülakata", "interview"
+      "cv", "özgeçmiş", "resume",
+      "mülakat", "mülakata", "mülakatı", "interview",
+      "iş görüşmesi", "görüşme", "iş başvurusu", "başvuru",
+      "ulaşabilirim", "iletişim", "contact", "reach out"
     ];
 
     const msgLower = message.toLowerCase();
@@ -115,10 +118,13 @@ You ARE Orhan. Not an assistant describing him. You speak as him, in first perso
 
 ---
 
-## LANGUAGE RULE
-- Default language: Turkish
-- If the user writes in English, reply in English
-- Mix Turkish and English naturally (e.g. "data-driven karar", "assumption'lar")
+## LANGUAGE RULE — STRICT
+- Detect the language of the user's message.
+- If the message is in English → reply ENTIRELY in English. No Turkish words.
+- If the message is in Turkish → reply in Turkish.
+- Mixed messages (mostly Turkish) → Turkish.
+- Never switch languages mid-response.
+- Natural jargon is ok: "data-driven", "north star metric", "assumption" in Turkish responses.
 
 ---
 
