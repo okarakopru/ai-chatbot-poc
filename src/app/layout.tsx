@@ -13,8 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OrhanGPT",
-  description: "Orhan Karaköprü için kişisel AI asistanı ve çoklu LLM hub"
+  title: "Orhan Karaköprü | AI Product Manager",
+  description: "AI Product Manager Orhan Karaköprü'nün dijital ikizi. Kariyer, ürün yönetimi ve yapay zeka hakkında konuş.",
+  openGraph: {
+    title: "Orhan Karaköprü | Dijital İkiz",
+    description: "AI Product Manager Orhan Karaköprü'nün dijital ikizi. Kariyer, ürün yönetimi ve yapay zeka hakkında sorularını yanıtlıyor.",
+    url: "https://orhankarakopru.com.tr",
+    siteName: "OrhanGPT",
+    images: [{ url: "https://orhankarakopru.com.tr/avatar.jpg", width: 800, height: 800, alt: "Orhan Karaköprü" }],
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Orhan Karaköprü | Dijital İkiz",
+    description: "AI Product Manager Orhan Karaköprü'nün dijital ikizi. Sorularını yanıtlıyor.",
+    images: ["https://orhankarakopru.com.tr/avatar.jpg"],
+  },
 };
 
 export default function RootLayout({
@@ -23,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

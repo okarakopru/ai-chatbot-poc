@@ -22,6 +22,23 @@ type ChatMessage = {
   content: string;
 };
 
+// ── Rate limiting (in-memory, dakikada 15 mesaj / IP) ──────────────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const WINDOW = 60_000; // 1 dakika
+  const MAX = 15;
+  const entry = rateLimitMap.get(ip);
+  if (!entry || entry.resetAt < now) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW });
+    return false;
+  }
+  if (entry.count >= MAX) return true;
+  entry.count++;
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
 
@@ -33,6 +50,13 @@ export async function POST(req: NextRequest) {
     };
 
     const rawIp = extractClientIp(req.headers);
+
+    if (isRateLimited(rawIp)) {
+      return Response.json(
+        { answer: "Çok hızlı mesaj gönderiyorsun. Bir dakika bekleyip tekrar dener misin?" },
+        { status: 200 }
+      );
+    }
 
     if (!history || history.length <= 1) {
       recordChatStarted();
@@ -159,7 +183,7 @@ ${memoryBlock ? `\n## GEÇMİŞ SOHBET BAĞLAMI\n${memoryBlock}` : ""}
     // Hafızayı güncelle (fire & forget — yanıtı bloklamaz)
     saveMemory(rawIp, [...history, { role: "user", content: message }], pastMemory).catch(() => {});
 
-    return Response.json({ answer });
+    return Response.json({ answer, showCTA: !!matchedKeyword });
   } catch (error) {
     console.error("CHAT API ERROR:", error instanceof Error ? error.message : error);
     recordMessage(Date.now() - t0, false, extractClientIp(req.headers));

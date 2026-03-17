@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 type Message = {
   role: "user" | "assistant";
   content: string;
+  showCTA?: boolean;
 };
 
 const STORAGE_KEY = "orhan-gpt-history";
@@ -172,6 +173,7 @@ export default function Home() {
 
       const data = await res.json();
       const fullText: string = data.answer ?? "";
+      const showCTA: boolean = !!data.showCTA;
 
       if (!fullText) {
         setMessages((prev) => [...prev, { role: "assistant", content: "Şu an cevap veremedim, tekrar dener misin?" }]);
@@ -187,7 +189,7 @@ export default function Home() {
         setTypingText(fullText.slice(0, index));
         if (index >= fullText.length) {
           clearInterval(interval);
-          setMessages((prev) => [...prev, { role: "assistant", content: fullText }]);
+          setMessages((prev) => [...prev, { role: "assistant", content: fullText, showCTA }]);
           setTypingText("");
           setLoading(false);
         }
@@ -198,7 +200,7 @@ export default function Home() {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant") return prev;
-          return [...prev, { role: "assistant", content: fullText }];
+          return [...prev, { role: "assistant", content: fullText, showCTA }];
         });
         setTypingText("");
         setLoading(false);
@@ -273,6 +275,29 @@ export default function Home() {
                     {msg.content}
                   </ReactMarkdown>
                 </div>
+
+                {/* CTA kartı — yüksek değerli konularda */}
+                {msg.role === "assistant" && msg.showCTA && (
+                  <div className="mt-2 w-full p-3 rounded-xl bg-indigo-500/8 border border-indigo-500/20">
+                    <p className="text-[11px] text-white/50 mb-2">Devam etmek ister misin?</p>
+                    <div className="flex gap-2 flex-wrap">
+                      <a
+                        href="https://www.linkedin.com/in/orhankarakopru"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                      >
+                        LinkedIn&apos;den yaz
+                      </a>
+                      <a
+                        href="mailto:o.karakopru@gmail.com"
+                        className="text-xs border border-white/15 hover:border-indigo-500/50 hover:text-indigo-300 text-white/60 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        E-posta gönder
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 {/* Ses butonu — sadece asistan mesajları */}
                 {msg.role === "assistant" && (
