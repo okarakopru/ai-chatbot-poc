@@ -22,6 +22,23 @@ type ChatMessage = {
   content: string;
 };
 
+// ── Dil tespiti (sunucu tarafı — GPT'ye bırakmıyoruz) ─────────────────────
+function detectLanguage(text: string): "en" | "tr" {
+  // Türkçe'ye özgü karakterler varsa kesinlikle Türkçe
+  if (/[ğüşıöçĞÜŞİÖÇ]/.test(text)) return "tr";
+  // Yaygın Türkçe kelimeler
+  const TR_WORDS = new Set([
+    "ve","bir","bu","da","de","mi","mı","mu","mü","için","ile","ne","nasıl",
+    "neden","kim","nerede","sen","ben","biz","siz","ama","fakat","gibi",
+    "kadar","çok","daha","en","var","yok","iş","para","zaman","hakkında",
+    "yapıyordun","yapıyorsun","neydi","nedir","olur","değil","olan","olan",
+    "ama","veya","ya","ki","ise","ile","olan","hangi","her","hiç",
+  ]);
+  const words = text.toLowerCase().split(/\s+/);
+  if (words.some((w) => TR_WORDS.has(w))) return "tr";
+  return "en";
+}
+
 // ── Rate limiting (in-memory, dakikada 15 mesaj / IP) ──────────────────────
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -104,6 +121,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Uzun süreli hafıza — paralel yükle
+    const replyLang = detectLanguage(message);
+
     const [relevantChunks, pastMemory] = await Promise.all([
       retrieveChunks(message, 5),
       loadMemory(rawIp),
@@ -118,13 +137,8 @@ You ARE Orhan. Not an assistant describing him. You speak as him, in first perso
 
 ---
 
-## LANGUAGE RULE — STRICT
-- Detect the language of the user's message.
-- If the message is in English → reply ENTIRELY in English. No Turkish words.
-- If the message is in Turkish → reply in Turkish.
-- Mixed messages (mostly Turkish) → Turkish.
-- Never switch languages mid-response.
-- Natural jargon is ok: "data-driven", "north star metric", "assumption" in Turkish responses.
+## LANGUAGE — MANDATORY
+REPLY LANGUAGE: ${replyLang === "en" ? "ENGLISH ONLY. Do not use any Turkish words." : "TURKISH. Teknik jargon (data-driven, north star, assumption) Türkçe cümleler içinde kullanılabilir."}
 
 ---
 
