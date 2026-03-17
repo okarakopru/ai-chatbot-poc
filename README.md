@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OrhanGPT — Dijital İkiz
 
-## Getting Started
+**[orhankarakopru.com.tr](https://orhankarakopru.com.tr)**
 
-First, run the development server:
+Uğur Orhan Karaköprü'nün AI destekli dijital ikizi. Ziyaretçiler Orhan hakkında soru sorabilir; sistem birinci şahıs olarak, Orhan'ın sesi ve bakış açısıyla yanıt verir.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Özellikler
+
+- **Dijital İkiz Persona** — GPT-4o-mini, Orhan olarak konuşur (asistan değil, birinci şahıs)
+- **Semantik RAG** — Sorguya göre ilgili bilgi parçaları cosine similarity ile seçilir; embedding yoksa keyword araması devreye girer
+- **Uzun Süreli Hafıza** — Upstash Redis ile ziyaretçi bazında cross-session hafıza (30 gün TTL)
+- **Telegram Bildirimleri** — Yeni sohbet başladığında ve yüksek değerli kelimeler (iş teklifi, interview, işbirliği) algılandığında anlık bildirim
+- **CTA Kartı** — Yüksek değerli konularda cevabın altında LinkedIn ve e-posta butonları çıkar
+- **Ses Katmanı** — OpenAI TTS ile asistan cevapları sesli dinlenebilir
+- **Rate Limiting** — Dakikada 15 mesaj / IP (in-memory)
+- **Admin Dashboard** — `/admin` sayfasında sohbet ve mesaj istatistikleri
+- **OG Meta** — LinkedIn/WhatsApp paylaşımında profil önizlemesi
+
+---
+
+## Teknoloji Stack
+
+| Katman | Teknoloji |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| AI | OpenAI GPT-4o-mini + text-embedding-3-small |
+| TTS | OpenAI TTS (onyx voice) |
+| Hafıza | Upstash Redis REST API |
+| Bildirim | Telegram Bot API |
+| Stil | Tailwind CSS v4 |
+| Deploy | Render (auto-deploy on push) |
+| Auth | next-auth (admin panel) |
+
+---
+
+## Proje Yapısı
+
+```
+src/
+├── app/
+│   ├── page.tsx              # Ana chat UI
+│   ├── layout.tsx            # OG meta, font
+│   ├── admin/page.tsx        # Admin dashboard
+│   └── api/
+│       ├── chat/route.ts     # Ana chat endpoint (RAG + hafıza + Telegram)
+│       └── tts/route.ts      # Text-to-speech endpoint
+├── lib/
+│   ├── rag.ts                # Semantik RAG (embedding + cosine similarity)
+│   ├── memory.ts             # Upstash Redis uzun süreli hafıza
+│   ├── telegram.ts           # Telegram bildirim yardımcısı
+│   ├── geo.ts                # IP lokasyon (ipapi.co)
+│   └── adminMetrics.ts       # In-memory metrik toplama
+├── data/
+│   ├── orhan.chunks.json     # 20 bilgi parçası (kariyer, AI görüşleri, vb.)
+│   ├── orhan.embeddings.json # Önceden hesaplanmış embedding vektörleri
+│   ├── orhan.profile.json    # Temel profil
+│   ├── orhan.opinions.json   # Fikir ve görüşler
+│   └── orhan.faq.json        # 11 sık sorulan soru
+└── scripts/
+    └── buildEmbeddings.mjs   # Embedding yenileme scripti
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Ortam Değişkenleri
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+OPENAI_API_KEY=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+ADMIN_KEY=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Geliştirme
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd src
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Embedding'leri yenilemek için (chunks değiştiğinde):
 
-## Deploy on Vercel
+```bash
+cd src
+OPENAI_API_KEY=sk-... npm run embeddings
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+Render üzerinde `main` branch'e push yapıldığında otomatik deploy edilir.
+Build komutu: `npm install && npm run build`
+Start komutu: `npm start`
+Root directory: `src`
