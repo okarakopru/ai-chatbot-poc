@@ -36,6 +36,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 };
 
 const ALL_PRODUCTS: Product[] = [
+  // ── TRAVEL (20) ──
   {
     id: 1,
     name: "Deri Pasaport Cüzdanı",
@@ -45,7 +46,7 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-amber-800 via-amber-700 to-orange-700",
     category: "travel",
     occasions: ["birthday", "anniversary", "surprise"],
-    buyUrl: "https://www.trendyol.com/sr?q=deri+pasaport+c%C3%BCzdan%C4%B1&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=deri+pasaport+cuzdani&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
@@ -69,7 +70,7 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-emerald-800 via-teal-700 to-green-700",
     category: "travel",
     occasions: ["birthday", "valentines", "anniversary", "surprise"],
-    buyUrl: "https://www.trendyol.com/sr?q=seyahat+an%C4%B1+g%C3%BCnl%C3%BC%C4%9F%C3%BC&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=seyahat+ani+gunlugu&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
@@ -93,11 +94,193 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-purple-800 via-violet-700 to-purple-700",
     category: "travel",
     occasions: ["birthday", "surprise", "newyear"],
-    buyUrl: "https://www.trendyol.com/sr?q=seyahat+boyun+yast%C4%B1%C4%9F%C4%B1+memory+foam&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=seyahat+boyun+yastigi+memory+foam&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
     id: 6,
+    name: "Packing Cube Seti (6'lı)",
+    description: "Bavulda kaos bitti. Kıyafetleri kategoriye göre ayıran kompresyon cube seti.",
+    price: "₺349 – ₺699",
+    emoji: "📦",
+    gradient: "from-teal-800 via-teal-700 to-cyan-700",
+    category: "travel",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=packing+cube+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 7,
+    name: "RFID Engelleme Cüzdan",
+    description: "Kart bilgileri güvende, tasarım şık. Seyahatin akıllı güvenlik aksesuarı.",
+    price: "₺249 – ₺599",
+    emoji: "🔐",
+    gradient: "from-zinc-700 via-zinc-600 to-neutral-600",
+    category: "travel",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=rfid+engelleme+cuzdani&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 8,
+    name: "Universal Seyahat Adaptörü",
+    description: "Dünyanın her prizinde çalışır. 4 USB çıkışlı akıllı seyahat adaptörü.",
+    price: "₺299 – ₺649",
+    emoji: "🔌",
+    gradient: "from-orange-800 via-orange-700 to-amber-700",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=universal+seyahat+adaptoru",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 9,
+    name: "Dünya Haritası Scratch Map",
+    description: "Gittiği yerleri kazıyarak işaret etsin. Duvarını süsleyecek anlamlı harita.",
+    price: "₺299 – ₺549",
+    emoji: "🗺️",
+    gradient: "from-sky-800 via-blue-700 to-sky-700",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=scratch+map+dunya+haritasi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 10,
+    name: "Microfiber Seyahat Havlusu",
+    description: "Çanta boyutuna katlanıyor, süper hızlı kuruyor. Beach-to-hotel mükemmel seçim.",
+    price: "₺199 – ₺449",
+    emoji: "🏖️",
+    gradient: "from-cyan-800 via-sky-700 to-blue-700",
+    category: "travel",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=microfiber+seyahat+havlusu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 11,
+    name: "Seyahat Uyku Seti",
+    description: "Göz bandı + kulak tıkacı + boyun yastığı üçlüsü. Uçakta derin uyku garantisi.",
+    price: "₺299 – ₺599",
+    emoji: "😴",
+    gradient: "from-indigo-800 via-indigo-700 to-violet-700",
+    category: "travel",
+    occasions: ["birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=seyahat+uyku+seti+goz+bandi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 12,
+    name: "Kişiselleştirilmiş Valiz Etiketi",
+    description: "Adı ve renk tercihi yazılan şık deri bagaj etiketi. Valizi asla karışmaz.",
+    price: "₺149 – ₺349",
+    emoji: "🏷️",
+    gradient: "from-rose-800 via-red-700 to-rose-700",
+    category: "travel",
+    occasions: ["birthday", "valentines", "anniversary", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=kisisel+deri+valiz+etiketi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 13,
+    name: "Taşınabilir Hamak",
+    description: "200g ağırlık, iki ağaç arası 5 dakikada kurulum. Seyahatin en rahat molası.",
+    price: "₺399 – ₺799",
+    emoji: "🌴",
+    gradient: "from-lime-800 via-green-700 to-emerald-700",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=tasinalir+hamak+seyahat&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 14,
+    name: "Retro Polaroid Fotoğraf Makinesi",
+    description: "Anı çek, anında bas, hediye et. Seyahat anılarını somutlaştırmanın en şirin yolu.",
+    price: "₺1.499 – ₺2.999",
+    emoji: "📸",
+    gradient: "from-pink-800 via-rose-700 to-pink-700",
+    category: "travel",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=polaroid+fotograf+makinesi",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 15,
+    name: "Premium Seyahat Makyaj Çantası",
+    description: "Düzenli ve şık. Tüm makyaj malzemelerini seyahate taşımak için tasarlanmış.",
+    price: "₺299 – ₺699",
+    emoji: "💼",
+    gradient: "from-fuchsia-800 via-pink-700 to-fuchsia-700",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=seyahat+makyaj+cantasi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 16,
+    name: "Kompresyon Çorap Seti",
+    description: "Uzun uçuşlarda ayak şişmesi ve yorgunluğuna çözüm. Konfor her adımda.",
+    price: "₺199 – ₺449",
+    emoji: "🧦",
+    gradient: "from-stone-700 via-stone-600 to-zinc-600",
+    category: "travel",
+    occasions: ["surprise", "newyear", "birthday"],
+    buyUrl: "https://www.trendyol.com/sr?q=kompresyon+corap+seyahat&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 17,
+    name: "Kamera Çantası (Mirrorless)",
+    description: "Seyahat fotoğrafçılığı için şık ve koruyucu kamera çantası. Tam Beril tarzı.",
+    price: "₺699 – ₺1.599",
+    emoji: "📷",
+    gradient: "from-gray-700 via-gray-600 to-zinc-600",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=kamera+cantasi+mirrorless",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 18,
+    name: "Portable Wi-Fi Cihazı",
+    description: "Yurtdışında operatör sorunu yok. 30+ ülkede çalışan taşınabilir Wi-Fi.",
+    price: "₺999 – ₺2.499",
+    emoji: "📡",
+    gradient: "from-violet-800 via-purple-700 to-violet-700",
+    category: "travel",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=portable+wifi+yurtdisi+modem",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 19,
+    name: "Outdoor Yürüyüş Botu",
+    description: "Su geçirmez, hafif ve rahat. Dağ tatilinde, şehir keşfinde her yerde.",
+    price: "₺1.499 – ₺3.999",
+    emoji: "🥾",
+    gradient: "from-amber-900 via-amber-800 to-orange-800",
+    category: "travel",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=outdoor+yuruyus+botu+kadin&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 20,
+    name: "Seyahat Kilitli Bavul",
+    description: "TSA onaylı kilit, 360° tekerlekler, hafif kasa. Seyahatin çok daha akıcı.",
+    price: "₺1.999 – ₺4.999",
+    emoji: "🧳",
+    gradient: "from-red-800 via-red-700 to-rose-700",
+    category: "travel",
+    occasions: ["birthday", "anniversary", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=kilitli+bavul+tsa+hafif&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+
+  // ── BOOK (15) ──
+  {
+    id: 21,
     name: "Kindle Paperwhite",
     description: "Seyahat + kitap = mükemmel ikili. Binlerce kitap tek cihazda, gözü yormayan ekran.",
     price: "₺3.999 – ₺5.499",
@@ -109,7 +292,7 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Hepsiburada",
   },
   {
-    id: 7,
+    id: 22,
     name: "Premium Deri Kitap Ayracı Seti",
     description: "Okuyan biri için ideal, kişiselleştirilebilir zarif deri yer imi seti.",
     price: "₺149 – ₺299",
@@ -117,11 +300,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-orange-800 via-amber-700 to-orange-700",
     category: "book",
     occasions: ["valentines", "surprise", "birthday"],
-    buyUrl: "https://www.trendyol.com/sr?q=deri+kitap+ayrac%C4%B1+ki%C5%9Fisel&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=deri+kitap+ayraci+kisisel&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 8,
+    id: 23,
     name: "Kitap Paketi Hediye Seti",
     description: "Sevilen yazarlardan seçilmiş 3-5 kitap + şık kutu ambalaj. Tam sürpriz.",
     price: "₺599 – ₺1.299",
@@ -133,7 +316,153 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Trendyol",
   },
   {
-    id: 9,
+    id: 24,
+    name: "Premium Okuma Lambası",
+    description: "Gözleri yormayan sarı ışık, kısılabilir parlaklık. Geceleri kitap için ideal.",
+    price: "₺299 – ₺699",
+    emoji: "💡",
+    gradient: "from-yellow-800 via-amber-700 to-yellow-700",
+    category: "book",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=kitap+okuma+lambasi+led&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 25,
+    name: "Sesli Kitap Aboneliği (6 Ay)",
+    description: "Seyahatte yürürken, spor yaparken kitap. 6 aylık Storytel aboneliği.",
+    price: "₺399 – ₺699",
+    emoji: "🎙️",
+    gradient: "from-violet-800 via-purple-700 to-violet-700",
+    category: "book",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=storytel+sesli+kitap+abonelik",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 26,
+    name: "Aylık Kitap Kutusu Aboneliği",
+    description: "Her ay kapısına sürpriz bir kitap gelsin. Kuratoryal seçki, şık ambalaj.",
+    price: "₺299 – ₺599 /ay",
+    emoji: "📬",
+    gradient: "from-emerald-800 via-teal-700 to-emerald-700",
+    category: "book",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=kitap+abonelik+kutusu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 27,
+    name: "Özel Baskı Klasikler Koleksiyonu",
+    description: "Bez ciltli, altın yaldızlı özel baskı. Okunmaktan çok sergilenmek için.",
+    price: "₺799 – ₺1.999",
+    emoji: "📜",
+    gradient: "from-amber-900 via-amber-800 to-orange-800",
+    category: "book",
+    occasions: ["birthday", "anniversary", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=ozel+baskı+klasik+kitap+set&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 28,
+    name: "Blue Light Engelleme Gözlüğü",
+    description: "Ekran ve kitap okurken göz yorgunluğunu azaltır. Şık çerçeve tasarımı.",
+    price: "₺299 – ₺799",
+    emoji: "👓",
+    gradient: "from-sky-800 via-blue-700 to-sky-700",
+    category: "book",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=blue+light+engelleyen+gozluk",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 29,
+    name: "Kitap Standı / Tutucu",
+    description: "Eller serbest okuma deneyimi. Masada, yatakta, her yerde kullanılabilir.",
+    price: "₺199 – ₺499",
+    emoji: "🗂️",
+    gradient: "from-stone-700 via-stone-600 to-zinc-600",
+    category: "book",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=kitap+standı+tutucu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 30,
+    name: "Okuma Oturma Yastığı",
+    description: "Yatakta uzun saatler boyunca sırt ağrısı olmadan kitap okumak için.",
+    price: "₺399 – ₺799",
+    emoji: "🛋️",
+    gradient: "from-pink-800 via-rose-700 to-pink-700",
+    category: "book",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=okuma+yastigi+sirti+destekleyen&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 31,
+    name: "Dekoratif Kitaplık Düzenleyici Seti",
+    description: "Kitaplığını sanat eserine dönüştüren şık bookend + düzenleyici seti.",
+    price: "₺249 – ₺599",
+    emoji: "🏛️",
+    gradient: "from-slate-700 via-slate-600 to-gray-600",
+    category: "book",
+    occasions: ["birthday", "anniversary", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=dekoratif+kitaplik+duzenleyici&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 32,
+    name: "Kitap Kasası (Gizli Kutu)",
+    description: "Kitap görünümünde gizli saklama kutusu. Hem dekoratif hem fonksiyonel.",
+    price: "₺199 – ₺449",
+    emoji: "🔒",
+    gradient: "from-green-900 via-green-800 to-emerald-800",
+    category: "book",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=kitap+kasasi+gizli+kutu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 33,
+    name: "Premium Not Defteri + Kalem Seti",
+    description: "Kaliteli kağıt, şık kapak, iyi bir kalem. Okurken not alan biri için ideal.",
+    price: "₺299 – ₺699",
+    emoji: "✒️",
+    gradient: "from-indigo-800 via-indigo-700 to-blue-700",
+    category: "book",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+not+defteri+kalem+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 34,
+    name: "Online Yaratıcı Yazarlık Kursu",
+    description: "Okuyan biri için doğal bir adım: yazmayı öğrenmek. 3 aylık online kurs.",
+    price: "₺499 – ₺1.299",
+    emoji: "✍️",
+    gradient: "from-fuchsia-800 via-pink-700 to-fuchsia-700",
+    category: "book",
+    occasions: ["birthday", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=yaratici+yazarlik+online+kurs",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 35,
+    name: "Kahve + Kitap Hediye Sepeti",
+    description: "Dünyaca ünlü single origin kahveler + 2 kitap. En iyi okuma ritüeli.",
+    price: "₺499 – ₺999",
+    emoji: "☕",
+    gradient: "from-amber-800 via-amber-700 to-yellow-700",
+    category: "book",
+    occasions: ["birthday", "valentines", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=kahve+hediye+sepeti+kitap&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+
+  // ── MUSIC (15) ──
+  {
+    id: 36,
     name: "Gürültü Önleyici Kablosuz Kulaklık",
     description: "Seyahatte müzikle uçmak için ANC özellikli premium kablosuz kulaklık.",
     price: "₺1.999 – ₺4.999",
@@ -141,11 +470,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-violet-800 via-purple-700 to-violet-700",
     category: "music",
     occasions: ["birthday", "anniversary", "newyear"],
-    buyUrl: "https://www.trendyol.com/sr?q=anc+kablosuz+kulakl%C4%B1k&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=anc+kablosuz+kulaklik&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 10,
+    id: 37,
     name: "Su Geçirmez Bluetooth Hoparlör",
     description: "Plajda, seyahatte, her yerde müzik. Su geçirmez, kompakt ve şık.",
     price: "₺999 – ₺2.499",
@@ -153,11 +482,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-cyan-800 via-cyan-700 to-sky-700",
     category: "music",
     occasions: ["birthday", "anniversary", "surprise"],
-    buyUrl: "https://www.hepsiburada.com/ara?q=bluetooth+hoparlör+su+geçirmez+taşınabilir",
+    buyUrl: "https://www.hepsiburada.com/ara?q=bluetooth+hoparlor+su+gecirmez+tasinalir",
     shop: "Hepsiburada",
   },
   {
-    id: 11,
+    id: 38,
     name: "Spotify / Apple Music Hediye Kartı",
     description: "12 aylık reklamsız, sınırsız müzik keyfi. Anında teslim, hemen aktif.",
     price: "₺799 – ₺999",
@@ -165,11 +494,157 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-green-800 via-emerald-700 to-green-700",
     category: "music",
     occasions: ["birthday", "valentines", "surprise", "newyear"],
-    buyUrl: "https://www.hepsiburada.com/ara?q=spotify+hediye+kart%C4%B1",
+    buyUrl: "https://www.hepsiburada.com/ara?q=spotify+hediye+karti",
     shop: "Hepsiburada",
   },
   {
-    id: 12,
+    id: 39,
+    name: "Pikap (Vinyl Record Player)",
+    description: "Müziği hissettiren deneyim. Retro tasarım, gerçek ses kalitesi. Evinizin yıldızı.",
+    price: "₺2.499 – ₺5.999",
+    emoji: "🎶",
+    gradient: "from-red-800 via-red-700 to-rose-700",
+    category: "music",
+    occasions: ["birthday", "anniversary", "valentines"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=pikap+vinyl+record+player",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 40,
+    name: "Premium TWS Kulak İçi Kulaklık",
+    description: "Şeffaf gövde, aktif gürültü engelleme, 30 saat batarya. Günlük kullanımın en iyisi.",
+    price: "₺799 – ₺2.499",
+    emoji: "🎵",
+    gradient: "from-indigo-800 via-blue-700 to-indigo-700",
+    category: "music",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=tws+kulakici+kulaklik+anc&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 41,
+    name: "Konser / Festival Etkinlik Bileti",
+    description: "Müziği canlı yaşamak bambaşka. Favori sanatçısının konserine iki bilet.",
+    price: "₺499 – ₺2.999",
+    emoji: "🎤",
+    gradient: "from-pink-800 via-rose-700 to-pink-700",
+    category: "music",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.biletix.com",
+    shop: "Biletix",
+  },
+  {
+    id: 42,
+    name: "Ukulele Başlangıç Seti",
+    description: "Hem eğlenceli hem yaratıcı. Seyahate dahi götürülecek boyutta, şık renklerde.",
+    price: "₺799 – ₺1.799",
+    emoji: "🎸",
+    gradient: "from-amber-800 via-amber-700 to-orange-700",
+    category: "music",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=ukulele+baslangic+seti",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 43,
+    name: "Bluetooth Alarm Saati + Hoparlör",
+    description: "Sabahı müzikle başlatmak için. Uyandırıcı değil, sarılıcı saat.",
+    price: "₺699 – ₺1.499",
+    emoji: "⏰",
+    gradient: "from-sky-800 via-blue-700 to-sky-700",
+    category: "music",
+    occasions: ["birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=bluetooth+alarm+saati+hoparlor&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 44,
+    name: "Premium Kablolu Referans Kulaklık",
+    description: "Stüdyo kalitesinde ses. Müziği gerçekten duyurmak isteyenler için.",
+    price: "₺1.299 – ₺3.999",
+    emoji: "🎼",
+    gradient: "from-stone-700 via-stone-600 to-zinc-600",
+    category: "music",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=premium+kablolu+kulaklik+referans",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 45,
+    name: "Online Müzik / Şan Kursu",
+    description: "Müzik sevenin hayali: çalmayı ya da söylemeyi öğrenmek. 3 aylık online kurs.",
+    price: "₺499 – ₺1.499",
+    emoji: "🎹",
+    gradient: "from-purple-800 via-violet-700 to-purple-700",
+    category: "music",
+    occasions: ["birthday", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=online+muzik+kursu+abonelik",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 46,
+    name: "Favori Albüm Vinyl LP",
+    description: "Sevdiği albümün vinyl baskısı. Pikap varsa anlamlı, yoksa duvar dekorasyonu.",
+    price: "₺399 – ₺899",
+    emoji: "💿",
+    gradient: "from-gray-700 via-gray-600 to-zinc-600",
+    category: "music",
+    occasions: ["birthday", "valentines", "anniversary", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=vinyl+lp+plak",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 47,
+    name: "Kulaklık Standı + Temizleme Kiti",
+    description: "Masaüstünü düzenleyen şık stand + premium temizleme seti. Pratik hediye.",
+    price: "₺199 – ₺499",
+    emoji: "🎯",
+    gradient: "from-teal-800 via-teal-700 to-cyan-700",
+    category: "music",
+    occasions: ["birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=kulaklik+standi+temizleme+kiti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 48,
+    name: "Mini Masaüstü Bluetooth Hoparlör",
+    description: "Ofiste, evde, her masanın üzerinde yer alabilecek şık küçük hoparlör.",
+    price: "₺599 – ₺1.299",
+    emoji: "📻",
+    gradient: "from-lime-800 via-green-700 to-lime-700",
+    category: "music",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=mini+bluetooth+hoparlor+masaustu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 49,
+    name: "Müzik Temalı Hediye Sepeti",
+    description: "Müzik baskılı kupa + el yapımı çikolata + küçük hoparlör. Keyifli sürpriz.",
+    price: "₺399 – ₺799",
+    emoji: "🎁",
+    gradient: "from-rose-800 via-rose-700 to-pink-700",
+    category: "music",
+    occasions: ["valentines", "surprise", "birthday"],
+    buyUrl: "https://www.trendyol.com/sr?q=muzik+hediye+sepeti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 50,
+    name: "Şarj Edilebilir Boyun Hoparlörü",
+    description: "Kulaklık takmadan müzik. Boyunda taşınan 360° ses deneyimi.",
+    price: "₺799 – ₺1.999",
+    emoji: "🔈",
+    gradient: "from-blue-800 via-blue-700 to-indigo-700",
+    category: "music",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=boyun+hoparloru+bluetooth",
+    shop: "Hepsiburada",
+  },
+
+  // ── COSMETIC (15) ──
+  {
+    id: 51,
     name: "Niche Parfüm",
     description: "Kimsenin taşımadığı, kalıcı ve özel bir koku. Lüks hediye kutusuyla.",
     price: "₺1.499 – ₺3.999",
@@ -177,11 +652,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-pink-800 via-rose-700 to-pink-700",
     category: "cosmetic",
     occasions: ["birthday", "valentines", "anniversary"],
-    buyUrl: "https://www.trendyol.com/sr?q=niche+parf%C3%BCm+kad%C4%B1n&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=niche+parfum+kadin&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 13,
+    id: 52,
     name: "Premium Cilt Bakım Seti",
     description: "Seyahat boyutlu, premium marka cilt bakım rutini. Her seyahatin olmazsa olmazı.",
     price: "₺899 – ₺2.499",
@@ -189,11 +664,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-fuchsia-800 via-pink-700 to-fuchsia-700",
     category: "cosmetic",
     occasions: ["birthday", "valentines", "anniversary", "surprise"],
-    buyUrl: "https://www.trendyol.com/sr?q=cilt+bak%C4%B1m+seti+premium+set&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=cilt+bakim+seti+premium&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 14,
+    id: 53,
     name: "Saç Bakım Ritüel Seti",
     description: "Seyahatte bile salon çıkışlı görünüm. Lüks saç bakım seti.",
     price: "₺699 – ₺1.799",
@@ -205,7 +680,7 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Hepsiburada",
   },
   {
-    id: 15,
+    id: 54,
     name: "SPF 50+ Güneş Koruyucu Set",
     description: "Seyahatin vazgeçilmezi. Yüz + vücut için premium güneş koruma seti.",
     price: "₺399 – ₺999",
@@ -213,11 +688,145 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-yellow-700 via-amber-600 to-yellow-700",
     category: "cosmetic",
     occasions: ["birthday", "surprise", "valentines"],
-    buyUrl: "https://www.trendyol.com/sr?q=spf+50+güneş+koruyucu+set&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=spf+50+gunes+koruyucu+set&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 16,
+    id: 55,
+    name: "Premium Dudak Bakım Seti",
+    description: "Laneige, Fresh veya Tatcha kalitesinde dudak bakım rutini. Güzel hediye.",
+    price: "₺299 – ₺799",
+    emoji: "💋",
+    gradient: "from-red-800 via-rose-700 to-red-700",
+    category: "cosmetic",
+    occasions: ["valentines", "birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+dudak+bakim+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 56,
+    name: "Gua Sha + Yüz Masaj Rulosu Seti",
+    description: "Doğal taş, anti-aging etki, dinlendirici masaj. Cilt bakımının şık aksesuarı.",
+    price: "₺299 – ₺699",
+    emoji: "💎",
+    gradient: "from-rose-900 via-rose-800 to-pink-800",
+    category: "cosmetic",
+    occasions: ["birthday", "valentines", "anniversary", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=gua+sha+yuz+masaj+rulosu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 57,
+    name: "Premium Makyaj Fırçası Seti",
+    description: "Profesyonel kalite, yumuşak kıl, şık kılıflı. Makyaj rutinini yükselt.",
+    price: "₺499 – ₺1.299",
+    emoji: "🖌️",
+    gradient: "from-purple-800 via-violet-700 to-purple-700",
+    category: "cosmetic",
+    occasions: ["birthday", "anniversary", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+makyaj+fircasi+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 58,
+    name: "Anti-Aging Göz Kremi (Premium)",
+    description: "Klinik test edilmiş, retinol + peptid formüllü. Gerçekten işe yarayan bakım.",
+    price: "₺599 – ₺1.499",
+    emoji: "👁️",
+    gradient: "from-sky-800 via-blue-700 to-sky-700",
+    category: "cosmetic",
+    occasions: ["birthday", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+goz+kremi+anti+aging&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 59,
+    name: "Vücut Peeling + Losyon Seti",
+    description: "Pürüzsüz cilt için çift aşamalı bakım seti. Doğal içerikli, lüks koku.",
+    price: "₺499 – ₺1.199",
+    emoji: "🛁",
+    gradient: "from-emerald-800 via-teal-700 to-emerald-700",
+    category: "cosmetic",
+    occasions: ["birthday", "valentines", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=vucut+peeling+losyon+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 60,
+    name: "Premium El Kremi Hediye Seti",
+    description: "Shea butter, hyaluronic acid, zengin formül. Küçük ama anlamlı hediye.",
+    price: "₺199 – ₺599",
+    emoji: "🤲",
+    gradient: "from-amber-800 via-amber-700 to-orange-700",
+    category: "cosmetic",
+    occasions: ["valentines", "surprise", "birthday"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+el+kremi+hediye+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 61,
+    name: "Premium Saç Kurutma Makinesi",
+    description: "Dyson alternatifi, salon kalitesi evde. Isı korumalı, hızlı kurutucu.",
+    price: "₺999 – ₺3.999",
+    emoji: "💨",
+    gradient: "from-orange-800 via-orange-700 to-amber-700",
+    category: "cosmetic",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=premium+sac+kurutma+makinesi",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 62,
+    name: "LED Işıklı Makyaj Aynası",
+    description: "Gündüz ışığı simüle eden LED çerçeve. Makyajı mükemmel yapmanın sırrı.",
+    price: "₺499 – ₺1.299",
+    emoji: "🪞",
+    gradient: "from-slate-700 via-slate-600 to-gray-600",
+    category: "cosmetic",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=led+isikli+makyaj+aynasi",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 63,
+    name: "Ruj Koleksiyonu Hediye Seti",
+    description: "Nude'dan boldlara, sezonun en şık renk koleksiyonu. Şık hediye kutusuyla.",
+    price: "₺399 – ₺999",
+    emoji: "💄",
+    gradient: "from-red-800 via-rose-700 to-red-700",
+    category: "cosmetic",
+    occasions: ["valentines", "birthday", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=ruj+koleksiyon+hediye+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 64,
+    name: "Aromaterapi Yüz Buharlaştırıcı",
+    description: "Gözenekleri açan, cilt nemini dengeleyen mini spa cihazı. Evde kaplıca.",
+    price: "₺399 – ₺899",
+    emoji: "🌿",
+    gradient: "from-teal-800 via-teal-700 to-cyan-700",
+    category: "cosmetic",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=yuz+buharastirici+aromaterapi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 65,
+    name: "Serum Koleksiyonu (C Vitamini + Hyaluron)",
+    description: "Cilt bakımının yıldız ikilisi. Aydınlatıcı C vitamini + nem bombası hyaluron.",
+    price: "₺599 – ₺1.799",
+    emoji: "💧",
+    gradient: "from-cyan-800 via-sky-700 to-cyan-700",
+    category: "cosmetic",
+    occasions: ["birthday", "valentines", "anniversary", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=c+vitamini+hyaluron+serum+set&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+
+  // ── SPORT (15) ──
+  {
+    id: 66,
     name: "Premium Yoga Matı",
     description: "Kaymaz yüzey, 6mm kalınlık. Sporty yaşamın şık ve işlevsel aksesuarı.",
     price: "₺599 – ₺1.299",
@@ -225,11 +834,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-teal-800 via-teal-700 to-emerald-700",
     category: "sport",
     occasions: ["birthday", "newyear", "surprise"],
-    buyUrl: "https://www.trendyol.com/sr?q=premium+yoga+mat%C4%B1&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=premium+yoga+mati&sst=MOST_RATED",
     shop: "Trendyol",
   },
   {
-    id: 17,
+    id: 67,
     name: "Akıllı Saat / Fitness Tracker",
     description: "Adım, nabız, uyku takibi — hepsi bileğinde. Sporty yaşamın teknolojik dostu.",
     price: "₺2.499 – ₺5.999",
@@ -237,11 +846,11 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-indigo-800 via-indigo-700 to-blue-700",
     category: "sport",
     occasions: ["birthday", "anniversary", "newyear"],
-    buyUrl: "https://www.hepsiburada.com/ara?q=fitness+tracker+akıllı+saat+kadın",
+    buyUrl: "https://www.hepsiburada.com/ara?q=fitness+tracker+akilli+saat+kadin",
     shop: "Hepsiburada",
   },
   {
-    id: 18,
+    id: 68,
     name: "Premium Termos Matara",
     description: "24 saat soğuk, 12 saat sıcak. Seyahat ve spor için şık, dayanıklı matara.",
     price: "₺499 – ₺1.099",
@@ -253,7 +862,153 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Trendyol",
   },
   {
-    id: 19,
+    id: 69,
+    name: "Pilates Topu + Egzersiz Bandı Seti",
+    description: "Eve taşınabilir mini jimnastik. Pilates, yoga ve esneme egzersizleri için.",
+    price: "₺299 – ₺699",
+    emoji: "⚽",
+    gradient: "from-lime-800 via-green-700 to-lime-700",
+    category: "sport",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=pilates+topu+egzersiz+bandi+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 70,
+    name: "Premium Spor Çantası",
+    description: "Spor salonuna, seyahate. Ayrı ayakkabı bölmeli, şık ve geniş spor çantası.",
+    price: "₺699 – ₺1.799",
+    emoji: "🎒",
+    gradient: "from-slate-700 via-slate-600 to-gray-600",
+    category: "sport",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+spor+cantasi+kadin&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 71,
+    name: "Foam Roller (Kas Toparlanma)",
+    description: "Spor sonrası kas ağrılarına doğal çözüm. Fizyoterapistlerin tercihi.",
+    price: "₺299 – ₺699",
+    emoji: "🏋️‍♀️",
+    gradient: "from-orange-800 via-orange-700 to-amber-700",
+    category: "sport",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=foam+roller+kas+toparlanma&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 72,
+    name: "Masaj Tabancası (Percussive)",
+    description: "Spordan sonra derin doku masajı. Profesyonel fizyoterapi cihazı evde.",
+    price: "₺1.299 – ₺3.999",
+    emoji: "⚡",
+    gradient: "from-red-800 via-red-700 to-rose-700",
+    category: "sport",
+    occasions: ["birthday", "anniversary", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=masaj+tabancasi+percussive",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 73,
+    name: "Premium Atlama İpi",
+    description: "Hız, kilo verme, koordinasyon. Sporcuların tercihi, boncuklu kablo atlama ipi.",
+    price: "₺199 – ₺499",
+    emoji: "🪢",
+    gradient: "from-violet-800 via-purple-700 to-violet-700",
+    category: "sport",
+    occasions: ["birthday", "surprise", "newyear"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+atlama+ipi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 74,
+    name: "Yoga Blok + Kayış Seti",
+    description: "Esnekliği ve dengeyi geliştiren temel yoga aksesuarları. Başlangıç için ideal.",
+    price: "₺249 – ₺549",
+    emoji: "🧩",
+    gradient: "from-purple-800 via-violet-700 to-purple-700",
+    category: "sport",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=yoga+blok+kayis+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 75,
+    name: "Premium Spor Çorap Seti",
+    description: "Nem emen, kaymaz taban, anatomik tasarım. Her sporlu kişinin ihtiyacı.",
+    price: "₺199 – ₺499",
+    emoji: "🧦",
+    gradient: "from-emerald-800 via-teal-700 to-emerald-700",
+    category: "sport",
+    occasions: ["birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+spor+corap+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 76,
+    name: "Pilates / Barre Online Ders Aboneliği",
+    description: "Evden profesyonel ders. 3 aylık online pilates ve barre aboneliği.",
+    price: "₺399 – ₺899",
+    emoji: "🩰",
+    gradient: "from-pink-800 via-rose-700 to-pink-700",
+    category: "sport",
+    occasions: ["birthday", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=pilates+online+ders+abonelik",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 77,
+    name: "Balance Board (Denge Tahtası)",
+    description: "Core kaslarını geliştiren denge tahtası. Evde çalışırken bile kullanılabilir.",
+    price: "₺599 – ₺1.299",
+    emoji: "🏄‍♀️",
+    gradient: "from-amber-800 via-amber-700 to-orange-700",
+    category: "sport",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=balance+board+denge+tahtasi&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 78,
+    name: "Kemik İletimli Koşu Kulaklığı",
+    description: "Dışarıdaki sesleri duyarken müzik. Koşu ve outdoor aktiviteler için güvenli.",
+    price: "₺1.299 – ₺2.999",
+    emoji: "🎧",
+    gradient: "from-cyan-800 via-sky-700 to-cyan-700",
+    category: "sport",
+    occasions: ["birthday", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=kemik+iletimli+kulaklik+kosus",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 79,
+    name: "Sporty Güneş Gözlüğü",
+    description: "UV400 korumalı, polarize cam, hafif çerçeve. Outdoor aktiviteler için ideal.",
+    price: "₺399 – ₺1.299",
+    emoji: "😎",
+    gradient: "from-gray-700 via-gray-600 to-zinc-600",
+    category: "sport",
+    occasions: ["birthday", "surprise", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=sporty+polarize+gunes+gozlugu&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 80,
+    name: "Premium Yoga Taytı + Sports Bra Seti",
+    description: "Yüksek bel, sıkıştırıcı değil destekleyici. Hareket özgürlüğü + stil.",
+    price: "₺599 – ₺1.799",
+    emoji: "👗",
+    gradient: "from-fuchsia-800 via-pink-700 to-fuchsia-700",
+    category: "sport",
+    occasions: ["birthday", "newyear", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=yoga+tayti+sports+bra+set+kadin&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+
+  // ── LIFESTYLE (20) ──
+  {
+    id: 81,
     name: "Spa & Wellness Deneyimi",
     description: "Tüm gün spa paketi — hamam, masaj, sauna. Dinlenmenin en güzel hali.",
     price: "₺999 – ₺2.499",
@@ -265,7 +1020,7 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Trendyol",
   },
   {
-    id: 20,
+    id: 82,
     name: "Online Dil Kursu Aboneliği",
     description: "Seyahat tutkunuyla mükemmel uyum. İspanyolca, İtalyanca, Portekizce — seçim sende.",
     price: "₺999 – ₺2.999",
@@ -277,7 +1032,7 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Hepsiburada",
   },
   {
-    id: 21,
+    id: 83,
     name: "Aromalı Premium Mum Seti",
     description: "Evde şehir kaçamağı. El yapımı, soya balmumu premium mum koleksiyonu.",
     price: "₺349 – ₺799",
@@ -289,7 +1044,7 @@ const ALL_PRODUCTS: Product[] = [
     shop: "Trendyol",
   },
   {
-    id: 22,
+    id: 84,
     name: "Kişiselleştirilmiş Takı",
     description: "Adı veya özel tarihi yazılan zarif bileklik ya da kolye. Ona özel.",
     price: "₺499 – ₺1.599",
@@ -297,10 +1052,204 @@ const ALL_PRODUCTS: Product[] = [
     gradient: "from-rose-900 via-rose-800 to-pink-800",
     category: "lifestyle",
     occasions: ["valentines", "anniversary", "birthday"],
-    buyUrl: "https://www.trendyol.com/sr?q=ki%C5%9Fisel+isimli+tak%C4%B1+bileklik&sst=MOST_RATED",
+    buyUrl: "https://www.trendyol.com/sr?q=kisisel+isimli+taki+bileklik&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 85,
+    name: "Single Origin Kahve + French Press",
+    description: "Dünyadan seçme kahveler + kaliteli French Press. Kahve ritüelini yükselt.",
+    price: "₺599 – ₺1.299",
+    emoji: "☕",
+    gradient: "from-amber-800 via-amber-700 to-yellow-700",
+    category: "lifestyle",
+    occasions: ["birthday", "surprise", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=single+origin+kahve+french+press&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 86,
+    name: "Premium Çay Koleksiyonu + Demlik",
+    description: "Dünyanın dört bir yanından seçme çaylar + şık cam demlik. Çay ritüeli.",
+    price: "₺399 – ₺899",
+    emoji: "🍵",
+    gradient: "from-green-800 via-emerald-700 to-green-700",
+    category: "lifestyle",
+    occasions: ["birthday", "surprise", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+cay+koleksiyonu+demlik&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 87,
+    name: "Fotoğraf Kolajı Baskı Hediyesi",
+    description: "En güzel anlar bir çerçevede. Polaroid tarz kolaj baskı veya canvas.",
+    price: "₺299 – ₺799",
+    emoji: "🖼️",
+    gradient: "from-pink-800 via-rose-700 to-pink-700",
+    category: "lifestyle",
+    occasions: ["valentines", "anniversary", "birthday"],
+    buyUrl: "https://www.trendyol.com/sr?q=fotograf+kolaj+baskı+cerceve&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 88,
+    name: "Premium Ajanda / Planner 2026",
+    description: "Hedefleri, yolculukları, planları takip etmek için şık haftalık planner.",
+    price: "₺299 – ₺699",
+    emoji: "📅",
+    gradient: "from-indigo-800 via-indigo-700 to-blue-700",
+    category: "lifestyle",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+ajanda+planner+2026&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 89,
+    name: "İpek Yastık Kılıfı Seti",
+    description: "Saç ve cilt dostu %100 doğal ipek. Uyku kalitesini artıran şık yastık kılıfı.",
+    price: "₺499 – ₺1.299",
+    emoji: "🌙",
+    gradient: "from-purple-800 via-violet-700 to-purple-700",
+    category: "lifestyle",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=ipek+yastik+kilifi+%100+dogal&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 90,
+    name: "Aromaterapi Difüzörü + Uçucu Yağ Seti",
+    description: "Evi spa'ya dönüştür. Lavandar, ökaliptüs, gül — tam 10 koku seçeneği.",
+    price: "₺399 – ₺899",
+    emoji: "🌿",
+    gradient: "from-teal-800 via-teal-700 to-cyan-700",
+    category: "lifestyle",
+    occasions: ["birthday", "surprise", "valentines"],
+    buyUrl: "https://www.trendyol.com/sr?q=aromaterapi+difuzor+ucucu+yag+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 91,
+    name: "Premium Bornoz",
+    description: "Hotel lüksünü eve taşı. %100 pamuk, yumuşak ve emen, monogramlı.",
+    price: "₺699 – ₺1.799",
+    emoji: "🛀",
+    gradient: "from-sky-800 via-blue-700 to-sky-700",
+    category: "lifestyle",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+bornoz+pamuk&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 92,
+    name: "Fine Dining Restoran Hediye Kartı",
+    description: "Unutulmaz bir akşam yemeği deneyimi. Şehrin en iyi restoranlarında.",
+    price: "₺1.499 – ₺4.999",
+    emoji: "🍽️",
+    gradient: "from-slate-700 via-slate-600 to-gray-600",
+    category: "lifestyle",
+    occasions: ["valentines", "anniversary", "birthday"],
+    buyUrl: "https://www.trendyol.com/sr?q=restoran+hediye+karti+deneyim&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 93,
+    name: "Online Yemek Kursu Aboneliği",
+    description: "Dünya mutfaklarını öğren, evde restoran deneyimi yarat. 3 aylık kurs.",
+    price: "₺499 – ₺1.299",
+    emoji: "👨‍🍳",
+    gradient: "from-orange-800 via-orange-700 to-amber-700",
+    category: "lifestyle",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=online+yemek+kursu+abonelik",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 94,
+    name: "Meditation App Aboneliği (Calm/Headspace)",
+    description: "Zihni dinginleştir. 1 yıllık premium meditation ve uyku hikayeleri aboneliği.",
+    price: "₺399 – ₺799",
+    emoji: "🧘",
+    gradient: "from-violet-800 via-purple-700 to-violet-700",
+    category: "lifestyle",
+    occasions: ["birthday", "newyear", "surprise"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=calm+headspace+abonelik+hediye",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 95,
+    name: "Premium Şarap + Peynir Hediye Sepeti",
+    description: "Şık ambalaj, seçilmiş şarap, özel peynirler. Hep birlikte açılacak hediye.",
+    price: "₺799 – ₺2.499",
+    emoji: "🍷",
+    gradient: "from-red-900 via-red-800 to-rose-800",
+    category: "lifestyle",
+    occasions: ["valentines", "anniversary", "birthday", "surprise"],
+    buyUrl: "https://www.trendyol.com/sr?q=sarap+peynir+hediye+sepeti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 96,
+    name: "Kişiselleştirilmiş Takı Kutusu",
+    description: "İsmi veya özel mesajı oyulmuş şık mücevher kutusu. Her gece yatmadan önce.",
+    price: "₺399 – ₺899",
+    emoji: "💝",
+    gradient: "from-rose-800 via-rose-700 to-pink-700",
+    category: "lifestyle",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=kisisel+taki+kutusu+isimli&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 97,
+    name: "Dijital Fotoğraf Çerçevesi",
+    description: "Binlerce anı bir çerçevede. Telefondaki fotoğraflar her gün salonda.",
+    price: "₺899 – ₺2.499",
+    emoji: "🖼️",
+    gradient: "from-gray-700 via-gray-600 to-zinc-600",
+    category: "lifestyle",
+    occasions: ["birthday", "valentines", "anniversary"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=dijital+fotograf+cercevesi+wifi",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 98,
+    name: "El Yapımı Çikolata Hediye Seti",
+    description: "Belçika çikolatası, sıra dışı tatlar, şık ambalaj. Herkesi mutlu eden hediye.",
+    price: "₺299 – ₺799",
+    emoji: "🍫",
+    gradient: "from-amber-900 via-amber-800 to-brown-800",
+    category: "lifestyle",
+    occasions: ["valentines", "birthday", "surprise", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=el+yapimi+cikolata+hediye+seti&sst=MOST_RATED",
+    shop: "Trendyol",
+  },
+  {
+    id: 99,
+    name: "Online Kişisel Gelişim Kursu",
+    description: "Kariyer, üretkenlik veya mindfulness. Yılbaşının en anlamlı hediyesi.",
+    price: "₺499 – ₺1.999",
+    emoji: "🚀",
+    gradient: "from-blue-800 via-blue-700 to-indigo-700",
+    category: "lifestyle",
+    occasions: ["birthday", "newyear"],
+    buyUrl: "https://www.hepsiburada.com/ara?q=online+kisisel+gelisim+kursu",
+    shop: "Hepsiburada",
+  },
+  {
+    id: 100,
+    name: "Premium Güneş Gözlüğü",
+    description: "UV400 koruma, polarize cam, ikonik çerçeve. Seyahatin en şık aksesuarı.",
+    price: "₺799 – ₺2.999",
+    emoji: "🕶️",
+    gradient: "from-zinc-700 via-zinc-600 to-neutral-600",
+    category: "lifestyle",
+    occasions: ["birthday", "surprise", "valentines", "anniversary"],
+    buyUrl: "https://www.trendyol.com/sr?q=premium+gunes+gozlugu+kadin&sst=MOST_RATED",
     shop: "Trendyol",
   },
 ];
+
+const SESSION_SIZE = 20;
 
 type SwipeDirection = "left" | "right" | null;
 
@@ -318,13 +1267,13 @@ export default function BerilHediyeBul() {
 
   function startOccasion(occasion: Occasion) {
     const filtered = ALL_PRODUCTS.filter((p) => p.occasions.includes(occasion));
-    // Fisher-Yates shuffle — her seferinde farklı sıra
+    // Fisher-Yates shuffle
     for (let i = filtered.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
     }
     setSelectedOccasion(occasion);
-    setProducts(filtered);
+    setProducts(filtered.slice(0, SESSION_SIZE));
     setCurrentIndex(0);
     setLiked([]);
     setStep("swipe");
@@ -385,14 +1334,10 @@ export default function BerilHediyeBul() {
   }
 
   const cardRotation = swipeFeedback
-    ? swipeFeedback === "right"
-      ? 15
-      : -15
+    ? swipeFeedback === "right" ? 15 : -15
     : dragX * 0.1;
   const cardTranslateX = swipeFeedback
-    ? swipeFeedback === "right"
-      ? 400
-      : -400
+    ? swipeFeedback === "right" ? 400 : -400
     : dragX;
   const likeOpacity = Math.min(1, Math.max(0, (dragX > 0 ? dragX : 0) / 60));
   const passOpacity = Math.min(1, Math.max(0, (dragX < 0 ? -dragX : 0) / 60));
@@ -402,7 +1347,6 @@ export default function BerilHediyeBul() {
   const progress = products.length > 0 ? (currentIndex / products.length) * 100 : 0;
   const occasionLabel = OCCASIONS.find((o) => o.id === selectedOccasion)?.label ?? "";
 
-  // Group liked by category
   const likedByCategory = liked.reduce<Record<string, Product[]>>((acc, p) => {
     if (!acc[p.category]) acc[p.category] = [];
     acc[p.category].push(p);
@@ -424,11 +1368,7 @@ export default function BerilHediyeBul() {
           </div>
           {step !== "occasion" && (
             <button
-              onClick={() => {
-                setStep("occasion");
-                setDragX(0);
-                setSwipeFeedback(null);
-              }}
+              onClick={() => { setStep("occasion"); setDragX(0); setSwipeFeedback(null); }}
               className="text-[11px] text-white/30 hover:text-white/60 border border-white/10 hover:border-white/25 px-2.5 py-1 rounded-md transition-all"
             >
               Yeniden Başla
@@ -446,7 +1386,7 @@ export default function BerilHediyeBul() {
               <div className="text-5xl mb-3">💝</div>
               <h2 className="text-xl font-bold text-white mb-1">Berkay, merhaba!</h2>
               <p className="text-sm text-white/50 leading-relaxed">
-                Beril'e doğru hediyeyi bulalım. Hangi özel gün için arıyorsun?
+                Beril&apos;e doğru hediyeyi bulalım. Hangi özel gün için arıyorsun?
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3">
@@ -488,7 +1428,6 @@ export default function BerilHediyeBul() {
 
             {/* Card stack */}
             <div className="relative w-full" style={{ height: 460 }}>
-              {/* Background card (next) */}
               {nextProduct && (
                 <div
                   className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${nextProduct.gradient} border border-white/10`}
@@ -530,14 +1469,12 @@ export default function BerilHediyeBul() {
 
                 {/* Content */}
                 <div className="absolute inset-0 flex flex-col p-7">
-                  {/* Category tag */}
                   <div className="self-start">
                     <span className="text-[11px] font-medium text-white/50 bg-white/10 px-2.5 py-1 rounded-full">
                       {CATEGORY_LABELS[currentProduct.category]}
                     </span>
                   </div>
 
-                  {/* Emoji */}
                   <div className="flex-1 flex items-center justify-center">
                     <span
                       className="select-none"
@@ -547,7 +1484,6 @@ export default function BerilHediyeBul() {
                     </span>
                   </div>
 
-                  {/* Info */}
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold text-white leading-tight">{currentProduct.name}</h3>
                     <p className="text-sm text-white/65 leading-relaxed">{currentProduct.description}</p>
@@ -562,10 +1498,8 @@ export default function BerilHediyeBul() {
               </div>
             </div>
 
-            {/* Swipe hint */}
             <p className="text-xs text-white/25 text-center">Sürükle veya aşağıdaki butonları kullan</p>
 
-            {/* Buttons */}
             <div className="flex items-center gap-5 w-full justify-center">
               <button
                 onClick={() => swipe("left")}
@@ -588,15 +1522,10 @@ export default function BerilHediyeBul() {
         {/* ── STEP 3: Results ── */}
         {step === "results" && (
           <div className="flex flex-col gap-6 animate-fadeIn">
-            {/* Summary */}
             <div className="text-center">
-              <div className="text-4xl mb-3">
-                {liked.length > 0 ? "🎉" : "😕"}
-              </div>
+              <div className="text-4xl mb-3">{liked.length > 0 ? "🎉" : "😕"}</div>
               <h2 className="text-xl font-bold text-white mb-1">
-                {liked.length > 0
-                  ? `${liked.length} harika hediye seçtin!`
-                  : "Hiç beğenmedin..."}
+                {liked.length > 0 ? `${liked.length} harika hediye seçtin!` : "Hiç beğenmedin..."}
               </h2>
               <p className="text-sm text-white/50">
                 {liked.length > 0
@@ -614,7 +1543,6 @@ export default function BerilHediyeBul() {
               </button>
             )}
 
-            {/* Liked products grouped by category */}
             {Object.entries(likedByCategory).map(([cat, items]) => (
               <div key={cat}>
                 <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">
@@ -630,9 +1558,7 @@ export default function BerilHediyeBul() {
                         {product.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white text-sm leading-tight truncate">
-                          {product.name}
-                        </p>
+                        <p className="font-semibold text-white text-sm leading-tight truncate">{product.name}</p>
                         <p className="text-xs text-white/50 mt-0.5">{product.price}</p>
                         <p className="text-[10px] text-white/30 mt-0.5">{product.shop}</p>
                       </div>
@@ -653,7 +1579,7 @@ export default function BerilHediyeBul() {
             {liked.length > 0 && (
               <div className="mt-2 p-4 rounded-2xl bg-white/4 border border-white/8 text-center">
                 <p className="text-xs text-white/40 leading-relaxed">
-                  💡 Emin olamadın mı? "Hemen Al" linkine tıkla, incele, sonra karar ver.
+                  💡 Emin olamadın mı? &quot;Hemen Al&quot; linkine tıkla, incele, sonra karar ver.
                   <br />Beril seyahati, müziği ve kaliteyi sever — bu listede hepsi var!
                 </p>
               </div>
@@ -669,13 +1595,11 @@ export default function BerilHediyeBul() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="w-full border-t border-white/5 py-3 px-4">
         <p className="text-center text-[10px] text-white/15">
-          Beril'e özel · <a href="https://orhankarakopru.com.tr" className="hover:text-white/30 transition-colors">orhankarakopru.com.tr</a>
+          Beril&apos;e özel · <a href="https://orhankarakopru.com.tr" className="hover:text-white/30 transition-colors">orhankarakopru.com.tr</a>
         </p>
       </footer>
-
     </div>
   );
 }
