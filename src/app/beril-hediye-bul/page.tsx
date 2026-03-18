@@ -318,6 +318,11 @@ export default function BerilHediyeBul() {
 
   function startOccasion(occasion: Occasion) {
     const filtered = ALL_PRODUCTS.filter((p) => p.occasions.includes(occasion));
+    // Fisher-Yates shuffle — her seferinde farklı sıra
+    for (let i = filtered.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    }
     setSelectedOccasion(occasion);
     setProducts(filtered);
     setCurrentIndex(0);
