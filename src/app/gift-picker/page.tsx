@@ -1094,7 +1094,7 @@ export default function HediyeBulPage() {
                 Tekrar Bak
               </button>
               <button
-                onClick={fetchRecommendations}
+                onClick={() => fetchRecommendations()}
                 className="w-full bg-white/[0.08] text-white/60 font-medium py-3.5 rounded-2xl text-sm transition-all active:scale-[0.98]"
               >
                 Yeni Liste Üret 🔄
