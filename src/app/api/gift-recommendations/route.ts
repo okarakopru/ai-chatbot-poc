@@ -166,7 +166,7 @@ Sadece JSON döndür:
           { role: "user", content: prompt },
         ],
         temperature: 0.95,
-        max_tokens: 2000,
+        max_tokens: 3500,
         response_format: { type: "json_object" },
       }),
     });
