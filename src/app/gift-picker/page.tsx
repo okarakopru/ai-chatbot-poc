@@ -119,8 +119,14 @@ const DURATIONS: { id: Duration; label: string }[] = [
 const LOADING_MESSAGES = [
   "Profil analiz ediliyor",
   "Kişilik özellikleri değerlendiriliyor",
+  "Yaşam tarzına göre fikirler üretiliyor",
   "Geniş ürün kataloğu taranıyor",
-  "Kişiselleştirilmiş hediyeler hazırlanıyor",
+  "Özgün ve kişisel seçenekler belirleniyor",
+  "Klişe hediyeler eleniyor",
+  "En iyi 20 öneri seçiliyor",
+  "Ürün görselleri yükleniyor",
+  "Son rötuşlar yapılıyor",
+  "Neredeyse hazır",
   "Son dokunuşlar yapılıyor ✨",
 ];
 
@@ -344,7 +350,7 @@ export default function HediyeBulPage() {
     const msgInterval = setInterval(() => {
       msgIdx = Math.min(msgIdx + 1, LOADING_MESSAGES.length - 1);
       setLoadingText(LOADING_MESSAGES[msgIdx]);
-    }, 1600);
+    }, 2500);
     const dotsInterval = setInterval(() => {
       setLoadingDots((d) => (d + 1) % 4);
     }, 400);

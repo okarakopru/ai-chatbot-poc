@@ -7,15 +7,18 @@ export const runtime = "nodejs";
 async function fetchPexelsImage(keywords: string): Promise<string | null> {
   try {
     const query = encodeURIComponent(keywords.replace(/,/g, " "));
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${query}&per_page=5&orientation=portrait`,
-      { headers: { Authorization: process.env.PEXELS_API_KEY! } }
+      `https://api.pexels.com/v1/search?query=${query}&per_page=1&orientation=portrait`,
+      { headers: { Authorization: process.env.PEXELS_API_KEY! }, signal: controller.signal }
     );
+    clearTimeout(timeout);
     if (!res.ok) return null;
     const data = await res.json();
-    const photos: { src: { large: string; medium: string } }[] = data.photos || [];
+    const photos: { src: { medium: string } }[] = data.photos || [];
     if (photos.length === 0) return null;
-    return photos[0].src.large || photos[0].src.medium || null;
+    return photos[0].src.medium || null;
   } catch {
     return null;
   }
@@ -138,7 +141,7 @@ Bu profili derinlemesine analiz et:
 3. Fiyat çeşitliliği: 5 ürün ₺0–500, 7 ürün ₺500–1.500, 5 ürün ₺1.500–5.000, 3 ürün ₺5.000+
 4. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan, spesifik ürünler — genel kategori adı değil, somut ürün adı yaz
 5. 20 önerinin en az 6'sı "ilk aklına gelen" değil, gerçekten düşünülmüş sürpriz öneri olsun
-6. Her description: 1. cümle bu KİŞİYE neden özel olduğunu açıkla. 2. cümle somut kullanım senaryosu ver. "Harika hediye" gibi jenerik ifadeler kullanma.
+6. Her description: Kişiye neden özel olduğunu 1 cümlede, somut şekilde açıkla. Jenerik ifade kullanma.
 7. buyUrl: Türkçe arama terimiyle oluştur — "https://www.trendyol.com/sr?q=turkce+urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=turkce+urun+adi". q= parametresindeki kelimeler MUTLAKA Türkçe olsun.
 8. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime, ürün fotoğrafçılığı tarzında). Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle". ASLA insan fotoğrafına yol açacak terimler kullanma.
 
@@ -163,6 +166,7 @@ Sadece JSON döndür:
           { role: "user", content: prompt },
         ],
         temperature: 0.95,
+        max_tokens: 2000,
         response_format: { type: "json_object" },
       }),
     });
