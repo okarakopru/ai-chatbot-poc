@@ -256,6 +256,50 @@ function ProductCard({
   );
 }
 
+// ─── PageShell (defined outside main component to avoid remount on re-render) ───
+
+function PageShell({
+  step,
+  progress,
+  resetAll,
+  children,
+}: {
+  step: Step;
+  progress: number;
+  resetAll: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+      <div className="w-full max-w-[420px] min-h-screen flex flex-col">
+        <div className="px-5 py-3 flex items-center justify-between">
+          <span className="text-white/40 text-xs font-medium tracking-widest uppercase">
+            Hediye Bulucu
+          </span>
+          {step !== "welcome" && step !== "swipe" && step !== "results" && step !== "loading" && (
+            <button onClick={resetAll} className="text-white/30 hover:text-white/60 text-xs transition-colors">
+              Başa dön
+            </button>
+          )}
+        </div>
+        {step !== "welcome" && step !== "swipe" && step !== "results" && (
+          <div className="px-5 pb-2">
+            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-violet-500 to-pink-500 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+        <div className="flex-1 flex flex-col px-5 overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
 export default function HediyeBulPage() {
@@ -463,40 +507,6 @@ export default function HediyeBulPage() {
 
   // ─── Layout wrapper ──────────────────────────────────────────────────────────
 
-  const PageShell = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen bg-[#0d0d16] flex justify-center">
-      <div className="w-full max-w-[420px] min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="px-5 py-3 flex items-center justify-between">
-          <div>
-            <span className="text-white/40 text-xs font-medium tracking-widest uppercase">
-              Hediye Bulucu
-            </span>
-          </div>
-          {step !== "welcome" && step !== "swipe" && step !== "results" && step !== "loading" && (
-            <button onClick={resetAll} className="text-white/30 hover:text-white/60 text-xs transition-colors">
-              Başa dön
-            </button>
-          )}
-        </div>
-        {/* Progress bar */}
-        {step !== "welcome" && step !== "swipe" && step !== "results" && (
-          <div className="px-5 pb-2">
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-violet-500 to-pink-500 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        )}
-        <div className="flex-1 flex flex-col px-5 overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-
   // ══════════════════════════════════════════════════════════════════
   // STEP: WELCOME
   // ══════════════════════════════════════════════════════════════════
@@ -561,7 +571,7 @@ export default function HediyeBulPage() {
   if (step === "recipient") {
     const canContinue = recipientName.trim() && relationship && duration;
     return (
-      <PageShell>
+      <PageShell step={step} progress={progress} resetAll={resetAll}>
         <div className="pt-4">
           <h2 className="text-xl font-bold text-white">Kime hediye alıyorsun?</h2>
           <p className="text-sm text-white/40 mt-0.5 mb-5">Kişiyi ne kadar iyi tanırsak, o kadar iyi öneri üretiriz.</p>
@@ -576,7 +586,6 @@ export default function HediyeBulPage() {
             onChange={(e) => setRecipientName(e.target.value)}
             placeholder="Hediye alacağın kişinin adı..."
             className="w-full bg-white/[0.07] border border-white/[0.10] text-white placeholder-white/25 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.09] transition-all"
-            autoFocus
           />
         </div>
 
@@ -668,7 +677,7 @@ export default function HediyeBulPage() {
     };
 
     return (
-      <PageShell>
+      <PageShell step={step} progress={progress} resetAll={resetAll}>
         {/* Progress dots */}
         <div className="flex gap-1.5 py-4">
           {PERSONALITY_QUESTIONS.map((_, i) => (
@@ -728,7 +737,7 @@ export default function HediyeBulPage() {
 
   if (step === "occasion") {
     return (
-      <PageShell>
+      <PageShell step={step} progress={progress} resetAll={resetAll}>
         <div className="pt-4">
           <h2 className="text-xl font-bold text-white">Ne için hediye?</h2>
           <p className="text-sm text-white/40 mt-0.5 mb-5">Özel gün türüne göre önerileri şekillendiriyoruz.</p>
@@ -764,7 +773,7 @@ export default function HediyeBulPage() {
 
   if (step === "past") {
     return (
-      <PageShell>
+      <PageShell step={step} progress={progress} resetAll={resetAll}>
         <div className="pt-4">
           <h2 className="text-xl font-bold text-white">Daha önce ne hediye ettin?</h2>
           <p className="text-sm text-white/40 mt-0.5 mb-5">Aynı şeyleri önermemek için. Opsiyonel, atlayabilirsin.</p>
