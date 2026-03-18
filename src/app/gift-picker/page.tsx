@@ -604,12 +604,11 @@ export default function HediyeBulPage() {
           <div className="mb-6">
             <label className="text-white/60 text-sm mb-2 block">Kaç yaşında? <span className="text-white/30">(opsiyonel)</span></label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={recipientAge}
-              onChange={(e) => setRecipientAge(e.target.value)}
+              onChange={(e) => setRecipientAge(e.target.value.replace(/\D/g, ""))}
               placeholder="ör. 28"
-              min="1"
-              max="100"
               className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-400 transition-colors"
             />
           </div>
