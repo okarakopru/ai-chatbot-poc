@@ -802,13 +802,13 @@ export default function HediyeBulPage() {
 
         <div className="flex gap-3 mt-auto mb-2">
           <button
-            onClick={fetchRecommendations}
+            onClick={() => fetchRecommendations()}
             className="bg-white/[0.08] text-white/50 font-medium py-3.5 rounded-2xl flex-1 text-sm transition-all active:scale-[0.98]"
           >
             Atla →
           </button>
           <button
-            onClick={fetchRecommendations}
+            onClick={() => fetchRecommendations()}
             className="bg-gradient-to-r from-violet-600 to-pink-600 text-white font-semibold py-3.5 rounded-2xl flex-[2] text-sm transition-all active:scale-[0.98]"
           >
             Hediyeleri Bul ✨
