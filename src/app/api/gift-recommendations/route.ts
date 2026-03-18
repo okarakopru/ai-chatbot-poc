@@ -71,26 +71,68 @@ export async function POST(req: NextRequest) {
     if (personality.valueType === "experience") personalityParts.push("deneyimlere ve anılara büyük değer verir");
     else if (personality.valueType === "item") personalityParts.push("somut ürünleri ve eşyaları tercih eder");
 
-    const personalityText = personalityParts.join("; ");
+    // Build rich personality profile for deep AI reasoning
+    const lifestyleDesc = personality.lifestyle === "home"
+      ? "Evde vakit geçirmeyi sever; film, kitap, dinlenme ve huzurlu ortamlar onun için önemli."
+      : personality.lifestyle === "outdoor"
+      ? "Dışarı çıkmayı, seyahat etmeyi ve yeni deneyimler keşfetmeyi sever; evde durmaktan hoşlanmaz."
+      : null;
 
-    const prompt = `Sen bir uzman hediye danışmanısın. Verilen profile göre 20 adet kişiselleştirilmiş hediye önerisi üret.
+    const giftStyleDesc = personality.giftStyle === "practical"
+      ? "Hediyede pratiklik arar; her gün kullanacağı, hayatını kolaylaştıran şeyler onu mutlu eder."
+      : personality.giftStyle === "sentimental"
+      ? "Hediyenin arkasındaki düşünceye önem verir; anlam yüklü, kişisel dokunuşlu hediyeler daha çok heyecanlandırır."
+      : null;
 
-ALICI PROFİLİ:
-- Hediye veren: ${giverName}
-- Alıcı: ${recipient.name} (${giverName}'in ${RELATION_LABELS[recipient.relationship] || "yakını"}, ${DURATION_LABELS[recipient.duration] || ""})${recipient.age ? `\n- Yaşı: ${recipient.age}` : ""}
-- Kişilik: ${personalityText || "belirtilmemiş"}
-- Özel gün: ${OCCASION_LABELS[occasion] || occasion}${pastGifts ? `\n- Daha önce alınan hediyeler: "${pastGifts}" — bunları TEKRAR ÖNERME, benzer kategorilerden de kaçın` : ""}
+    const aestheticDesc = personality.aesthetic === "minimal"
+      ? "Tarzı sade ve minimalist; gereksiz detaylardan kaçınır, temiz çizgileri ve işlevselliği sever."
+      : personality.aesthetic === "luxury"
+      ? "Kaliteli ve şık şeylerden hoşlanır; ince işçilik ve premium malzeme ona değer ifade eder."
+      : null;
 
-KURALLAR:
-1. En az 6 farklı kategoride öneriler sun (güzellik/kozmetik, teknoloji/elektronik, deneyim, aksesuar/moda, kitap/hobi, yaşam tarzı, spor, seyahat, yemek/içecek)
-2. Fiyat dağılımı: ~5 ürün 0–500₺, ~7 ürün 500–1.500₺, ~5 ürün 1.500–5.000₺, ~3 ürün 5.000₺+ — böylece kullanıcı kendi bütçesine göre filtreleyebilsin
-3. Türkiye'de Trendyol veya Hepsiburada'da gerçekten bulunabilecek, gerçekçi ürünler öner — hayali ürün uydurma
-4. buyUrl: Trendyol veya Hepsiburada arama URL'si — Format: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
-5. imageKeywords: Flickr'da ürünü DOĞRU temsil eden fotoğrafı bulacak İngilizce anahtar kelimeler (3-4 kelime, virgülle ayrılmış). Dikkat: "sunscreen" için "sunscreen,beach,spf,bottle" gibi spesifik ol — yanlış fotoğrafa yol açacak genel kelimeler kullanma
-6. Her önerinin description'ında neden bu kişiye uyduğunu 1-2 cümleyle belirt
+    const energyDesc = personality.energy === "calm"
+      ? "Sakin ve içe dönük bir yapısı var; yoğunluktan çok huzur ve dinginlik arar."
+      : personality.energy === "active"
+      ? "Enerjik ve sosyal biri; aktif olmayı, bir şeyler üretmeyi ve hareket halinde olmayı sever."
+      : null;
 
-Sadece JSON döndür, başka açıklama yazma:
-{"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Bu kişiye neden uyduğunu açıklayan 1-2 cümle","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"kategori","imageKeywords":"english,product,photo,keywords","buyUrl":"https://www.trendyol.com/sr?q=...","shop":"Trendyol"}]}`;
+    const valueDesc = personality.valueType === "experience"
+      ? "Deneyimlere ve anılara büyük değer verir; 'yaşanan an' eşyadan daha değerlidir ona göre."
+      : personality.valueType === "item"
+      ? "Somut ve kalıcı şeyler tercih eder; eline alıp her gün görebileceği, kullanabileceği hediyeler daha anlamlı gelir."
+      : null;
+
+    const profileLines = [lifestyleDesc, giftStyleDesc, aestheticDesc, energyDesc, valueDesc]
+      .filter(Boolean)
+      .map((line, i) => `${i + 1}. ${line}`)
+      .join("\n");
+
+    const occasionLabel = OCCASION_LABELS[occasion] || occasion;
+    const relationLabel = RELATION_LABELS[recipient.relationship] || "yakını";
+    const durationLabel = DURATION_LABELS[recipient.duration] || "";
+
+    const prompt = `${giverName}, ${durationLabel} ${recipient.name} adındaki ${relationLabel} için ${occasionLabel} vesilesiyle hediye arıyor.${recipient.age ? ` ${recipient.name} ${recipient.age} yaşında.` : ""}
+
+${recipient.name}'in kişilik profili:
+${profileLines || "Profil belirtilmemiş."}
+${pastGifts ? `\nDaha önce verilen hediyeler: "${pastGifts}"\n⚠️ Bu ürünleri veya çok benzer kategorileri KESINLIKLE ÖNERME.` : ""}
+
+Bu profili derinlemesine analiz et:
+- ${recipient.name}'in günlük hayatı nasıl görünüyor?
+- Kendisi almayacağı ama alınca çok sevineceklerine ne olabilir?
+- ${occasionLabel} için bu kişiye özel ne anlam ifade eder?
+
+Buna göre 20 hediye önerisi üret. Kriterler:
+1. En az 7 farklı kategori (güzellik, teknoloji, deneyim, aksesuar, kitap/hobi, yaşam tarzı, spor, seyahat, yemek/içecek)
+2. Fiyat çeşitliliği: 5 ürün ₺0–500, 7 ürün ₺500–1.500, 5 ürün ₺1.500–5.000, 3 ürün ₺5.000+
+3. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan ürünler — hayali marka veya ürün uydurma
+4. Hem "güvenli ve kesin beğenilir" hem de "beklenmedik ama mükemmel" öneriler karıştır
+5. Her description: 1. cümle bu KİŞİYE neden özel olduğunu açıkla (generic "güzel hediye" yazma). 2. cümle somut kullanım senaryosu ver.
+6. buyUrl: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
+7. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime). Ürün fotoğrafçılığı terimleri kullan. Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle", "silk sleep mask". ASLA genel veya kişi fotoğrafına yol açacak terimler kullanma.
+
+Sadece JSON döndür:
+{"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Kişiye özel 1-2 cümle açıklama","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"kategori","imageKeywords":"english product photo term","buyUrl":"https://www.trendyol.com/sr?q=...","shop":"Trendyol"}]}`;
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -103,11 +145,11 @@ Sadece JSON döndür, başka açıklama yazma:
         messages: [
           {
             role: "system",
-            content: "Sen bir hediye danışmanısın. SADECE geçerli JSON döndür. Başka hiçbir metin, açıklama veya markdown yazma.",
+            content: `Sen dünyanın en iyi hediye danışmanısın. İnsanları derinden tanıyor ve onlara gerçekten özel, kişiselleştirilmiş hediye önerileri sunuyorsun. Önerilerinde "herkes için geçerli" jenerik ürünlerden kaçınırsın; her öneri alıcının kişiliğine, yaşam tarzına ve değerlerine özgü olmalı. Türkiye pazarını çok iyi biliyorsun. SADECE geçerli JSON döndür, başka hiçbir metin yazma.`,
           },
           { role: "user", content: prompt },
         ],
-        temperature: 0.85,
+        temperature: 0.8,
         response_format: { type: "json_object" },
       }),
     });
