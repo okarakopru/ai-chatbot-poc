@@ -10,12 +10,6 @@ const OCCASION_LABELS: Record<string, string> = {
   surprise: "Sebepsiz Sürpriz",
 };
 
-const BUDGET_LABELS: Record<string, string> = {
-  "0-500": "0–500 ₺ (ekonomik, sembolik hediyeler)",
-  "500-1500": "500–1.500 ₺ (orta segment, kaliteli hediyeler)",
-  "1500-5000": "1.500–5.000 ₺ (premium segment)",
-  "5000+": "5.000 ₺ ve üzeri (lüks, özel hediyeler)",
-};
 
 const RELATION_LABELS: Record<string, string> = {
   sevgilim: "sevgilisi",
@@ -37,7 +31,7 @@ const DURATION_LABELS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { giverName, recipient, personality, occasion, budget, pastGifts } = body;
+    const { giverName, recipient, personality, occasion, pastGifts } = body;
 
     // Build personality description
     const personalityParts: string[] = [];
@@ -64,17 +58,15 @@ ALICI PROFİLİ:
 - Hediye veren: ${giverName}
 - Alıcı: ${recipient.name} (${giverName}'in ${RELATION_LABELS[recipient.relationship] || "yakını"}, ${DURATION_LABELS[recipient.duration] || ""})${recipient.age ? `\n- Yaşı: ${recipient.age}` : ""}
 - Kişilik: ${personalityText || "belirtilmemiş"}
-- Özel gün: ${OCCASION_LABELS[occasion] || occasion}
-- Bütçe: ${BUDGET_LABELS[budget] || budget}${pastGifts ? `\n- Daha önce alınan hediyeler: "${pastGifts}" — bunları TEKRAR ÖNERME, benzer kategorilerden de kaçın` : ""}
+- Özel gün: ${OCCASION_LABELS[occasion] || occasion}${pastGifts ? `\n- Daha önce alınan hediyeler: "${pastGifts}" — bunları TEKRAR ÖNERME, benzer kategorilerden de kaçın` : ""}
 
 KURALLAR:
 1. En az 6 farklı kategoride öneriler sun (güzellik/kozmetik, teknoloji/elektronik, deneyim, aksesuar/moda, kitap/hobi, yaşam tarzı, spor, seyahat, yemek/içecek)
-2. Tüm fiyatlar belirtilen bütçe aralığına uygun olsun
+2. Fiyat dağılımı: ~5 ürün 0–500₺, ~7 ürün 500–1.500₺, ~5 ürün 1.500–5.000₺, ~3 ürün 5.000₺+ — böylece kullanıcı kendi bütçesine göre filtreleyebilsin
 3. Türkiye'de Trendyol veya Hepsiburada'da gerçekten bulunabilecek, gerçekçi ürünler öner — hayali ürün uydurma
 4. buyUrl: Trendyol veya Hepsiburada arama URL'si — Format: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
 5. imageKeywords: Flickr'da ürünü DOĞRU temsil eden fotoğrafı bulacak İngilizce anahtar kelimeler (3-4 kelime, virgülle ayrılmış). Dikkat: "sunscreen" için "sunscreen,beach,spf,bottle" gibi spesifik ol — yanlış fotoğrafa yol açacak genel kelimeler kullanma
 6. Her önerinin description'ında neden bu kişiye uyduğunu 1-2 cümleyle belirt
-7. Önerilerin çeşitli fiyat noktalarında olmasına dikkat et (hepsi max fiyatta olmasın)
 
 Sadece JSON döndür, başka açıklama yazma:
 {"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Bu kişiye neden uyduğunu açıklayan 1-2 cümle","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"kategori","imageKeywords":"english,product,photo,keywords","buyUrl":"https://www.trendyol.com/sr?q=...","shop":"Trendyol"}]}`;

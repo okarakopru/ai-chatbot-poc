@@ -9,7 +9,6 @@ type Step =
   | "recipient"
   | "personality"
   | "occasion"
-  | "budget"
   | "past"
   | "loading"
   | "swipe"
@@ -119,10 +118,26 @@ const DURATIONS: { id: Duration; label: string }[] = [
 const LOADING_MESSAGES = [
   "Profil analiz ediliyor",
   "Kişilik özellikleri değerlendiriliyor",
-  "Bütçeye uygun ürünler taranıyor",
+  "Geniş ürün kataloğu taranıyor",
   "Kişiselleştirilmiş hediyeler hazırlanıyor",
   "Son dokunuşlar yapılıyor ✨",
 ];
+
+// ─── Price helpers (for results filter) ──────────────────────────────────────
+
+function parsePriceMin(price: string): number {
+  const cleaned = price.replace(/\./g, "");
+  const match = cleaned.match(/₺(\d+)/);
+  return match ? parseInt(match[1]) : 0;
+}
+
+function getPriceTier(price: string): Budget {
+  const min = parsePriceMin(price);
+  if (min < 500) return "0-500";
+  if (min < 1500) return "500-1500";
+  if (min < 5000) return "1500-5000";
+  return "5000+";
+}
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
   güzellik: "from-pink-800 via-rose-700 to-pink-700",
@@ -256,8 +271,8 @@ export default function HediyeBulPage() {
   const [personalityAnswers, setPersonalityAnswers] = useState<PersonalityAnswers>({});
   const [personalityStep, setPersonalityStep] = useState(0);
   const [occasion, setOccasion] = useState<Occasion | "">("");
-  const [budget, setBudget] = useState<Budget | "">("");
   const [pastGifts, setPastGifts] = useState("");
+  const [budgetFilter, setBudgetFilter] = useState<Budget | "all">("all");
 
   // Loading
   const [loadingText, setLoadingText] = useState(LOADING_MESSAGES[0]);
@@ -309,7 +324,6 @@ export default function HediyeBulPage() {
           recipient: { name: recipientName, relationship, duration, age: recipientAge || undefined },
           personality: personalityAnswers,
           occasion,
-          budget,
           pastGifts: pastGifts.trim() || undefined,
         }),
       });
@@ -327,7 +341,7 @@ export default function HediyeBulPage() {
       setApiError(msg);
       setStep("past");
     }
-  }, [giverName, recipientName, relationship, duration, recipientAge, personalityAnswers, occasion, budget, pastGifts]);
+  }, [giverName, recipientName, relationship, duration, recipientAge, personalityAnswers, occasion, pastGifts]);
 
   // ─── Swipe handlers ─────────────────────────────────────────────────────────
 
@@ -403,10 +417,13 @@ export default function HediyeBulPage() {
   // ─── WhatsApp share ──────────────────────────────────────────────────────────
 
   const shareOnWhatsApp = () => {
-    const lines = liked
+    const toShare = budgetFilter === "all"
+      ? liked
+      : liked.filter((p) => getPriceTier(p.price) === budgetFilter);
+    const lines = toShare
       .map((p, i) => `${i + 1}. *${p.name}* — ${p.price}\n🔗 ${p.buyUrl}`)
       .join("\n\n");
-    const text = `🎁 *${recipientName} için hediye fikirleri*\n\n${lines}\n\n✨ _hediye.bul ile hazırlandı_`;
+    const text = `🎁 *${recipientName} için hediye fikirleri*\n\n${lines}\n\n✨ _gift-picker ile hazırlandı_`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -422,8 +439,8 @@ export default function HediyeBulPage() {
     setPersonalityAnswers({});
     setPersonalityStep(0);
     setOccasion("");
-    setBudget("");
     setPastGifts("");
+    setBudgetFilter("all");
     setProducts([]);
     setLiked([]);
     setApiError(null);
@@ -431,17 +448,16 @@ export default function HediyeBulPage() {
 
   // ─── Progress helper ─────────────────────────────────────────────────────────
 
-  const totalSteps = 7; // welcome(1) recipient(2) personality(3) occasion(4) budget(5) past(6) → AI
+  const totalSteps = 6; // welcome(1) recipient(2) personality(3) occasion(4) past(5) → AI(6)
   const stepNumbers: Record<Step, number> = {
     welcome: 1,
     recipient: 2,
     personality: 3,
     occasion: 4,
-    budget: 5,
-    past: 6,
-    loading: 7,
-    swipe: 7,
-    results: 7,
+    past: 5,
+    loading: 6,
+    swipe: 6,
+    results: 6,
   };
   const progress = Math.round(((stepNumbers[step] - 1) / (totalSteps - 1)) * 100);
 
@@ -715,7 +731,7 @@ export default function HediyeBulPage() {
             {OCCASIONS.map((o) => (
               <button
                 key={o.id}
-                onClick={() => { setOccasion(o.id); setStep("budget"); }}
+                onClick={() => { setOccasion(o.id); setStep("past"); }}
                 className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
                   occasion === o.id
                     ? "bg-violet-600/40 border-violet-500"
@@ -728,40 +744,6 @@ export default function HediyeBulPage() {
                   <div className="text-white/45 text-sm">{o.desc}</div>
                 </div>
                 {occasion === o.id && <span className="ml-auto text-violet-400">✓</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════
-  // STEP: BUDGET
-  // ══════════════════════════════════════════════════════════════════
-
-  if (step === "budget") {
-    return (
-      <PageShell>
-        <div className="flex-1 flex flex-col px-5 pb-8">
-          <div className="pt-4 pb-6">
-            <h2 className="text-2xl font-bold text-white mb-1">Bütçen ne kadar?</h2>
-            <p className="text-white/40 text-sm">Öneriler bu aralıkta kalacak, söz.</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 flex-1 content-start">
-            {BUDGETS.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => { setBudget(b.id); setStep("past"); }}
-                className={`flex flex-col items-center justify-center gap-2 py-8 rounded-3xl border-2 transition-all active:scale-[0.97] ${
-                  budget === b.id
-                    ? "bg-violet-600/40 border-violet-500 shadow-lg"
-                    : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/25"
-                }`}
-              >
-                <span className="text-white font-black text-xl">{b.label}</span>
-                <span className="text-white/45 text-sm">{b.sublabel}</span>
               </button>
             ))}
           </div>
@@ -855,10 +837,6 @@ export default function HediyeBulPage() {
             <div className="flex justify-between text-sm">
               <span className="text-white/40">Özel gün</span>
               <span className="text-white/80 font-medium">{OCCASIONS.find((o) => o.id === occasion)?.label}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/40">Bütçe</span>
-              <span className="text-white/80 font-medium">{BUDGETS.find((b) => b.id === budget)?.label}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-white/40">Kişilik soruları</span>
@@ -970,10 +948,19 @@ export default function HediyeBulPage() {
   if (step === "results") {
     const hasLiked = liked.length > 0;
 
+    const filteredLiked = budgetFilter === "all"
+      ? liked
+      : liked.filter((p) => getPriceTier(p.price) === budgetFilter);
+
+    const budgetCounts = BUDGETS.reduce<Record<string, number>>((acc, b) => {
+      acc[b.id] = liked.filter((p) => getPriceTier(p.price) === b.id).length;
+      return acc;
+    }, {});
+
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 flex flex-col">
         {/* Header */}
-        <div className="px-5 pt-5 pb-4">
+        <div className="px-5 pt-5 pb-3">
           <div className="flex items-center gap-3 mb-1">
             <span className="text-3xl">🎉</span>
             <h1 className="text-2xl font-bold text-white">
@@ -989,9 +976,42 @@ export default function HediyeBulPage() {
 
         {hasLiked ? (
           <>
+            {/* Budget filter chips */}
+            <div className="px-5 pb-3">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <button
+                  onClick={() => setBudgetFilter("all")}
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    budgetFilter === "all"
+                      ? "bg-violet-600 text-white"
+                      : "bg-white/8 text-white/50 hover:bg-white/15"
+                  }`}
+                >
+                  Tümü ({liked.length})
+                </button>
+                {BUDGETS.map((b) => budgetCounts[b.id] > 0 && (
+                  <button
+                    key={b.id}
+                    onClick={() => setBudgetFilter(b.id)}
+                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      budgetFilter === b.id
+                        ? "bg-violet-600 text-white"
+                        : "bg-white/8 text-white/50 hover:bg-white/15"
+                    }`}
+                  >
+                    {b.label} ({budgetCounts[b.id]})
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Liked products list */}
             <div className="flex-1 px-5 space-y-3 overflow-y-auto pb-4">
-              {liked.map((p, i) => (
+              {filteredLiked.length === 0 ? (
+                <div className="text-center py-10 text-white/30 text-sm">
+                  Bu bütçe aralığında beğenilen hediye yok
+                </div>
+              ) : filteredLiked.map((p, i) => (
                 <a
                   key={p.id}
                   href={p.buyUrl}
