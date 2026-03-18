@@ -139,11 +139,13 @@ Bu profili derinlemesine analiz et:
 4. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan, spesifik ürünler — genel kategori adı değil, somut ürün adı yaz
 5. 20 önerinin en az 6'sı "ilk aklına gelen" değil, gerçekten düşünülmüş sürpriz öneri olsun
 6. Her description: 1. cümle bu KİŞİYE neden özel olduğunu açıkla. 2. cümle somut kullanım senaryosu ver. "Harika hediye" gibi jenerik ifadeler kullanma.
-7. buyUrl: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
+7. buyUrl: Türkçe arama terimiyle oluştur — "https://www.trendyol.com/sr?q=turkce+urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=turkce+urun+adi". q= parametresindeki kelimeler MUTLAKA Türkçe olsun.
 8. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime, ürün fotoğrafçılığı tarzında). Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle". ASLA insan fotoğrafına yol açacak terimler kullanma.
 
+⚠️ DİL KURALI: name, description ve category alanları ZORUNLU OLARAK TÜRKÇE olmalı. "Smart Watch", "Espresso Maker", "Camping Tent" gibi İngilizce ürün isimleri YASAK — bunları "Akıllı Saat", "Espresso Makinesi", "Kamp Çadırı" gibi Türkçe yaz. Sadece imageKeywords İngilizce olacak.
+
 Sadece JSON döndür:
-{"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Kişiye özel 1-2 cümle açıklama","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"kategori","imageKeywords":"english product photo term","buyUrl":"https://www.trendyol.com/sr?q=...","shop":"Trendyol"}]}`;
+{"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Kişiye özel 1-2 cümle Türkçe açıklama","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"türkçe kategori","imageKeywords":"english product photo term","buyUrl":"https://www.trendyol.com/sr?q=turkce+arama&sst=MOST_RATED","shop":"Trendyol"}]}`;
 
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -188,11 +190,19 @@ Sadece JSON döndür:
     }
 
     // Fetch real product photos from Pexels in parallel
+    // Also fix buyUrl if AI used English name in the search query
     const productsWithImages = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       products.map(async (p: any) => {
         const imageUrl = await fetchPexelsImage(p.imageKeywords || p.name);
-        return { ...p, imageUrl };
+
+        // Ensure buyUrl uses the Turkish product name, not whatever AI put in q=
+        const safeName = encodeURIComponent((p.name || "").replace(/\s+/g, "+"));
+        const fixedBuyUrl = p.shop === "Hepsiburada"
+          ? `https://www.hepsiburada.com/ara?q=${safeName}`
+          : `https://www.trendyol.com/sr?q=${safeName}&sst=MOST_RATED`;
+
+        return { ...p, imageUrl, buyUrl: fixedBuyUrl };
       })
     );
 
