@@ -142,7 +142,16 @@ Bu profili derinlemesine analiz et:
 4. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan, spesifik ürünler — genel kategori adı değil, somut ürün adı yaz
 5. 20 önerinin en az 6'sı "ilk aklına gelen" değil, gerçekten düşünülmüş sürpriz öneri olsun
 6. Her description: Kişiye neden özel olduğunu 1 cümlede, somut şekilde açıkla. Jenerik ifade kullanma.
-7. buyUrl: Türkçe arama terimiyle oluştur — "https://www.trendyol.com/sr?q=turkce+urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=turkce+urun+adi". q= parametresindeki kelimeler MUTLAKA Türkçe olsun.
+7. shop alanı: Ürün kategorisine göre EN UYGUN Türk e-ticaret sitesini seç. Kurallar:
+   - Elektronik, teknoloji, gadget → "Teknosa" veya "MediaMarkt"
+   - Kitap, dergi, kırtasiye → "D&R" veya "Kitapyurdu"
+   - Kozmetik, parfüm, cilt bakımı → "Gratis" veya "Sephora"
+   - Spor, outdoor, kamp → "Decathlon"
+   - Ev, mutfak, dekorasyon → "Karaca" veya "Hepsiburada"
+   - Çiçek, deneyim hediyesi → "Çiçeksepeti"
+   - Moda, aksesuar, çanta → "Trendyol"
+   - Her şey için genel → "Trendyol" veya "Amazon TR"
+   Sadece bu değerlerden birini yaz: Trendyol, Hepsiburada, Amazon TR, Teknosa, MediaMarkt, D&R, Kitapyurdu, Gratis, Sephora, Decathlon, Karaca, Çiçeksepeti
 8. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime, ürün fotoğrafçılığı tarzında). Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle". ASLA insan fotoğrafına yol açacak terimler kullanma.
 
 ⚠️ DİL KURALI: name, description ve category alanları ZORUNLU OLARAK TÜRKÇE olmalı. "Smart Watch", "Espresso Maker", "Camping Tent" gibi İngilizce ürün isimleri YASAK — bunları "Akıllı Saat", "Espresso Makinesi", "Kamp Çadırı" gibi Türkçe yaz. Sadece imageKeywords İngilizce olacak.
@@ -193,20 +202,34 @@ Sadece JSON döndür:
       return NextResponse.json({ error: "Ürün önerisi alınamadı" }, { status: 500 });
     }
 
+    // Shop URL builders — server-side so AI can't produce broken URLs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function buildBuyUrl(shop: string, productName: string): string {
+      const q = encodeURIComponent(productName.trim());
+      const qPlus = productName.trim().replace(/\s+/g, "+");
+      switch (shop) {
+        case "Hepsiburada":   return `https://www.hepsiburada.com/ara?q=${q}`;
+        case "Amazon TR":     return `https://www.amazon.com.tr/s?k=${q}`;
+        case "Teknosa":       return `https://www.teknosa.com/search?q=${q}`;
+        case "MediaMarkt":    return `https://www.mediamarkt.com.tr/tr/search.html?query=${q}`;
+        case "D&R":           return `https://www.dr.com.tr/search?q=${q}`;
+        case "Kitapyurdu":    return `https://www.kitapyurdu.com/index.php?route=product/search&filter_name=${q}`;
+        case "Gratis":        return `https://www.gratis.com/search?q=${q}`;
+        case "Sephora":       return `https://www.sephora.com.tr/search?q=${q}`;
+        case "Decathlon":     return `https://www.decathlon.com.tr/search?Ntt=${q}`;
+        case "Karaca":        return `https://www.karaca.com/search?q=${q}`;
+        case "Çiçeksepeti":   return `https://www.ciceksepeti.com/arama?q=${q}`;
+        default:              return `https://www.trendyol.com/sr?q=${qPlus}&sst=MOST_RATED`;
+      }
+    }
+
     // Fetch real product photos from Pexels in parallel
-    // Also fix buyUrl if AI used English name in the search query
     const productsWithImages = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       products.map(async (p: any) => {
         const imageUrl = await fetchPexelsImage(p.imageKeywords || p.name);
-
-        // Ensure buyUrl uses the Turkish product name, not whatever AI put in q=
-        const safeName = encodeURIComponent((p.name || "").replace(/\s+/g, "+"));
-        const fixedBuyUrl = p.shop === "Hepsiburada"
-          ? `https://www.hepsiburada.com/ara?q=${safeName}`
-          : `https://www.trendyol.com/sr?q=${safeName}&sst=MOST_RATED`;
-
-        return { ...p, imageUrl, buyUrl: fixedBuyUrl };
+        const buyUrl = buildBuyUrl(p.shop || "Trendyol", p.name || "");
+        return { ...p, imageUrl, buyUrl };
       })
     );
 
