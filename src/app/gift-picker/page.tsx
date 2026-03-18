@@ -225,26 +225,26 @@ function ProductCard({
 
       {/* Like badge */}
       <div
-        className="absolute top-6 left-6 bg-green-500 text-white font-black text-2xl px-5 py-2 rounded-2xl rotate-[-15deg] border-4 border-white shadow-lg"
+        className="absolute top-6 left-6 bg-green-500 text-white font-black text-xl px-4 py-1.5 rounded-xl rotate-[-15deg] border-2 border-white shadow-lg"
         style={{ opacity: likeOpacity }}
       >
         BEĞEN 💚
       </div>
       {/* Pass badge */}
       <div
-        className="absolute top-6 right-6 bg-red-500 text-white font-black text-2xl px-5 py-2 rounded-2xl rotate-[15deg] border-4 border-white shadow-lg"
+        className="absolute top-6 right-6 bg-red-500 text-white font-black text-xl px-4 py-1.5 rounded-xl rotate-[15deg] border-2 border-white shadow-lg"
         style={{ opacity: passOpacity }}
       >
         GEÇ ❌
       </div>
 
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="absolute bottom-0 left-0 right-0 p-5">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h2 className="text-white font-bold text-xl leading-tight">{product.name}</h2>
+          <h2 className="text-white font-bold text-lg leading-tight">{product.name}</h2>
           <span className="text-3xl flex-shrink-0">{product.emoji}</span>
         </div>
-        <p className="text-white/75 text-sm leading-snug mb-3">{product.description}</p>
+        <p className="text-white/70 text-sm leading-snug mb-3">{product.description}</p>
         <div className="flex items-center justify-between">
           <span className="text-white font-semibold text-base">{product.price}</span>
           <span className="text-white/60 text-xs bg-white/10 px-3 py-1 rounded-full">
@@ -464,33 +464,37 @@ export default function HediyeBulPage() {
   // ─── Layout wrapper ──────────────────────────────────────────────────────────
 
   const PageShell = ({ children }: { children: React.ReactNode }) => (
-    <main className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <div>
-          <span className="text-white/40 text-xs font-medium tracking-widest uppercase">
-            Hediye Bulucu
-          </span>
-        </div>
-        {step !== "welcome" && step !== "swipe" && step !== "results" && step !== "loading" && (
-          <button onClick={resetAll} className="text-white/30 hover:text-white/60 text-xs transition-colors">
-            Başa dön
-          </button>
-        )}
-      </div>
-      {/* Progress bar */}
-      {step !== "welcome" && step !== "swipe" && step !== "results" && (
-        <div className="px-5 mb-1">
-          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-violet-500 to-pink-500 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
+    <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+      <div className="w-full max-w-[420px] min-h-screen flex flex-col">
+        {/* Header */}
+        <div className="px-5 py-3 flex items-center justify-between">
+          <div>
+            <span className="text-white/40 text-xs font-medium tracking-widest uppercase">
+              Hediye Bulucu
+            </span>
           </div>
+          {step !== "welcome" && step !== "swipe" && step !== "results" && step !== "loading" && (
+            <button onClick={resetAll} className="text-white/30 hover:text-white/60 text-xs transition-colors">
+              Başa dön
+            </button>
+          )}
         </div>
-      )}
-      {children}
-    </main>
+        {/* Progress bar */}
+        {step !== "welcome" && step !== "swipe" && step !== "results" && (
+          <div className="px-5 pb-2">
+            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-violet-500 to-pink-500 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+        <div className="flex-1 flex flex-col px-5 overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 
   // ══════════════════════════════════════════════════════════════════
@@ -499,52 +503,54 @@ export default function HediyeBulPage() {
 
   if (step === "welcome") {
     return (
-      <PageShell>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-10">
-          <div className="text-center mb-10">
-            <div className="text-6xl mb-5">🎁</div>
-            <h1 className="text-4xl font-black text-white mb-3 leading-tight">
-              Mükemmel<br />Hediyeyi Bul
-            </h1>
-            <p className="text-white/50 text-base max-w-xs mx-auto leading-relaxed">
-              Kişilik profili çıkarıp AI ile tam uyumlu hediyeler öneriyoruz. 2 dakika, 20 öneri.
-            </p>
-          </div>
-
-          <div className="w-full max-w-sm space-y-4">
-            <div>
-              <label className="text-white/60 text-sm mb-2 block">Adın nedir?</label>
-              <input
-                type="text"
-                value={giverName}
-                onChange={(e) => setGiverName(e.target.value)}
-                placeholder="Adını yaz..."
-                className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-2xl px-4 py-4 text-base focus:outline-none focus:border-violet-400 transition-colors"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && giverName.trim()) setStep("recipient");
-                }}
-                autoFocus
-              />
+      <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+        <div className="w-full max-w-[420px] min-h-screen flex flex-col">
+          <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 py-10">
+            <div className="text-center">
+              <div className="text-5xl mb-2">🎁</div>
+              <h1 className="text-3xl font-black text-white leading-tight text-center">
+                Mükemmel<br />Hediyeyi Bul
+              </h1>
+              <p className="text-sm text-white/45 text-center max-w-[280px] mx-auto mt-2">
+                Kişilik profili çıkarıp AI ile tam uyumlu hediyeler öneriyoruz. 2 dakika, 20 öneri.
+              </p>
             </div>
-            <button
-              onClick={() => setStep("recipient")}
-              disabled={!giverName.trim()}
-              className="w-full bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 shadow-lg"
-            >
-              Başla →
-            </button>
-          </div>
 
-          <div className="mt-10 flex gap-6 text-center">
-            {[["🎯", "Kişiselleştirilmiş"], ["🤖", "AI destekli"], ["⚡", "2 dakika"]].map(([emoji, label]) => (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <span className="text-2xl">{emoji}</span>
-                <span className="text-white/40 text-xs">{label}</span>
+            <div className="w-full space-y-3">
+              <div>
+                <label className="text-xs font-medium text-white/45 mb-2 block uppercase tracking-wide">Adın nedir?</label>
+                <input
+                  type="text"
+                  value={giverName}
+                  onChange={(e) => setGiverName(e.target.value)}
+                  placeholder="Adını yaz..."
+                  className="w-full bg-white/[0.07] border border-white/[0.10] text-white placeholder-white/25 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.09] transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && giverName.trim()) setStep("recipient");
+                  }}
+                  autoFocus
+                />
               </div>
-            ))}
+              <button
+                onClick={() => setStep("recipient")}
+                disabled={!giverName.trim()}
+                className="w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white font-semibold py-3.5 rounded-2xl text-base transition-all active:scale-[0.98] disabled:opacity-30"
+              >
+                Başla →
+              </button>
+            </div>
+
+            <div className="flex gap-6 text-center">
+              {[["🎯", "Kişiselleştirilmiş"], ["🤖", "AI destekli"], ["⚡", "2 dakika"]].map(([emoji, label]) => (
+                <div key={label} className="flex flex-col items-center gap-1">
+                  <span className="text-xl">{emoji}</span>
+                  <span className="text-xs text-white/35">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
@@ -556,87 +562,87 @@ export default function HediyeBulPage() {
     const canContinue = recipientName.trim() && relationship && duration;
     return (
       <PageShell>
-        <div className="flex-1 flex flex-col px-5 pb-8 overflow-y-auto">
-          <div className="pt-4 pb-6">
-            <h2 className="text-2xl font-bold text-white mb-1">Kime hediye alıyorsun?</h2>
-            <p className="text-white/40 text-sm">Kişiyi ne kadar iyi tanırsak, o kadar iyi öneri üretiriz.</p>
-          </div>
-
-          {/* Name */}
-          <div className="mb-5">
-            <label className="text-white/60 text-sm mb-2 block">İsmi</label>
-            <input
-              type="text"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="Hediye alacağın kişinin adı..."
-              className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-400 transition-colors"
-              autoFocus
-            />
-          </div>
-
-          {/* Relationship */}
-          <div className="mb-5">
-            <label className="text-white/60 text-sm mb-3 block">İlişki türü</label>
-            <div className="grid grid-cols-4 gap-2">
-              {RELATIONSHIPS.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setRelationship(r.id)}
-                  className={`flex flex-col items-center gap-1 py-3 rounded-2xl border text-sm font-medium transition-all active:scale-95 ${
-                    relationship === r.id
-                      ? "bg-violet-600 border-violet-500 text-white shadow-lg"
-                      : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="text-xl">{r.emoji}</span>
-                  <span className="text-xs">{r.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="mb-5">
-            <label className="text-white/60 text-sm mb-3 block">Ne zamandır tanışıyorsunuz?</label>
-            <div className="space-y-2">
-              {DURATIONS.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => setDuration(d.id)}
-                  className={`w-full text-left px-4 py-3 rounded-2xl border text-sm font-medium transition-all active:scale-[0.98] ${
-                    duration === d.id
-                      ? "bg-violet-600 border-violet-500 text-white"
-                      : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Age (optional) */}
-          <div className="mb-6">
-            <label className="text-white/60 text-sm mb-2 block">Kaç yaşında? <span className="text-white/30">(opsiyonel)</span></label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={recipientAge}
-              onChange={(e) => setRecipientAge(e.target.value.replace(/\D/g, ""))}
-              placeholder="ör. 28"
-              className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-400 transition-colors"
-            />
-          </div>
-
-          <button
-            onClick={() => { setPersonalityStep(0); setStep("personality"); }}
-            disabled={!canContinue}
-            className="w-full bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 shadow-lg"
-          >
-            Devam →
-          </button>
+        <div className="pt-4">
+          <h2 className="text-xl font-bold text-white">Kime hediye alıyorsun?</h2>
+          <p className="text-sm text-white/40 mt-0.5 mb-5">Kişiyi ne kadar iyi tanırsak, o kadar iyi öneri üretiriz.</p>
         </div>
+
+        {/* Name */}
+        <div className="mb-5">
+          <label className="text-xs font-medium text-white/45 mb-2 block uppercase tracking-wide">İsmi</label>
+          <input
+            type="text"
+            value={recipientName}
+            onChange={(e) => setRecipientName(e.target.value)}
+            placeholder="Hediye alacağın kişinin adı..."
+            className="w-full bg-white/[0.07] border border-white/[0.10] text-white placeholder-white/25 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.09] transition-all"
+            autoFocus
+          />
+        </div>
+
+        {/* Relationship */}
+        <div className="mb-5">
+          <label className="text-xs font-medium text-white/45 mb-2 block uppercase tracking-wide">İlişki türü</label>
+          <div className="grid grid-cols-4 gap-2">
+            {RELATIONSHIPS.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setRelationship(r.id)}
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl border text-xs font-medium transition-all active:scale-95 ${
+                  relationship === r.id
+                    ? "bg-violet-600/20 border-violet-500/60 text-white"
+                    : "bg-white/[0.05] border-white/[0.08] text-white/50"
+                }`}
+              >
+                <span className="text-lg">{r.emoji}</span>
+                <span>{r.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Duration */}
+        <div className="mb-5">
+          <label className="text-xs font-medium text-white/45 mb-2 block uppercase tracking-wide">Ne zamandır tanışıyorsunuz?</label>
+          <div className="space-y-2">
+            {DURATIONS.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => setDuration(d.id)}
+                className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[0.98] ${
+                  duration === d.id
+                    ? "bg-violet-600/20 border-violet-500/60 text-white"
+                    : "bg-white/[0.04] border-white/[0.07] text-white/50"
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Age (optional) */}
+        <div className="mb-6">
+          <label className="text-xs font-medium text-white/45 mb-2 block uppercase tracking-wide">
+            Kaç yaşında? <span className="text-white/25 normal-case">(opsiyonel)</span>
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={recipientAge}
+            onChange={(e) => setRecipientAge(e.target.value.replace(/\D/g, ""))}
+            placeholder="ör. 28"
+            className="w-full bg-white/[0.07] border border-white/[0.10] text-white placeholder-white/25 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-500/60 focus:bg-white/[0.09] transition-all"
+          />
+        </div>
+
+        <button
+          onClick={() => { setPersonalityStep(0); setStep("personality"); }}
+          disabled={!canContinue}
+          className="mt-auto w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white font-semibold py-3.5 rounded-2xl text-base transition-all active:scale-[0.98] disabled:opacity-30 mb-6"
+        >
+          Devam →
+        </button>
       </PageShell>
     );
   }
@@ -663,53 +669,55 @@ export default function HediyeBulPage() {
 
     return (
       <PageShell>
-        <div className="flex-1 flex flex-col px-5 pb-8">
-          {/* Progress dots */}
-          <div className="flex gap-2 pt-4 pb-6">
-            {PERSONALITY_QUESTIONS.map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                  i < personalityStep ? "bg-violet-500" : i === personalityStep ? "bg-violet-400" : "bg-white/15"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="mb-2">
-            <span className="text-white/40 text-xs font-medium">{recipientName} için soru {personalityStep + 1}/{PERSONALITY_QUESTIONS.length}</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-6">{q.question}</h2>
-
-          <div className="flex flex-col gap-4 flex-1">
-            {q.choices.map((choice) => (
-              <button
-                key={choice.value}
-                onClick={() => handleAnswer(choice.value)}
-                className={`flex-1 flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all active:scale-[0.97] ${
-                  answered === choice.value
-                    ? "bg-violet-600/40 border-violet-500 shadow-lg shadow-violet-900/30"
-                    : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/25"
-                }`}
-              >
-                <span className="text-5xl">{choice.emoji}</span>
-                <div className="text-center">
-                  <div className="text-white font-bold text-lg leading-tight">{choice.label}</div>
-                  <div className="text-white/50 text-sm mt-1">{choice.sublabel}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {personalityStep > 0 && (
-            <button
-              onClick={() => setPersonalityStep((s) => s - 1)}
-              className="mt-4 text-white/30 hover:text-white/60 text-sm transition-colors text-center"
-            >
-              ← Önceki soru
-            </button>
-          )}
+        {/* Progress dots */}
+        <div className="flex gap-1.5 py-4">
+          {PERSONALITY_QUESTIONS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === personalityStep
+                  ? "bg-violet-500 w-6"
+                  : i < personalityStep
+                  ? "bg-violet-500/40 flex-1"
+                  : "bg-white/15 flex-1"
+              }`}
+            />
+          ))}
         </div>
+
+        <div className="mb-1">
+          <span className="text-xs text-white/35">{recipientName} için soru {personalityStep + 1}/{PERSONALITY_QUESTIONS.length}</span>
+        </div>
+        <h2 className="text-xl font-bold text-white mb-5 leading-snug">{q.question}</h2>
+
+        <div className="flex flex-col gap-3 flex-1">
+          {q.choices.map((choice) => (
+            <button
+              key={choice.value}
+              onClick={() => handleAnswer(choice.value)}
+              className={`flex-1 flex flex-col items-center justify-center gap-3 p-5 rounded-3xl border-2 transition-all active:scale-[0.97] cursor-pointer ${
+                answered === choice.value
+                  ? "bg-violet-600/15 border-violet-500/50"
+                  : "bg-white/[0.04] border-white/[0.08] hover:border-white/[0.18]"
+              }`}
+            >
+              <span className="text-4xl">{choice.emoji}</span>
+              <div className="text-center">
+                <div className="text-white font-semibold text-base leading-snug">{choice.label}</div>
+                <div className="text-white/40 text-xs text-center mt-1">{choice.sublabel}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {personalityStep > 0 && (
+          <button
+            onClick={() => setPersonalityStep((s) => s - 1)}
+            className="text-white/25 text-xs mt-3 mx-auto block mb-4"
+          >
+            ← Önceki soru
+          </button>
+        )}
       </PageShell>
     );
   }
@@ -721,32 +729,30 @@ export default function HediyeBulPage() {
   if (step === "occasion") {
     return (
       <PageShell>
-        <div className="flex-1 flex flex-col px-5 pb-8">
-          <div className="pt-4 pb-6">
-            <h2 className="text-2xl font-bold text-white mb-1">Ne için hediye?</h2>
-            <p className="text-white/40 text-sm">Özel gün türüne göre önerileri şekillendiriyoruz.</p>
-          </div>
+        <div className="pt-4">
+          <h2 className="text-xl font-bold text-white">Ne için hediye?</h2>
+          <p className="text-sm text-white/40 mt-0.5 mb-5">Özel gün türüne göre önerileri şekillendiriyoruz.</p>
+        </div>
 
-          <div className="flex flex-col gap-3 flex-1">
-            {OCCASIONS.map((o) => (
-              <button
-                key={o.id}
-                onClick={() => { setOccasion(o.id); setStep("past"); }}
-                className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all active:scale-[0.98] ${
-                  occasion === o.id
-                    ? "bg-violet-600/40 border-violet-500"
-                    : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/25"
-                }`}
-              >
-                <span className="text-3xl">{o.emoji}</span>
-                <div className="text-left">
-                  <div className="text-white font-bold">{o.label}</div>
-                  <div className="text-white/45 text-sm">{o.desc}</div>
-                </div>
-                {occasion === o.id && <span className="ml-auto text-violet-400">✓</span>}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-col gap-2.5 flex-1 pb-6">
+          {OCCASIONS.map((o) => (
+            <button
+              key={o.id}
+              onClick={() => { setOccasion(o.id); setStep("past"); }}
+              className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] ${
+                occasion === o.id
+                  ? "bg-violet-600/20 border-violet-500/60"
+                  : "bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07]"
+              }`}
+            >
+              <span className="text-2xl flex-shrink-0">{o.emoji}</span>
+              <div className="text-left">
+                <div className="text-white font-medium text-sm">{o.label}</div>
+                <div className="text-white/40 text-xs">{o.desc}</div>
+              </div>
+              {occasion === o.id && <span className="text-violet-400 ml-auto text-sm">✓</span>}
+            </button>
+          ))}
         </div>
       </PageShell>
     );
@@ -759,45 +765,43 @@ export default function HediyeBulPage() {
   if (step === "past") {
     return (
       <PageShell>
-        <div className="flex-1 flex flex-col px-5 pb-8">
-          <div className="pt-4 pb-6">
-            <h2 className="text-2xl font-bold text-white mb-1">Daha önce ne hediye ettin?</h2>
-            <p className="text-white/40 text-sm">Aynı şeyleri önermemek için. Opsiyonel, atlayabilirsin.</p>
-          </div>
-
-          {apiError && (
-            <div className="mb-4 p-4 bg-red-900/40 border border-red-500/40 rounded-2xl">
-              <p className="text-red-300 text-sm">⚠️ {apiError}</p>
-            </div>
-          )}
-
-          <textarea
-            value={pastGifts}
-            onChange={(e) => setPastGifts(e.target.value)}
-            placeholder={`ör. Geçen yıl parfüm almıştım, doğum gününde kitap seti verdim...`}
-            rows={4}
-            className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-violet-400 transition-colors resize-none mb-4"
-          />
-
-          <div className="flex gap-3 mt-auto">
-            <button
-              onClick={fetchRecommendations}
-              className="flex-1 bg-white/10 hover:bg-white/15 text-white/70 font-bold py-4 rounded-2xl transition-all active:scale-95"
-            >
-              Atla →
-            </button>
-            <button
-              onClick={fetchRecommendations}
-              className="flex-[2] bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 text-white font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 shadow-lg"
-            >
-              Hediyeleri Bul ✨
-            </button>
-          </div>
-
-          <p className="text-white/25 text-xs text-center mt-4">
-            AI ile 20 kişiselleştirilmiş öneri üretilecek
-          </p>
+        <div className="pt-4">
+          <h2 className="text-xl font-bold text-white">Daha önce ne hediye ettin?</h2>
+          <p className="text-sm text-white/40 mt-0.5 mb-5">Aynı şeyleri önermemek için. Opsiyonel, atlayabilirsin.</p>
         </div>
+
+        {apiError && (
+          <div className="mb-4 p-4 bg-red-900/40 border border-red-500/40 rounded-2xl">
+            <p className="text-red-300 text-sm">⚠️ {apiError}</p>
+          </div>
+        )}
+
+        <textarea
+          value={pastGifts}
+          onChange={(e) => setPastGifts(e.target.value)}
+          placeholder={`ör. Geçen yıl parfüm almıştım, doğum gününde kitap seti verdim...`}
+          rows={4}
+          className="w-full bg-white/[0.06] border border-white/[0.10] text-white placeholder-white/25 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-violet-500/60 resize-none transition-all mb-4"
+        />
+
+        <div className="flex gap-3 mt-auto mb-2">
+          <button
+            onClick={fetchRecommendations}
+            className="bg-white/[0.08] text-white/50 font-medium py-3.5 rounded-2xl flex-1 text-sm transition-all active:scale-[0.98]"
+          >
+            Atla →
+          </button>
+          <button
+            onClick={fetchRecommendations}
+            className="bg-gradient-to-r from-violet-600 to-pink-600 text-white font-semibold py-3.5 rounded-2xl flex-[2] text-sm transition-all active:scale-[0.98]"
+          >
+            Hediyeleri Bul ✨
+          </button>
+        </div>
+
+        <p className="text-white/20 text-xs text-center mt-3 mb-6">
+          AI ile 20 kişiselleştirilmiş öneri üretilecek
+        </p>
       </PageShell>
     );
   }
@@ -809,42 +813,42 @@ export default function HediyeBulPage() {
   if (step === "loading") {
     const dots = ".".repeat(loadingDots);
     return (
-      <PageShell>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-10 gap-8">
+      <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+        <div className="w-full max-w-[420px] min-h-screen flex flex-col items-center justify-center px-6 pb-10 gap-6">
           {/* Animated rings */}
-          <div className="relative w-32 h-32 flex items-center justify-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
             <div className="absolute inset-0 rounded-full border-4 border-violet-500/20 animate-ping" />
             <div className="absolute inset-3 rounded-full border-4 border-violet-500/30 animate-ping" style={{ animationDelay: "0.3s" }} />
             <div className="absolute inset-6 rounded-full border-4 border-pink-500/40 animate-ping" style={{ animationDelay: "0.6s" }} />
-            <span className="text-5xl z-10 animate-pulse">🤖</span>
+            <span className="text-4xl z-10 animate-pulse">🤖</span>
           </div>
 
           <div className="text-center">
-            <h2 className="text-white font-bold text-xl mb-2">
+            <h2 className="text-lg font-semibold text-white mb-2">
               {recipientName} için öneriler hazırlanıyor
             </h2>
-            <p className="text-violet-300 text-base min-h-[1.5em]">
+            <p className="text-violet-300/80 text-sm min-h-[1.5em]">
               {loadingText}{dots}
             </p>
           </div>
 
           {/* Profile summary */}
-          <div className="w-full max-w-sm bg-white/5 rounded-2xl p-4 space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="bg-white/[0.05] rounded-2xl p-4 space-y-2.5 w-full text-sm">
+            <div className="flex justify-between">
               <span className="text-white/40">Kişi</span>
               <span className="text-white/80 font-medium">{recipientName}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span className="text-white/40">Özel gün</span>
               <span className="text-white/80 font-medium">{OCCASIONS.find((o) => o.id === occasion)?.label}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between">
               <span className="text-white/40">Kişilik soruları</span>
               <span className="text-white/80 font-medium">{Object.keys(personalityAnswers).length}/5 ✓</span>
             </div>
           </div>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
@@ -860,84 +864,84 @@ export default function HediyeBulPage() {
     const passOpacity = Math.max(0, -dragX / 100);
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 flex flex-col select-none">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <div>
-            <span className="text-white font-semibold">{recipientName} için hediyeler</span>
+      <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+        <div className="max-w-[420px] w-full min-h-screen flex flex-col select-none">
+          {/* Header */}
+          <div className="px-5 py-3 flex items-center justify-between">
+            <div>
+              <span className="text-white font-semibold text-sm">{recipientName} için hediyeler</span>
+            </div>
+            <span className="text-white/40 text-xs">{currentIndex + 1} / {products.length}</span>
           </div>
-          <span className="text-white/40 text-sm">{currentIndex + 1} / {products.length}</span>
-        </div>
 
-        {/* Progress bar */}
-        <div className="px-5 mb-3">
-          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+          {/* Progress bar */}
+          <div className="mx-5 mb-3 h-0.5 bg-white/[0.08] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-violet-500 to-pink-500 rounded-full transition-all duration-300"
               style={{ width: `${((currentIndex + 1) / products.length) * 100}%` }}
             />
           </div>
+
+          {/* Card stack */}
+          <div className="flex-1 mx-4 relative" style={{ minHeight: 0 }}>
+            {/* Next card (behind) */}
+            {nextProduct && (
+              <ProductCard
+                product={nextProduct}
+                style={{ transform: "scale(0.94) translateY(8px)", zIndex: 1 }}
+              />
+            )}
+            {/* Empty state behind */}
+            {!nextProduct && (
+              <div className="absolute inset-0 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <span className="text-white/20 text-sm">Son kart</span>
+              </div>
+            )}
+
+            {/* Current card */}
+            {currentProduct && (
+              <ProductCard
+                product={currentProduct}
+                style={{
+                  transform: `translateX(${dragX}px) translateY(${dragY * 0.3}px) rotate(${rotate}deg)`,
+                  zIndex: 10,
+                  transition: isDragging ? "none" : "transform 0.3s ease",
+                }}
+                handlers={{ onMouseDown, onMouseMove, onMouseUp, onTouchStart, onTouchMove, onTouchEnd }}
+                likeOpacity={likeOpacity}
+                passOpacity={passOpacity}
+              />
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-center items-center gap-6 px-5 py-4">
+            <button
+              onClick={() => handleSwipe("left")}
+              className="w-14 h-14 rounded-full bg-white/[0.08] border border-white/[0.12] text-xl flex items-center justify-center transition-all active:scale-90"
+            >
+              ❌
+            </button>
+            <button
+              onClick={() => setStep("results")}
+              className="px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/35 text-xs transition-all"
+            >
+              Listeye bak ({liked.length})
+            </button>
+            <button
+              onClick={() => handleSwipe("right")}
+              className="w-14 h-14 rounded-full bg-white/[0.08] border border-white/[0.12] text-xl flex items-center justify-center transition-all active:scale-90"
+            >
+              💚
+            </button>
+          </div>
+
+          {/* Hint */}
+          <p className="text-center text-white/20 text-[11px] pb-4">
+            Sola kaydır = geç · Sağa kaydır = beğen
+          </p>
         </div>
-
-        {/* Card stack */}
-        <div className="flex-1 relative mx-4 mb-4" style={{ minHeight: 460 }}>
-          {/* Next card (behind) */}
-          {nextProduct && (
-            <ProductCard
-              product={nextProduct}
-              style={{ transform: "scale(0.94) translateY(8px)", zIndex: 1 }}
-            />
-          )}
-          {/* Empty state behind */}
-          {!nextProduct && (
-            <div className="absolute inset-0 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <span className="text-white/20 text-sm">Son kart</span>
-            </div>
-          )}
-
-          {/* Current card */}
-          {currentProduct && (
-            <ProductCard
-              product={currentProduct}
-              style={{
-                transform: `translateX(${dragX}px) translateY(${dragY * 0.3}px) rotate(${rotate}deg)`,
-                zIndex: 10,
-                transition: isDragging ? "none" : "transform 0.3s ease",
-              }}
-              handlers={{ onMouseDown, onMouseMove, onMouseUp, onTouchStart, onTouchMove, onTouchEnd }}
-              likeOpacity={likeOpacity}
-              passOpacity={passOpacity}
-            />
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="flex justify-center gap-8 px-8 pb-8 pt-2">
-          <button
-            onClick={() => handleSwipe("left")}
-            className="w-16 h-16 rounded-full bg-white/10 hover:bg-red-500/30 border-2 border-white/20 hover:border-red-400 text-2xl flex items-center justify-center transition-all active:scale-90 shadow-lg"
-          >
-            ❌
-          </button>
-          <button
-            onClick={() => setStep("results")}
-            className="px-5 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 text-xs hover:bg-white/10 transition-all"
-          >
-            Listeye bak ({liked.length})
-          </button>
-          <button
-            onClick={() => handleSwipe("right")}
-            className="w-16 h-16 rounded-full bg-white/10 hover:bg-green-500/30 border-2 border-white/20 hover:border-green-400 text-2xl flex items-center justify-center transition-all active:scale-90 shadow-lg"
-          >
-            💚
-          </button>
-        </div>
-
-        {/* Hint */}
-        <p className="text-center text-white/20 text-xs pb-5">
-          Sola kaydır = geç · Sağa kaydır = beğen
-        </p>
-      </main>
+      </div>
     );
   }
 
@@ -958,33 +962,33 @@ export default function HediyeBulPage() {
     }, {});
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 flex flex-col">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-3">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-3xl">🎉</span>
-            <h1 className="text-2xl font-bold text-white">
-              {hasLiked ? `${liked.length} hediye seçtin!` : "Hiç beğenmedin..."}
-            </h1>
+      <div className="min-h-screen bg-[#0d0d16] flex justify-center">
+        <div className="max-w-[420px] w-full min-h-screen flex flex-col">
+          {/* Header */}
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-3xl">🎉</span>
+              <h1 className="text-xl font-bold text-white">
+                {hasLiked ? `${liked.length} hediye seçtin!` : "Hiç beğenmedin..."}
+              </h1>
+            </div>
+            <p className="text-sm text-white/40 mt-0.5 pl-12">
+              {hasLiked
+                ? `${recipientName} bunları çok sevecek`
+                : "Tekrar deneyebilir veya swipe'a geri dönebilirsin"}
+            </p>
           </div>
-          <p className="text-white/45 text-sm pl-12">
-            {hasLiked
-              ? `${recipientName} bunları çok sevecek`
-              : "Tekrar deneyebilir veya swipe'a geri dönebilirsin"}
-          </p>
-        </div>
 
-        {hasLiked ? (
-          <>
-            {/* Budget filter chips */}
-            <div className="px-5 pb-3">
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {hasLiked ? (
+            <>
+              {/* Budget filter chips */}
+              <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-hide">
                 <button
                   onClick={() => setBudgetFilter("all")}
-                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     budgetFilter === "all"
                       ? "bg-violet-600 text-white"
-                      : "bg-white/8 text-white/50 hover:bg-white/15"
+                      : "bg-white/[0.07] text-white/45"
                   }`}
                 >
                   Tümü ({liked.length})
@@ -993,102 +997,99 @@ export default function HediyeBulPage() {
                   <button
                     key={b.id}
                     onClick={() => setBudgetFilter(b.id)}
-                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                       budgetFilter === b.id
                         ? "bg-violet-600 text-white"
-                        : "bg-white/8 text-white/50 hover:bg-white/15"
+                        : "bg-white/[0.07] text-white/45"
                     }`}
                   >
                     {b.label} ({budgetCounts[b.id]})
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Liked products list */}
-            <div className="flex-1 px-5 space-y-3 overflow-y-auto pb-4">
-              {filteredLiked.length === 0 ? (
-                <div className="text-center py-10 text-white/30 text-sm">
-                  Bu bütçe aralığında beğenilen hediye yok
-                </div>
-              ) : filteredLiked.map((p, i) => (
-                <a
-                  key={p.id}
-                  href={p.buyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/25 rounded-2xl transition-all group"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
-                    <img
-                      src={getImageUrl(p.imageKeywords, p.id)}
-                      alt={p.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
+              {/* Liked products list */}
+              <div className="flex-1 px-5 space-y-2.5 overflow-y-auto pb-4">
+                {filteredLiked.length === 0 ? (
+                  <div className="text-center py-10 text-white/30 text-sm">
+                    Bu bütçe aralığında beğenilen hediye yok
                   </div>
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-white font-semibold text-sm leading-tight truncate">{p.name}</p>
-                      <span className="text-lg flex-shrink-0">{p.emoji}</span>
+                ) : filteredLiked.map((p) => (
+                  <a
+                    key={p.id}
+                    href={p.buyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 p-3.5 bg-white/[0.04] border border-white/[0.08] rounded-2xl hover:bg-white/[0.07] transition-all group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+                      <img
+                        src={getImageUrl(p.imageKeywords, p.id)}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
                     </div>
-                    <p className="text-violet-300 font-medium text-sm">{p.price}</p>
-                    <p className="text-white/40 text-xs">{p.shop} →</p>
-                  </div>
-                  <span className="text-white/30 group-hover:text-white/60 transition-colors text-lg">›</span>
-                </a>
-              ))}
-            </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white leading-tight truncate">{p.name}</p>
+                      <p className="text-violet-400 font-medium text-xs mt-0.5">{p.price}</p>
+                      <p className="text-white/30 text-xs">{p.shop}</p>
+                    </div>
+                    <span className="text-white/20 group-hover:text-white/50 ml-auto transition-colors">›</span>
+                  </a>
+                ))}
+              </div>
 
-            {/* Actions */}
-            <div className="px-5 pb-8 pt-3 space-y-3">
-              <button
-                onClick={shareOnWhatsApp}
-                className="w-full flex items-center justify-center gap-3 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg"
-              >
-                <span className="text-2xl">💬</span>
-                WhatsApp&apos;a Gönder
-              </button>
+              {/* Actions */}
+              <div className="px-5 pb-6 pt-2 space-y-2.5">
+                <button
+                  onClick={shareOnWhatsApp}
+                  className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] text-white font-semibold py-3.5 rounded-2xl text-sm transition-all active:scale-[0.98]"
+                >
+                  <span className="text-lg">💬</span>
+                  WhatsApp&apos;a Gönder
+                </button>
+                <button
+                  onClick={() => { setCurrentIndex(0); setStep("swipe"); }}
+                  className="w-full bg-white/[0.08] text-white/60 font-medium py-3 rounded-2xl text-sm transition-all active:scale-[0.98]"
+                >
+                  ← Swipe&apos;a Dön
+                </button>
+                <button
+                  onClick={resetAll}
+                  className="w-full text-white/25 text-xs py-2"
+                >
+                  Baştan Başla
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 gap-5 pb-10">
+              <span className="text-7xl">🤔</span>
+              <p className="text-white/50 text-center text-sm">
+                Hiç beğendin yok. Yeni bir liste üretebilir ya da swipe&apos;a dönüp tekrar bakabilirsin.
+              </p>
               <button
                 onClick={() => { setCurrentIndex(0); setStep("swipe"); }}
-                className="w-full bg-white/10 hover:bg-white/15 text-white/70 font-bold py-3.5 rounded-2xl transition-all active:scale-95"
+                className="w-full bg-gradient-to-r from-violet-600 to-pink-600 text-white font-semibold py-3.5 rounded-2xl text-sm transition-all active:scale-[0.98]"
               >
-                ← Swipe&apos;a Dön
+                Tekrar Bak
               </button>
               <button
-                onClick={resetAll}
-                className="w-full text-white/30 hover:text-white/50 font-medium py-2 transition-colors text-sm"
+                onClick={fetchRecommendations}
+                className="w-full bg-white/[0.08] text-white/60 font-medium py-3.5 rounded-2xl text-sm transition-all active:scale-[0.98]"
               >
+                Yeni Liste Üret 🔄
+              </button>
+              <button onClick={resetAll} className="text-white/25 text-xs py-2">
                 Baştan Başla
               </button>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 pb-10">
-            <span className="text-7xl">🤔</span>
-            <p className="text-white/50 text-center text-base">
-              Hiç beğendin yok. Yeni bir liste üretebilir ya da swipe&apos;a dönüp tekrar bakabilirsin.
-            </p>
-            <button
-              onClick={() => { setCurrentIndex(0); setStep("swipe"); }}
-              className="w-full max-w-xs bg-gradient-to-r from-violet-600 to-pink-600 text-white font-bold py-4 rounded-2xl transition-all active:scale-95"
-            >
-              Tekrar Bak
-            </button>
-            <button
-              onClick={fetchRecommendations}
-              className="w-full max-w-xs bg-white/10 text-white/70 font-bold py-4 rounded-2xl transition-all active:scale-95"
-            >
-              Yeni Liste Üret 🔄
-            </button>
-            <button onClick={resetAll} className="text-white/30 hover:text-white/50 text-sm transition-colors">
-              Baştan Başla
-            </button>
-          </div>
-        )}
-      </main>
+          )}
+        </div>
+      </div>
     );
   }
 
