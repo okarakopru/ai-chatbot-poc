@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+// ─── Pexels image fetcher ────────────────────────────────────────────────────
+
+async function fetchPexelsImage(keywords: string): Promise<string | null> {
+  try {
+    const query = encodeURIComponent(keywords.replace(/,/g, " "));
+    const res = await fetch(
+      `https://api.pexels.com/v1/search?query=${query}&per_page=5&orientation=portrait`,
+      { headers: { Authorization: process.env.PEXELS_API_KEY! } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const photos: { src: { large: string; medium: string } }[] = data.photos || [];
+    if (photos.length === 0) return null;
+    return photos[0].src.large || photos[0].src.medium || null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Labels ──────────────────────────────────────────────────────────────────
+
 const OCCASION_LABELS: Record<string, string> = {
   birthday: "Doğum Günü",
   valentines: "Sevgililer Günü",
@@ -113,7 +134,16 @@ Sadece JSON döndür, başka açıklama yazma:
       return NextResponse.json({ error: "Ürün önerisi alınamadı" }, { status: 500 });
     }
 
-    return NextResponse.json({ products });
+    // Fetch real product photos from Pexels in parallel
+    const productsWithImages = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      products.map(async (p: any) => {
+        const imageUrl = await fetchPexelsImage(p.imageKeywords || p.name);
+        return { ...p, imageUrl };
+      })
+    );
+
+    return NextResponse.json({ products: productsWithImages });
   } catch (err) {
     console.error("gift-recommendations error:", err);
     return NextResponse.json({ error: "Bir hata oluştu, lütfen tekrar deneyin" }, { status: 500 });

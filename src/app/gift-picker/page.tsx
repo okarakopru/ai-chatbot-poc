@@ -30,6 +30,7 @@ type AIProduct = {
   emoji: string;
   category: string;
   imageKeywords: string;
+  imageUrl?: string;
   buyUrl: string;
   shop: string;
 };
@@ -207,10 +208,10 @@ function ProductCard({
       onTouchEnd={handlers?.onTouchEnd}
     >
       {/* Background */}
-      {!imgError ? (
+      {!imgError && (product.imageUrl || getImageUrl(product.imageKeywords, product.id)) ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={getImageUrl(product.imageKeywords, product.id)}
+          src={product.imageUrl || getImageUrl(product.imageKeywords, product.id)}
           alt={product.name}
           className="absolute inset-0 w-full h-full object-cover"
           onError={() => setImgError(true)}
