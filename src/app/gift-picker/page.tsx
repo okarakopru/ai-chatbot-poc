@@ -356,9 +356,9 @@ export default function HediyeBulPage() {
 
   // ─── AI fetch ───────────────────────────────────────────────────────────────
 
-  const fetchRecommendations = useCallback(async () => {
+  const fetchRecommendations = useCallback(async (initialMessage?: string) => {
     setStep("loading");
-    setLoadingText(LOADING_MESSAGES[0]);
+    setLoadingText(initialMessage ?? LOADING_MESSAGES[0]);
     setApiError(null);
     try {
       const res = await fetch("/api/gift-recommendations", {
@@ -392,19 +392,25 @@ export default function HediyeBulPage() {
 
   const handleSwipe = useCallback(
     (dir: "left" | "right") => {
+      const newLiked = dir === "right" ? [...liked, products[currentIndex]] : liked;
       if (dir === "right") {
-        setLiked((prev) => [...prev, products[currentIndex]]);
+        setLiked(newLiked);
       }
       setDragX(0);
       setDragY(0);
       setIsDragging(false);
       if (currentIndex + 1 >= products.length) {
-        setStep("results");
+        if (newLiked.length === 0) {
+          // No likes at all — fetch a fresh batch automatically
+          fetchRecommendations("Farklı öneriler aranıyor ✨");
+        } else {
+          setStep("results");
+        }
       } else {
         setCurrentIndex((i) => i + 1);
       }
     },
-    [currentIndex, products]
+    [currentIndex, products, liked, fetchRecommendations]
   );
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
