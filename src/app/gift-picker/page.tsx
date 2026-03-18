@@ -1035,7 +1035,7 @@ export default function HediyeBulPage() {
                     {/* Thumbnail */}
                     <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
                       <img
-                        src={getImageUrl(p.imageKeywords, p.id)}
+                        src={p.imageUrl || getImageUrl(p.imageKeywords, p.id)}
                         alt={p.name}
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
