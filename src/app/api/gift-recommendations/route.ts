@@ -111,7 +111,17 @@ export async function POST(req: NextRequest) {
     const relationLabel = RELATION_LABELS[recipient.relationship] || "yakını";
     const durationLabel = DURATION_LABELS[recipient.duration] || "";
 
-    const prompt = `${giverName}, ${durationLabel} ${recipient.name} adındaki ${relationLabel} için ${occasionLabel} vesilesiyle hediye arıyor.${recipient.age ? ` ${recipient.name} ${recipient.age} yaşında.` : ""}
+    // Random seed forces the model to generate fresh results each call
+    const sessionSeed = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    const BLACKLIST = [
+      "parfüm", "çikolata", "çiçek", "mum", "defter/ajanda", "kupa bardak",
+      "takı seti", "makyaj paleti", "spor çantası", "kitap okuma lambası",
+    ].join(", ");
+
+    const prompt = `[Oturum: ${sessionSeed}] — Her oturumda farklı, taze öneriler üret.
+
+${giverName}, ${durationLabel} ${recipient.name} adındaki ${relationLabel} için ${occasionLabel} vesilesiyle hediye arıyor.${recipient.age ? ` ${recipient.name} ${recipient.age} yaşında.` : ""}
 
 ${recipient.name}'in kişilik profili:
 ${profileLines || "Profil belirtilmemiş."}
@@ -122,14 +132,15 @@ Bu profili derinlemesine analiz et:
 - Kendisi almayacağı ama alınca çok sevineceklerine ne olabilir?
 - ${occasionLabel} için bu kişiye özel ne anlam ifade eder?
 
-Buna göre 20 hediye önerisi üret. Kriterler:
-1. En az 7 farklı kategori (güzellik, teknoloji, deneyim, aksesuar, kitap/hobi, yaşam tarzı, spor, seyahat, yemek/içecek)
-2. Fiyat çeşitliliği: 5 ürün ₺0–500, 7 ürün ₺500–1.500, 5 ürün ₺1.500–5.000, 3 ürün ₺5.000+
-3. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan ürünler — hayali marka veya ürün uydurma
-4. Hem "güvenli ve kesin beğenilir" hem de "beklenmedik ama mükemmel" öneriler karıştır
-5. Her description: 1. cümle bu KİŞİYE neden özel olduğunu açıkla (generic "güzel hediye" yazma). 2. cümle somut kullanım senaryosu ver.
-6. buyUrl: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
-7. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime). Ürün fotoğrafçılığı terimleri kullan. Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle", "silk sleep mask". ASLA genel veya kişi fotoğrafına yol açacak terimler kullanma.
+20 hediye önerisi üret. Kriterler:
+1. KLİŞELERDEN KAÇIN — şu tür önerileri ASLA verme: ${BLACKLIST}. Bunların yerine niş, spesifik, özgün ürünler bul.
+2. En az 8 farklı kategori — her kategoride beklenmedik, özgün seçenekler tercih et
+3. Fiyat çeşitliliği: 5 ürün ₺0–500, 7 ürün ₺500–1.500, 5 ürün ₺1.500–5.000, 3 ürün ₺5.000+
+4. Türkiye'de Trendyol veya Hepsiburada'da gerçekten satılan, spesifik ürünler — genel kategori adı değil, somut ürün adı yaz
+5. 20 önerinin en az 6'sı "ilk aklına gelen" değil, gerçekten düşünülmüş sürpriz öneri olsun
+6. Her description: 1. cümle bu KİŞİYE neden özel olduğunu açıkla. 2. cümle somut kullanım senaryosu ver. "Harika hediye" gibi jenerik ifadeler kullanma.
+7. buyUrl: "https://www.trendyol.com/sr?q=urun+adi&sst=MOST_RATED" veya "https://www.hepsiburada.com/ara?q=urun+adi"
+8. imageKeywords: Pexels'te bu ürünü temsil eden İngilizce fotoğraf arama terimi (2-3 kelime, ürün fotoğrafçılığı tarzında). Örnekler: "leather journal notebook", "wireless earbuds white", "luxury perfume bottle". ASLA insan fotoğrafına yol açacak terimler kullanma.
 
 Sadece JSON döndür:
 {"recommendations":[{"id":1,"name":"Türkçe ürün adı","description":"Kişiye özel 1-2 cümle açıklama","price":"₺X – ₺Y.YYY","emoji":"tek-emoji","category":"kategori","imageKeywords":"english product photo term","buyUrl":"https://www.trendyol.com/sr?q=...","shop":"Trendyol"}]}`;
@@ -149,7 +160,7 @@ Sadece JSON döndür:
           },
           { role: "user", content: prompt },
         ],
-        temperature: 0.8,
+        temperature: 0.95,
         response_format: { type: "json_object" },
       }),
     });
